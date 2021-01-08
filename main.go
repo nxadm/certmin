@@ -17,10 +17,6 @@ const (
 func main() {
 	action := getAction()
 	action()
-	//skimCerts(os.Args[1:])
-	//match, err := matchCertAndKey(os.Args[1], os.Args[2])
-	//fmt.Println(match, err)
-	//verifyChainFromFiles([]string{os.Args[1]}, nil, os.Args[2])
 }
 
 func skimCerts(certs []string) {
