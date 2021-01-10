@@ -1,21 +1,19 @@
 # certmin, a minimalistic certificate tool
 
-[![Build Status](https://travis-ci.com/nxadm/certmin.svg?token=3PQd6zsu83EBNA2LAEeq&branch=main)](https://travis-ci.com/nxadm/certmin)
-
 In short: nothing that openSSL can't do, just a few easy shortcuts (without needing openSSL). Binaries can be found at
 [releases](httos://github.com/nxadm/certmin/releases).
 
 
 ## Help page
 ```
-$ ./certmin 
+$ ./certmin
 certmin, 0.1.0. A minimalist certificate utility.
 See https://github.com/nxadm/certmin for more information.
 
 Usage:
   certmin skim certificate1 certificate2 ...
   certmin vk certificate key
-  certmin vc certificate 
+  certmin vc certificate
     --root=ca-file1 [--root=ca-file2 ...]
     --inter=inter-file1 [--inter=inter-file2 ...]
   certmin [-h]
@@ -25,7 +23,7 @@ Actions:
   skim         | s         : skim information from PEM certificates.
   verify-key   | vk        : verify that a PEM certificate matches an unencrypted PEM key.
   verify-chain | vc        : verify that a PEM certificate matches a PEM chain.
-    --root                 : root PEM certificates to verify against (at least 1 file). 
+    --root                 : root PEM certificates to verify against (at least 1 file).
     --inter                : intermediate PEM certificates to verify against (0 or more).
   -h           | --help    : This help message.
   -v           | --version : Version message.
@@ -37,7 +35,7 @@ Actions:
 ### Skim certificate information
 
 ```
-$ ./certmin skim t/chain.crt 
+$ ./certmin skim t/chain.crt
 Certificate file t/chain.crt:
 Subject:        CN=AAA Certificate Services,O=Comodo CA Limited,L=Salford,ST=Greater Manchester,C=GB
 Issuer:         CN=AAA Certificate Services,O=Comodo CA Limited,L=Salford,ST=Greater Manchester,C=GB
@@ -68,11 +66,11 @@ OCSP servers:   http://ocsp.usertrust.com
 $ ./certmin verify-key t/myserver.crt t/myserver.key
 Certificate file t/myserver.crt and key file t/myserver.key:
 certificate and key match
-``` 
+```
 
 ### Verify the chain of a certificate
 
 ```
-$ ./certmin verify-chain t/myserver.crt --root t/ca.crt 
+$ ./certmin verify-chain t/myserver.crt --root t/ca.crt
 certificate is valid for the supplied chain
-``` 
+```
