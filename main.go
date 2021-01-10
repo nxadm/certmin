@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"strings"
@@ -19,7 +20,7 @@ func main() {
 	action()
 }
 
-func skimCerts(certFiles []string) {
+func skimCerts(certFiles []string) bool {
 	for _, certFile := range certFiles {
 		fmt.Printf("Certificate file %s:\n", certFile)
 		certs, _ := splitMultiCertFile(certFile) // Errors are shown in output
@@ -43,19 +44,22 @@ func skimCerts(certFiles []string) {
 
 		fmt.Println("---")
 	}
+
+	return true
 }
 
-func verifyCertAndKey(certFile, keyFile string) {
+func verifyCertAndKey(certFile, keyFile string) bool {
 	fmt.Printf("Certificate file %s and key file %s:\n", certFile, keyFile)
 	_, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
 		fmt.Println(err.Error())
-		return
+		return false
 	}
 	fmt.Println("certificate and key match")
+	return true
 }
 
-func verifyChainFromFiles(rootFiles, intermediateFiles []string, certFile string) {
+func verifyChainFromFiles(rootFiles, intermediateFiles []string, certFile string) bool {
 	var roots, intermediates []*x509.Certificate
 
 	for _, file := range rootFiles {
@@ -69,11 +73,17 @@ func verifyChainFromFiles(rootFiles, intermediateFiles []string, certFile string
 	}
 
 	certs, _ := splitMultiCertFile(certFile) // Errors are shown in output
-	if len(certs) != 1 {
+
+	switch {
+	case len(certs) != 1:
 		fmt.Println("error: only a single cert can be verified")
+		return false
+	case len(roots) == 0:
+		fmt.Println("error: no root certificates found")
+		return false
 	}
 
-	verifyChain(roots, intermediates, certs[0])
+	return verifyChain(roots, intermediates, certs[0])
 }
 
 // Internal
@@ -89,8 +99,8 @@ func splitMultiCertFile(certFile string) ([]*x509.Certificate, error) {
 	for {
 		block, rest := pem.Decode([]byte(pemData))
 		if block == nil {
-			err = fmt.Errorf("error: invalid data in certificate file (%s)\n", err)
-			fmt.Printf(err.Error())
+			err = errors.New("error: invalid data in certificate file")
+			fmt.Println(err)
 			return nil, err
 		}
 		blocks = append(blocks, block)

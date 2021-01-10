@@ -21,7 +21,7 @@ Usage:
 
 Actions:
   skim         | s         : skim information from PEM certificates.
-  verify-key   | vk        : verify that a PEM certificate matches a PEM key.
+  verify-key   | vk        : verify that a PEM certificate matches an unencrypted PEM key.
   verify-chain | vc        : verify that a PEM certificate matches a PEM chain.
     --root                 : root PEM certificates to verify against (at least 1 file). 
     --inter                : intermediate PEM certificates to verify against (0 or more).
