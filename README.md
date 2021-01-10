@@ -2,7 +2,9 @@
 
 [![Build Status](https://travis-ci.com/nxadm/certmin.svg?token=3PQd6zsu83EBNA2LAEeq&branch=main)](https://travis-ci.com/nxadm/certmin)
 
-In short: nothing that openSSL can't do, just a few easy shortcuts (without needing openSSL). 
+In short: nothing that openSSL can't do, just a few easy shortcuts (without needing openSSL). Binaries can be found at
+[releases](httos://github.com/nxadm/certmin/releases).
+
 
 ## Help page
 ```
