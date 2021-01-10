@@ -21,7 +21,7 @@ jobs:
     - name: Build
       run: |
         mkdir -p binaries
-        GOOS=linux GOARCH=amd64 go build  -o binaries/certmin-linux-amd64
-        GOOS=darwin GOARCH=amd64 go build -o binaries/certmin-darwin-amd64
-        GOOS=darwin GOARCH=arm64 go build -o binaries/certmin-darwin-arm64
-        GOOS=windows GOARCH=amd64 go build -o binaries/certmin-windows-amd64.exe
+        GOOS=linux   GOARCH=amd64 go build 
+        GOOS=darwin  GOARCH=amd64 go build
+        GOOS=darwin  GOARCH=arm64 go build
+        GOOS=windows GOARCH=amd64 go build

@@ -1,7 +1,7 @@
 # certmin, a minimalistic certificate tool
 
 In short: nothing that openSSL can't do, just a few easy shortcuts (without needing openSSL). Binaries can be found at
-[releases](httos://github.com/nxadm/certmin/releases).
+[releases](https://github.com/nxadm/certmin/releases).
 
 
 ## Help page
