@@ -1,0 +1,23 @@
+language: go
+go:
+  # Keep the latest stable release at the top
+  # Keep 'tip' just under
+  # Because those two Go versions are the ones that interest us the most.
+  - "1.15.x"
+  - tip
+  - "1.14.x"
+script: go test -v && go build
+before_deploy: "./create_binaries.sh && ls -la /var/tmp/certmin"
+deploy:
+  provider: releases
+  api_key:
+    secure: IPgtOQrov6LfkV2DesoVNTSxsZCnVkdZnqei9nM/JFmXRCNCEpsKhmBn6DmKVuSwU2QVVRsA3zEIUD8ZN9+vtIeT8yrWVKYsbOY0BGipI/LcGAKFrVJF46iqHJLzxpdAvEMYCBuVyawAyjVQ7XTTlGgkibu/iCyWxXe3qAT2JA45R5jrXGYXjJI+WWQdJF2r5N3uVmm96Lw4SXo5wAtxtbahSXr3PtOs/VW1vW08ddOARka4+yD9aedlxY5sR7cb9qyVfcsaSN2uKxbKkmQowMm3hD6pr8acwF1hMKEpyVoatUZ7ZOrJc9ysO6BCQmRUYSXGikWPlq6cwA9Aezk5pjIOPHpGgsFWknr5IYmzJ6AMh3tjFEnG6M+9iti9z9M0okkkgyMYOiAOWTzhbItFbQojKb67ptWZpF8zG1wyuLZmpaBnObbtrbPsBnLmJaqVvvn6k/bWMSEIyMS4LBkyTtp6XxuvSjHYzzb9N/H0Q3K8Om1XN07JLcftwHY5/EYAepMIlyifDkuisli5oK/GeocQBaJEjWX1N0gxhjtn+pikbxh75+PQ8WlGMbCHVPmOrKyrAgM58rSYOxlG3Z31HzrQS2IieokCfDU+aDKGdyOYS1VbP+bDoodx7NuxAC7NLpj0vXxgtfTEgQIUlQsneRlQoqQ2ex03uhcfa060/yU=
+  file_glob: true
+  file: /var/tmp/certmin/*
+  skip_cleanup: true
+  on:
+    repo: nxadm/certmin
+    tags: true
+    branches:
+      only:
+      - /^v\d+\.\d+\.\d+$/    
