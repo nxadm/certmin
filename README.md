@@ -1,5 +1,7 @@
 # certmin, a minimalistic certificate tool
 
+[![Build Status](https://travis-ci.com/nxadm/certmin.svg?token=3PQd6zsu83EBNA2LAEeq&branch=main)](https://travis-ci.com/nxadm/certmin)
+
 In short: nothing that openSSL can't do, just a few easy shortcuts (without needing openSSL). 
 
 ## Help page
