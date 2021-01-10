@@ -34,52 +34,53 @@ Actions:
 //generate-ca         | gc : generate a PEM CA certificate.
 //generate-inter      | gi : generate a PEM intermediate CA certificate.
 
+type actionFunc func()
+
 func getAction() func() {
+	flag.Usage = func() { fmt.Print(usage) }
 	if len(os.Args) == 1 {
-		fmt.Print(usage)
+		flag.Usage()
 		os.Exit(0)
 	}
 
-	switch os.Args[1] {
-	case "-h":
-		fmt.Print(usage)
-		os.Exit(0)
-	case "-v":
-		fmt.Println("certmin, " + version)
-		os.Exit(0)
-	case "skim":
-		return skimCmdParse()
-	case "s":
-		return skimCmdParse()
-	case "verify-key":
-		return verifyKeyCmdParse()
-	case "vk":
-		return verifyKeyCmdParse()
-	case "verify-chain":
-		return verifyChainCmdParse()
-	case "vc":
-		return verifyChainCmdParse()
-	default:
-		fmt.Print(usage)
-		os.Exit(1)
-	}
-
-	return func() {}
-}
-
-func skimCmdParse() func() {
-	helpLong := flag.Bool("help", false, "")
-	helpShort := flag.Bool("h", false, "")
+	help := flag.BoolP("help", "h", false, "")
+	progVersion := flag.BoolP("version", "v", false, "")
 	flag.Parse()
 
-	if *helpLong || *helpShort || len(flag.Args()) == 1 {
+	var exitStatus int
+	var action actionFunc
+	switch {
+	case *help:
+		flag.Usage()
+	case *progVersion:
+		fmt.Println("certmin, " + version)
+	case flag.Arg(0) == "skim" || flag.Arg(0) == "s":
+		action, exitStatus = skimCmdParse(flag.Args()[1:])
+	case flag.Arg(0) == "verify-key" || flag.Arg(0) == "vk":
+		action, exitStatus = verifyKeyCmdParse(flag.Args()[1:])
+		////case "verify-chain":
+		////	return verifyChainCmdParse(os.Args[2:])
+		////case "vc":
+		////	return verifyChainCmdParse(os.Args[2:])
+		//default:
+		//	flag.Usage()
+	}
+	if exitStatus != -1 {
+		os.Exit(exitStatus)
+	}
+
+	return action
+}
+
+func skimCmdParse(files []string) (func(), int) {
+	if len(files) == 0 {
 		fmt.Print(usage)
-		os.Exit(0)
+		return nil, 0
 	}
 
 	return func() {
-		skimCerts(flag.Args()[1:])
-	}
+		skimCerts(files)
+	}, -1
 }
 
 func verifyChainCmdParse() func() {
@@ -99,17 +100,18 @@ func verifyChainCmdParse() func() {
 	}
 }
 
-func verifyKeyCmdParse() func() {
-	helpLong := flag.Bool("help", false, "")
-	helpShort := flag.Bool("h", false, "")
-	flag.Parse()
-
-	if *helpLong || *helpShort || len(flag.Args()) != 3 {
+func verifyKeyCmdParse(files []string) (func(), int) {
+	switch len(files) {
+	case 0:
 		fmt.Print(usage)
-		os.Exit(0)
+		return nil, 0
+	case 2:
+	default:
+		fmt.Print(usage)
+		return nil, 1
 	}
 
 	return func() {
-		verifyCertAndKey(flag.Args()[1], flag.Args()[2])
-	}
+		verifyCertAndKey(files[0], files[1])
+	}, -1
 }
