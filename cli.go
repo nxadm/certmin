@@ -98,7 +98,7 @@ func verifyChainCmdParse(roots, inters, args []string) (func(), int) {
 	}
 
 	return func() {
-		verifyChainFromFiles(roots, inters, args[1])
+		verifyChainFromFiles(roots, inters, args[0])
 	}, -1
 }
 
