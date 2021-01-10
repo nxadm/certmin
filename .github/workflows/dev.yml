@@ -21,7 +21,12 @@ jobs:
     - name: Build
       run: |
         mkdir -p binaries
-        GOOS=linux   GOARCH=amd64 go build 
-        GOOS=darwin  GOARCH=amd64 go build
-        GOOS=darwin  GOARCH=arm64 go build
-        GOOS=windows GOARCH=amd64 go build
+        export GOOS=linux GOARCH=amd64
+        echo "Building for $GOOS $GOARCH:"; go build 
+        export GOOS=darwin GOARCH=amd64
+        echo "Building for $GOOS $GOARCH:"; go build 
+        export GOOS=darwin GOARCH=arm64
+        echo "Building for $GOOS $GOARCH:"; go build 
+        export GOOS=windows GOARCH=amd64
+        echo "Building for $GOOS $GOARCH:"; go build 
+        echo "Done"
