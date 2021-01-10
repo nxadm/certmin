@@ -15,7 +15,7 @@ const (
 )
 
 func main() {
-	action := getAction()
+	action, _ := getAction()
 	action()
 }
 

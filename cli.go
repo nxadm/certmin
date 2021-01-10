@@ -32,40 +32,52 @@ Actions:
 //[not yet implemented]
 //generate-selfsigned | gs : generate a self-signed PEM certificate.
 
+var mock bool
+var mockArgs []string
+
 type actionFunc func()
 
-func getAction() func() {
-	flag.Usage = func() { fmt.Print(usage) }
-	if len(os.Args) == 1 {
-		flag.Usage()
-		os.Exit(0)
+func getAction() (func(), int) {
+	flags := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	flags.Usage = func() { fmt.Print(usage) }
+
+	if len(os.Args) == 1 && !mock {
+		flags.Usage()
+		exitWrapper(0)
 	}
 
-	help := flag.BoolP("help", "h", false, "")
-	progVersion := flag.BoolP("version", "v", false, "")
-	flag.Parse()
+	help := flags.BoolP("help", "h", false, "")
+	progVersion := flags.BoolP("version", "v", false, "")
+	roots := flags.StringSlice("root", []string{}, "")
+	inters := flags.StringSlice("inter", []string{}, "")
+	if !mock {
+		flags.Parse(os.Args)
+	} else {
+		flags.Parse(mockArgs)
+	}
 
 	var exitStatus int
 	var action actionFunc
 	switch {
 	case *help:
-		flag.Usage()
+		flags.Usage()
 	case *progVersion:
 		fmt.Println("certmin, " + version)
-	case flag.Arg(0) == "skim" || flag.Arg(0) == "s":
-		action, exitStatus = skimCmdParse(flag.Args()[1:])
-	case flag.Arg(0) == "verify-key" || flag.Arg(0) == "vk":
-		action, exitStatus = verifyKeyCmdParse(flag.Args()[1:])
-	case flag.Arg(0) == "verify-chain" || flag.Arg(0) == "vc":
-		action, exitStatus = verifyChainCmdParse(flag.Args()[1:])
+	case flags.Arg(1) == "skim" || flags.Arg(1) == "s":
+		action, exitStatus = skimCmdParse(flags.Args()[2:])
+	case flags.Arg(1) == "verify-key" || flags.Arg(1) == "vk":
+		action, exitStatus = verifyKeyCmdParse(flags.Args()[2:])
+	case flags.Arg(1) == "verify-chain" || flags.Arg(1) == "vc":
+		action, exitStatus = verifyChainCmdParse(*roots, *inters, flags.Args()[2:])
 	default:
-		flag.Usage()
-	}
-	if exitStatus != -1 {
-		os.Exit(exitStatus)
+		flags.Usage()
 	}
 
-	return action
+	if exitStatus != -1 {
+		exitWrapper(exitStatus)
+	}
+
+	return action, exitStatus
 }
 
 func skimCmdParse(files []string) (func(), int) {
@@ -79,19 +91,14 @@ func skimCmdParse(files []string) (func(), int) {
 	}, -1
 }
 
-func verifyChainCmdParse(args []string) (func(), int) {
-	flags := flag.NewFlagSet("verify-chain", flag.ExitOnError)
-	roots := flags.StringSlice("root", []string{}, "")
-	inters := flags.StringSlice("inter", []string{}, "")
-	flags.Parse(args)
-
-	if len(*roots) == 0 || len(flags.Args()) != 1 {
+func verifyChainCmdParse(roots, inters, args []string) (func(), int) {
+	if len(roots) == 0 || len(args) != 1 {
 		fmt.Print(usage)
 		return nil, 1
 	}
 
 	return func() {
-		verifyChainFromFiles(*roots, *inters, flags.Arg(0))
+		verifyChainFromFiles(roots, inters, args[1])
 	}, -1
 }
 
@@ -109,4 +116,11 @@ func verifyKeyCmdParse(files []string) (func(), int) {
 	return func() {
 		verifyCertAndKey(files[0], files[1])
 	}, -1
+}
+
+func exitWrapper(exitStatus int) func() int {
+	if !mock {
+		os.Exit(exitStatus)
+	}
+	return func() int { return exitStatus }
 }
