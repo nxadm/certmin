@@ -30,9 +30,7 @@ Actions:
 `
 
 //[not yet implemented]
-//generate-selfsigned | gs : generate a selfsigned PEM certificate.
-//generate-ca         | gc : generate a PEM CA certificate.
-//generate-inter      | gi : generate a PEM intermediate CA certificate.
+//generate-selfsigned | gs : generate a self-signed PEM certificate.
 
 type actionFunc func()
 
@@ -58,12 +56,10 @@ func getAction() func() {
 		action, exitStatus = skimCmdParse(flag.Args()[1:])
 	case flag.Arg(0) == "verify-key" || flag.Arg(0) == "vk":
 		action, exitStatus = verifyKeyCmdParse(flag.Args()[1:])
-		////case "verify-chain":
-		////	return verifyChainCmdParse(os.Args[2:])
-		////case "vc":
-		////	return verifyChainCmdParse(os.Args[2:])
-		//default:
-		//	flag.Usage()
+	case flag.Arg(0) == "verify-chain" || flag.Arg(0) == "vc":
+		action, exitStatus = verifyChainCmdParse(flag.Args()[1:])
+	default:
+		flag.Usage()
 	}
 	if exitStatus != -1 {
 		os.Exit(exitStatus)
@@ -75,7 +71,7 @@ func getAction() func() {
 func skimCmdParse(files []string) (func(), int) {
 	if len(files) == 0 {
 		fmt.Print(usage)
-		return nil, 0
+		return nil, 1
 	}
 
 	return func() {
@@ -83,21 +79,20 @@ func skimCmdParse(files []string) (func(), int) {
 	}, -1
 }
 
-func verifyChainCmdParse() func() {
-	helpLong := flag.Bool("help", false, "")
-	helpShort := flag.Bool("h", false, "")
-	roots := flag.StringSlice("root", []string{}, "")
-	inters := flag.StringSlice("inter", []string{}, "")
-	flag.Parse()
+func verifyChainCmdParse(args []string) (func(), int) {
+	flags := flag.NewFlagSet("verify-chain", flag.ExitOnError)
+	roots := flags.StringSlice("root", []string{}, "")
+	inters := flags.StringSlice("inter", []string{}, "")
+	flags.Parse(args)
 
-	if *helpLong || *helpShort || len(*roots) == 0 || len(flag.Args()) != 2 {
+	if len(*roots) == 0 || len(flags.Args()) != 1 {
 		fmt.Print(usage)
-		os.Exit(0)
+		return nil, 1
 	}
 
 	return func() {
-		verifyChainFromFiles(*roots, *inters, flag.Args()[1])
-	}
+		verifyChainFromFiles(*roots, *inters, flags.Arg(0))
+	}, -1
 }
 
 func verifyKeyCmdParse(files []string) (func(), int) {
