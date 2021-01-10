@@ -15,6 +15,11 @@ var (
 	}
 )
 
+//func verifyChainFromFiles(rootFiles, intermediateFiles []string, certFile string) {
+func TestVerifyChainFromFiles(t *testing.T) {
+	
+}
+
 func TestSplitMultiCertFile(t *testing.T) {
 	certs, err := splitMultiCertFile("t/chain.crt")
 	assert.NoError(t, err)
