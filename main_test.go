@@ -41,6 +41,10 @@ func TestSplitMultiCertFile(t *testing.T) {
 		assert.Equal(t, serial, certs[idx].SerialNumber.String())
 	}
 
+	_, err = splitMultiCertFile("t/chain-invalid-extra-nl.crt")
+	assert.NoError(t, err)
+	_, err = splitMultiCertFile("t/empty.crt")
+	assert.Error(t, err)
 	_, err = splitMultiCertFile("/dev/null")
 	assert.Error(t, err)
 	_, err = splitMultiCertFile(strings.Join(testSerials, ""))

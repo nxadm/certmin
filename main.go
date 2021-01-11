@@ -88,7 +88,6 @@ func verifyChainFromFiles(rootFiles, intermediateFiles []string, certFile string
 
 // Internal
 func splitMultiCertFile(certFile string) ([]*x509.Certificate, error) {
-	var blocks []*pem.Block
 	var certs []*x509.Certificate
 	pemData, err := ioutil.ReadFile(certFile)
 	if err != nil {
@@ -96,23 +95,13 @@ func splitMultiCertFile(certFile string) ([]*x509.Certificate, error) {
 		return nil, err
 	}
 
+	var keepErrStrs []string
 	for {
 		block, rest := pem.Decode([]byte(pemData))
 		if block == nil {
-			err = errors.New("error: invalid data in certificate file")
-			fmt.Println(err)
-			return nil, err
-		}
-		blocks = append(blocks, block)
-		pemData = rest
-
-		if len(rest) == 0 {
 			break
 		}
-	}
 
-	var keepErrStrs []string
-	for _, block := range blocks {
 		cert, err := x509.ParseCertificate(block.Bytes)
 		if err != nil {
 			fmt.Printf("error: can not parse certificate (%s)\n", err)
@@ -120,13 +109,19 @@ func splitMultiCertFile(certFile string) ([]*x509.Certificate, error) {
 			continue
 		}
 		certs = append(certs, cert)
+		pemData = rest
 	}
 
-	if keepErrStrs == nil {
-		return certs, nil
+	if keepErrStrs != nil || len(certs) == 0 {
+		if len(certs) == 0 {
+			keepErrStrs = append([]string{"no certificates found"}, keepErrStrs...)
+		}
+		keepErr := errors.New(strings.Join(keepErrStrs, ", "))
+		fmt.Printf("error: can not parse certificate file (%s)\n", keepErr)
+		return certs, keepErr
 	}
-	return certs,
-		fmt.Errorf("error: can not parse certificate (%s)\n", strings.Join(keepErrStrs, ", "))
+
+	return certs, nil
 }
 
 func verifyChain(roots, intermediates []*x509.Certificate, cert *x509.Certificate) bool {
