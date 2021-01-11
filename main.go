@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	version = "0.1.2"
+	version = "0.1.1"
 	website = "https://github.com/nxadm/certmin"
 )
 
