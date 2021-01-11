@@ -66,7 +66,7 @@ OCSP servers:   http://ocsp.usertrust.com
 ---
 ```
 
-### Verify a certificate an key match
+### Verify that a certificate and a key match
 
 ```
 $ ./certmin verify-key t/myserver.crt t/myserver.key
