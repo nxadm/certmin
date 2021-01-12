@@ -4,38 +4,20 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"strings"
+	"os"
 )
 
-func retrieveCerts(network, addr string) ([]*x509.Certificate, error) {
+func retrieveCerts(network, addr string, remoteChain bool) ([]*x509.Certificate, error) {
 	conn, err := tls.Dial(network, addr, nil)
 	if err != nil {
-		fmt.Printf("error: %s\n", err)
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		return nil, err
 	}
-
 	defer conn.Close()
-	return conn.ConnectionState().PeerCertificates, nil
-}
 
-func retrieveRemotes(certLocs []string, network string, remoteChain bool) ([]*x509.Certificate, error) {
-	var certs []*x509.Certificate
-	var errStrs []string
-	for _, certLoc := range certLocs {
-		cert, err := retrieveCerts(network, certLoc)
-		if err != nil {
-			errStrs = append(errStrs, err.Error())
-			continue
-		}
-		if remoteChain {
-			certs = append(certs, cert...)
-		} else {
-			certs = append(certs, cert[0])
-		}
-	}
+	if remoteChain {
+		return conn.ConnectionState().PeerCertificates, nil
 
-	if errStrs != nil {
-		return certs, fmt.Errorf("error: %s", strings.Join(errStrs, ", "))
 	}
-	return certs, nil
+	return []*x509.Certificate{conn.ConnectionState().PeerCertificates[0]}, nil
 }

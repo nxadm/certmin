@@ -78,7 +78,7 @@ func getAction() (func(), int) {
 	}
 
 	action, exitStatus :=
-		verifyAndDispatch(*help, *progVersion, *tcp, *udp, *remoteChain, network, *roots, *inters, flag.Args())
+		verifyAndDispatch(*help, *progVersion, *tcp, *udp, *remoteChain, network, *roots, *inters, flags.Args())
 	if exitStatus != -1 {
 		os.Exit(exitStatus)
 	}
@@ -144,7 +144,7 @@ func verifyAndDispatch(
 
 func verifyChainCmdParse(roots, inters []string, certLoc, network string, remoteChain bool) (func(), int) {
 	return func() {
-		verifyChainFromFiles(roots, inters, certLoc, network, remoteChain)
+		verifyChainFromLoc(roots, inters, certLoc, network, remoteChain)
 	}, -1
 }
 

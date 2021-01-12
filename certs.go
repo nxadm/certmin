@@ -7,67 +7,78 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 )
 
-func skimCerts(certLocs []string, network string, remoteChain bool) bool {
+func skimCerts(certLocs []string, network string, remoteChain bool) string {
+	var sb strings.Builder
 	for _, certLoc := range certLocs {
 		fmt.Printf("Certificate location %s:\n", certLoc)
 		var certs []*x509.Certificate
 
 		if network != "" {
-			certs, _ = retrieveRemotes(certLocs, network, remoteChain) // Errors are shown in output
+			certs, _ = retrieveCerts(network, certLoc, remoteChain) // Errors are shown in output
 		} else {
 			certs, _ = splitMultiCertFile(certLoc) // Errors are shown in output
 		}
 
 		for _, cert := range certs {
-			fmt.Printf("Subject:\t%s\n", cert.Subject)
+			keepAndPrintOutput(&sb, fmt.Sprintf("Subject:\t%s", cert.Subject), false)
 			if len(cert.DNSNames) > 0 {
-				fmt.Printf("DNS names:\t%s\n", strings.Join(cert.DNSNames, ", "))
+				keepAndPrintOutput(
+					&sb, fmt.Sprintf("DNS names:\t%s", strings.Join(cert.DNSNames, ", ")), false)
 			}
-			fmt.Printf("Issuer:\t\t%s\n", cert.Issuer)
-			fmt.Printf("Serial number:\t%s\n", cert.SerialNumber)
+			keepAndPrintOutput(&sb, fmt.Sprintf("Issuer:\t\t%s", cert.Issuer), false)
+			keepAndPrintOutput(&sb, fmt.Sprintf("Serial number:\t%s", cert.SerialNumber), false)
 			if cert.MaxPathLen > 0 {
-				fmt.Printf("MaxPathLen:\t%d\n", cert.MaxPathLen)
+				keepAndPrintOutput(&sb, fmt.Sprintf("MaxPathLen:\t%d", cert.MaxPathLen), false)
 			}
-			fmt.Printf("Public key algorhythm:\t%s\n", cert.PublicKeyAlgorithm.String())
-			fmt.Printf("Signature algorhythm:\t%s\n", cert.SignatureAlgorithm.String())
+			keepAndPrintOutput(&sb,
+				fmt.Sprintf("Public key algorhythm:\t%s", cert.PublicKeyAlgorithm.String()), false)
+			keepAndPrintOutput(&sb,
+				fmt.Sprintf("Signature algorhythm:\t%s", cert.SignatureAlgorithm.String()), false)
 			if len(cert.OCSPServer) > 0 {
-				fmt.Printf("OCSP servers:\t%s\n", strings.Join(cert.OCSPServer, ", "))
+				keepAndPrintOutput(
+					&sb, fmt.Sprintf("OCSP servers:\t%s", strings.Join(cert.OCSPServer, ", ")), false)
+
 			}
 			if len(cert.CRLDistributionPoints) > 0 {
-				fmt.Printf("CRL locations:\t%s\n", strings.Join(cert.CRLDistributionPoints, ", "))
+				keepAndPrintOutput(
+					&sb, fmt.Sprintf("CRL locations:\t%s", strings.Join(cert.CRLDistributionPoints, ", ")), false)
+
 			}
-			fmt.Printf("Not before:\t%s\n", cert.NotBefore)
-			fmt.Printf("Not after:\t%s\n", cert.NotAfter)
+			keepAndPrintOutput(
+				&sb, fmt.Sprintf("Not before:\t%s", cert.NotBefore), false)
+			keepAndPrintOutput(
+				&sb, fmt.Sprintf("Not after:\t%s", cert.NotAfter), false)
 			fmt.Println("")
 		}
 
 		fmt.Println("---")
 	}
 
-	return true // make it compatible with verify actions
+	return sb.String() // make it testable
 }
 
 func splitMultiCertFile(certFile string) ([]*x509.Certificate, error) {
 	var certs []*x509.Certificate
 	pemData, err := ioutil.ReadFile(certFile)
 	if err != nil {
-		fmt.Printf("error: %s\n", err)
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		return nil, err
 	}
 
 	var keepErrStrs []string
 	for {
-		block, rest := pem.Decode([]byte(pemData))
+		block, rest := pem.Decode(pemData)
 		if block == nil {
 			break
 		}
 
 		cert, err := x509.ParseCertificate(block.Bytes)
 		if err != nil {
-			fmt.Printf("error: can not parse certificate (%s)\n", err)
+			fmt.Fprintf(os.Stderr, "error: can not parse certificate (%s)\n", err)
 			keepErrStrs = append(keepErrStrs, err.Error())
 			continue
 		}
@@ -75,13 +86,14 @@ func splitMultiCertFile(certFile string) ([]*x509.Certificate, error) {
 		pemData = rest
 	}
 
-	if keepErrStrs != nil || len(certs) == 0 {
-		if len(certs) == 0 {
-			keepErrStrs = append([]string{"no certificates found"}, keepErrStrs...)
-		}
-		keepErr := errors.New(strings.Join(keepErrStrs, ", "))
-		fmt.Printf("error: can not parse certificate file (%s)\n", keepErr)
-		return certs, keepErr
+	if len(certs) == 0 {
+		keepErrStrs = append([]string{"no certificates found"}, keepErrStrs...)
+	}
+
+	if keepErrStrs != nil {
+		err = errors.New(strings.Join(keepErrStrs, ", "))
+		fmt.Fprintf(os.Stderr, "error: can not parse certificate (%s)\n", err)
+		return certs, err
 	}
 
 	return certs, nil
@@ -112,15 +124,17 @@ func verifyChain(roots, intermediates []*x509.Certificate, cert *x509.Certificat
 	return true
 }
 
-func verifyChainFromFiles(rootFiles, intermediateFiles []string, certLoc, network string, remoteChain bool) bool {
+func verifyChainFromLoc(rootFiles, interFiles []string, certLoc, network string, remoteChain bool) bool {
 	var roots, inters, certs []*x509.Certificate
+	var err error
+
 	if network != "" {
-		certs, err := retrieveCerts(network, certLoc) // Errors are shown in output
-		if err != nil {                               // Errors are shown in output
+		certs, err = retrieveCerts(network, certLoc, remoteChain) // Errors are shown in output
+		if err != nil {                                            // Errors are shown in output
 			return false
 		}
-		if remoteChain && len(certs) > 1 {
-			inters = append(inters, certs[1:]...)
+		if remoteChain && len(certs) > 0 {
+			roots = append(roots, certs[1:]...)
 		}
 	} else {
 		certs, _ = splitMultiCertFile(certLoc) // Errors are shown in output
@@ -131,21 +145,25 @@ func verifyChainFromFiles(rootFiles, intermediateFiles []string, certLoc, networ
 		roots = append(roots, tmpRoots...)
 	}
 
-	for _, file := range intermediateFiles {
+	for _, file := range interFiles {
 		tmpInter, _ := splitMultiCertFile(file) // Errors are shown in output
 		inters = append(inters, tmpInter...)
 	}
 
 	// Catch errors
 	switch {
-	case len(roots) == 0 && !remoteChain:
-		fmt.Println("error: no local root certificates found")
+	case len(certs) == 0:
+		msg := "error: no certificate found\n"
+		if network != "" {
+			msg = "error: no remote certificate found\n"
+		}
+		fmt.Fprintf(os.Stderr, msg)
 		return false
-	case len(inters) == 0 && remoteChain:
-		fmt.Println("error: no remote intermediate certificates found")
+	case !remoteChain && len(certs) != 1:
+		fmt.Fprintf(os.Stderr, "error: only a single local certificate can be verified\n")
 		return false
-	case len(certs) != 1 && !remoteChain:
-		fmt.Println("error: only a single local certificate can be verified")
+	case remoteChain && len(roots) == 0:
+		fmt.Fprintf(os.Stderr, "error: no remote chain certificates found\n")
 		return false
 	}
 
@@ -156,13 +174,14 @@ func verifyKey(certLoc, keyFile, network string) bool {
 	fmt.Printf("Certificate location %s and key file %s:\n", certLoc, keyFile)
 	var err error
 	if network != "" {
-		certs, err := retrieveCerts(network, certLoc) // Errors are shown in output
+		certs, err := retrieveCerts(network, certLoc, false) // Errors are shown in output
 		if err != nil || len(certs) == 0 {
 			return false
 		}
+
 		pemData, err := ioutil.ReadFile(keyFile)
 		if err != nil {
-			fmt.Printf("error: %s\n", err)
+			fmt.Fprintf(os.Stderr, "error: %s\n", err)
 			return false
 		}
 		_, err = tls.X509KeyPair(certs[0].Raw, pemData)
@@ -171,7 +190,7 @@ func verifyKey(certLoc, keyFile, network string) bool {
 	}
 
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		return false
 	}
 	fmt.Println("certificate and key match")
