@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"os"
 	"strings"
 )
 
@@ -24,8 +23,7 @@ func retrieveRemotes(certLocs []string, network string, remoteChain bool) ([]*x5
 	var errStrs []string
 	for _, certLoc := range certLocs {
 		cert, err := retrieveCerts(network, certLoc)
-		if err == nil {
-			fmt.Fprintf(os.Stderr, "error: %s", err)
+		if err != nil {
 			errStrs = append(errStrs, err.Error())
 			continue
 		}

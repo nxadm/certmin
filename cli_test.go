@@ -22,7 +22,7 @@ func TestVerifyAndDispatch(t *testing.T) {
 		verifyAndDispatch(true, false, false, false, false,
 			"", nil, nil, nil)
 	assert.Nil(t, action)
-	assert.Equal(t,exitStatus, 0)
+	assert.Equal(t, exitStatus, 0)
 
 	// empty
 	action, exitStatus =
@@ -108,7 +108,6 @@ func TestVerifyAndDispatch(t *testing.T) {
 	assert.NotNil(t, action)
 	assert.Equal(t, -1, exitStatus)
 }
-
 
 func TestVerifyChainCmdParse(t *testing.T) {
 	action, exitStatus := verifyChainCmdParse([]string{}, []string{}, "", "", false)
