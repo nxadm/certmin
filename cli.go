@@ -48,18 +48,15 @@ Global options:
 //[not yet implemented]
 //generate-selfsigned | gs : generate a self-signed PEM certificate.
 
-var mock bool
-var mockArgs []string
-
 type actionFunc func()
 
 func getAction() (func(), int) {
 	flags := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	flags.Usage = func() { fmt.Print(usage) }
 
-	if len(os.Args) == 1 && !mock {
+	if len(os.Args) == 1 {
 		flags.Usage()
-		exitWrapper(0)
+		os.Exit(0)
 	}
 
 	help := flags.BoolP("help", "h", false, "")
@@ -70,13 +67,9 @@ func getAction() (func(), int) {
 	tcp := flags.BoolP("tcp", "t", false, "")
 	udp := flags.BoolP("udp", "u", false, "")
 
-	if !mock {
-		err := flags.Parse(os.Args)
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		_ = flags.Parse(mockArgs)
+	err := flags.Parse(os.Args)
+	if err != nil {
+		panic(err)
 	}
 
 	network := "tcp"
@@ -87,7 +80,7 @@ func getAction() (func(), int) {
 	action, exitStatus :=
 		verifyAndDispatch(*help, *progVersion, *tcp, *udp, *remoteChain, network, *roots, *inters, flag.Args())
 	if exitStatus != -1 {
-		exitWrapper(exitStatus)
+		os.Exit(exitStatus)
 	}
 
 	return action, -1 // the exitcode facilitates testing
@@ -159,11 +152,4 @@ func verifyKeyCmdParse(certLoc, keyFile, network string) (func(), int) {
 	return func() {
 		verifyCertAndKey(certLoc, keyFile, network)
 	}, -1
-}
-
-func exitWrapper(exitStatus int) func() int {
-	if !mock {
-		os.Exit(exitStatus)
-	}
-	return func() int { return exitStatus }
 }
