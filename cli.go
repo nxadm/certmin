@@ -84,9 +84,8 @@ func getAction() (func(), int) {
 		network = "udp"
 	}
 
-	args := flag.Args()
 	action, exitStatus :=
-		verifyAndDispatch(help, progVersion, tcp, udp, remoteChain, network, roots, inters, &args)
+		verifyAndDispatch(*help, *progVersion, *tcp, *udp, *remoteChain, network, *roots, *inters, flag.Args())
 	if exitStatus != -1 {
 		exitWrapper(exitStatus)
 	}
@@ -94,52 +93,60 @@ func getAction() (func(), int) {
 	return action, -1 // the exitcode facilitates testing
 }
 
+func skimCmdParse(certLocs []string, network string, remoteChain bool) (func(), int) {
+	return func() {
+		skimCerts(certLocs, network, remoteChain)
+	}, -1
+}
+
+// verifyAndDispatch takes the cli parameters, verifies them amd returns an action to be run and an possible exitstatus.
 func verifyAndDispatch(
-	help, progVersion, tcp, udp, remoteChain *bool, network string, roots, inters, argsPtr *[]string) (actionFunc, int) {
+	help, progVersion, tcp, udp, remoteChain bool, network string, roots, inters, args []string) (actionFunc, int) {
 	var exitStatus int
 	var action actionFunc
-	args := *argsPtr
 
 	switch {
-	case *help:
+	case help || len(args) == 1:
 		fmt.Println(usage)
-	case *progVersion:
+	case progVersion:
 		fmt.Println("certmin, " + version)
-	case *tcp && *udp:
+	case tcp && udp:
 		fmt.Fprintf(os.Stderr, "error: --tcp and --udp can not be combined\n")
-	case *remoteChain && !(*tcp || *udp):
+		exitStatus = 1
+	case remoteChain && !(tcp || udp):
 		fmt.Fprintf(os.Stderr, "error: remote-chain is only valid with --tcp or --udp\n")
-	case len(*argsPtr) < 2:
+		exitStatus = 1
+	case len(args) < 3:
 		fmt.Fprintf(os.Stderr, "error: no certificate location given\n")
+		exitStatus = 1
 
 	case args[1] == "skim" || args[1] == "sc":
-		action, exitStatus = skimCmdParse(args[2:], network, *remoteChain)
+		action, exitStatus = skimCmdParse(args[2:], network, remoteChain)
 
 	case (args[1] == "verify-chain" || args[1] == "vc") && len(args) != 3:
 		fmt.Fprintf(os.Stderr, "error: only a single certificate is valid for verify-chain\n")
-	case (args[1] == "verify-chain" || args[1] == "vc") && (!*remoteChain && len(*roots) == 0):
+		exitStatus = 1
+	case (args[1] == "verify-chain" || args[1] == "vc") && (!remoteChain && len(roots) == 0):
 		fmt.Fprintf(os.Stderr, "error: no local root certificates given to verify-chain\n")
+		exitStatus = 1
 	case args[1] == "verify-chain" || args[1] == "vc":
-		action, exitStatus = verifyChainCmdParse(*roots, *inters, args[2], network, *remoteChain)
+		action, exitStatus = verifyChainCmdParse(roots, inters, args[2], network, remoteChain)
 
-	case (args[1] == "verify-key" || args[1] == "vk") && *remoteChain:
+	case (args[1] == "verify-key" || args[1] == "vk") && remoteChain:
 		fmt.Fprintf(os.Stderr, "error: remote-chain is not valid with verify-key\n")
-	case (args[1] == "verify-key" || args[1] == "vk") && len(args) != 3:
+		exitStatus = 1
+	case (args[1] == "verify-key" || args[1] == "vk") && len(args) != 4:
 		fmt.Fprintf(os.Stderr, "error: verify-key needs 1 certificate localtion and 1 key file\n")
+		exitStatus = 1
 	case args[1] == "verify-key" || args[1] == "vk":
 		action, exitStatus = verifyKeyCmdParse(args[2], args[3], network)
 
 	default:
 		fmt.Println(usage)
+		exitStatus = 1
 	}
 
 	return action, exitStatus
-}
-
-func skimCmdParse(certLocs []string, network string, remoteChain bool) (func(), int) {
-	return func() {
-		skimCerts(certLocs, network, remoteChain)
-	}, -1
 }
 
 func verifyChainCmdParse(roots, inters []string, certLoc, network string, remoteChain bool) (func(), int) {
