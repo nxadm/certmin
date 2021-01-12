@@ -24,34 +24,34 @@ func skimCerts(certLocs []string, network string, remoteChain bool) string {
 		}
 
 		for _, cert := range certs {
-			keepAndPrintOutput(&sb, fmt.Sprintf("Subject:\t%s", cert.Subject), false)
+			keepAndPrintOutput(&sb, fmt.Sprintf("Subject:\t\t%s", cert.Subject), false)
 			if len(cert.DNSNames) > 0 {
 				keepAndPrintOutput(
-					&sb, fmt.Sprintf("DNS names:\t%s", strings.Join(cert.DNSNames, ", ")), false)
+					&sb, fmt.Sprintf("DNS names:\t\t%s", strings.Join(cert.DNSNames, ", ")), false)
 			}
-			keepAndPrintOutput(&sb, fmt.Sprintf("Issuer:\t\t%s", cert.Issuer), false)
-			keepAndPrintOutput(&sb, fmt.Sprintf("Serial number:\t%s", cert.SerialNumber), false)
+			keepAndPrintOutput(&sb, fmt.Sprintf("Issuer:\t\t\t%s", cert.Issuer), false)
+			keepAndPrintOutput(&sb, fmt.Sprintf("Serial number:\t\t%s", cert.SerialNumber), false)
 			if cert.MaxPathLen > 0 {
-				keepAndPrintOutput(&sb, fmt.Sprintf("MaxPathLen:\t%d", cert.MaxPathLen), false)
+				keepAndPrintOutput(&sb, fmt.Sprintf("MaxPathLen:\t\t%d", cert.MaxPathLen), false)
 			}
 			keepAndPrintOutput(&sb,
-				fmt.Sprintf("Public key algorhythm:\t%s", cert.PublicKeyAlgorithm.String()), false)
+				fmt.Sprintf("Public key algorithm:\t%s", cert.PublicKeyAlgorithm.String()), false)
 			keepAndPrintOutput(&sb,
-				fmt.Sprintf("Signature algorhythm:\t%s", cert.SignatureAlgorithm.String()), false)
+				fmt.Sprintf("Signature algorithm:\t%s", cert.SignatureAlgorithm.String()), false)
 			if len(cert.OCSPServer) > 0 {
 				keepAndPrintOutput(
-					&sb, fmt.Sprintf("OCSP servers:\t%s", strings.Join(cert.OCSPServer, ", ")), false)
+					&sb, fmt.Sprintf("OCSP servers:\t\t%s", strings.Join(cert.OCSPServer, ", ")), false)
 
 			}
 			if len(cert.CRLDistributionPoints) > 0 {
 				keepAndPrintOutput(
-					&sb, fmt.Sprintf("CRL locations:\t%s", strings.Join(cert.CRLDistributionPoints, ", ")), false)
+					&sb, fmt.Sprintf("CRL locations:\t\t%s", strings.Join(cert.CRLDistributionPoints, ", ")), false)
 
 			}
 			keepAndPrintOutput(
-				&sb, fmt.Sprintf("Not before:\t%s", cert.NotBefore), false)
+				&sb, fmt.Sprintf("Not before:\t\t%s", cert.NotBefore), false)
 			keepAndPrintOutput(
-				&sb, fmt.Sprintf("Not after:\t%s", cert.NotAfter), false)
+				&sb, fmt.Sprintf("Not after:\t\t%s", cert.NotAfter), false)
 			fmt.Println("")
 		}
 
