@@ -22,8 +22,8 @@ package main
 //}
 //
 //func TestVerifyCertAndKey(t *testing.T) {
-//	assert.True(t, verifyCertAndKey("t/myserver.crt", "t/myserver.key"))
-//	assert.False(t, verifyCertAndKey("t/myserver.crt", "t/myserver-fromca2.key"))
+//	assert.True(t, verifyKey("t/myserver.crt", "t/myserver.key"))
+//	assert.False(t, verifyKey("t/myserver.crt", "t/myserver-fromca2.key"))
 //}
 //
 ////func verifyChainFromFiles(rootFiles, intermediateFiles []string, certFile string) {

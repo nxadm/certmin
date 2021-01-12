@@ -150,6 +150,6 @@ func verifyChainCmdParse(roots, inters []string, certLoc, network string, remote
 
 func verifyKeyCmdParse(certLoc, keyFile, network string) (func(), int) {
 	return func() {
-		verifyCertAndKey(certLoc, keyFile, network)
+		verifyKey(certLoc, keyFile, network)
 	}, -1
 }

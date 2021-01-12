@@ -28,14 +28,19 @@ func skimCerts(certLocs []string, network string, remoteChain bool) bool {
 			}
 			fmt.Printf("Issuer:\t\t%s\n", cert.Issuer)
 			fmt.Printf("Serial number:\t%s\n", cert.SerialNumber)
-			fmt.Printf("Not before:\t%s\n", cert.NotBefore)
-			fmt.Printf("Not after:\t%s\n", cert.NotAfter)
 			if cert.MaxPathLen > 0 {
 				fmt.Printf("MaxPathLen:\t%d\n", cert.MaxPathLen)
 			}
+			fmt.Printf("Public key algorhythm:\t%s\n", cert.PublicKeyAlgorithm.String())
+			fmt.Printf("Signature algorhythm:\t%s\n", cert.SignatureAlgorithm.String())
 			if len(cert.OCSPServer) > 0 {
 				fmt.Printf("OCSP servers:\t%s\n", strings.Join(cert.OCSPServer, ", "))
 			}
+			if len(cert.CRLDistributionPoints) > 0 {
+				fmt.Printf("CRL locations:\t%s\n", strings.Join(cert.CRLDistributionPoints, ", "))
+			}
+			fmt.Printf("Not before:\t%s\n", cert.NotBefore)
+			fmt.Printf("Not after:\t%s\n", cert.NotAfter)
 			fmt.Println("")
 		}
 
@@ -45,73 +50,6 @@ func skimCerts(certLocs []string, network string, remoteChain bool) bool {
 	return true // make it compatible with verify actions
 }
 
-func verifyCertAndKey(certLoc, keyFile, network string) bool {
-	fmt.Printf("Certificate location %s and key file %s:\n", certLoc, keyFile)
-	var err error
-	if network != "" {
-		certs, err := retrieveCerts(network, certLoc) // Errors are shown in output
-		if err != nil || len(certs) == 0 {
-			return false
-		}
-		pemData, err := ioutil.ReadFile(keyFile)
-		if err != nil {
-			fmt.Printf("error: %s\n", err)
-			return false
-		}
-		_, err = tls.X509KeyPair(certs[0].Raw, pemData)
-	} else {
-		_, err = tls.LoadX509KeyPair(certLoc, keyFile)
-	}
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return false
-	}
-	fmt.Println("certificate and key match")
-	return true
-}
-
-func verifyChainFromFiles(rootFiles, intermediateFiles []string, certLoc, network string, remoteChain bool) bool {
-	var roots, inters, certs []*x509.Certificate
-	if network != "" {
-		certs, err := retrieveCerts(network, certLoc) // Errors are shown in output
-		if err != nil {                               // Errors are shown in output
-			return false
-		}
-		if remoteChain && len(certs) > 1 {
-			inters = append(inters, certs[1:]...)
-		}
-	} else {
-		certs, _ = splitMultiCertFile(certLoc) // Errors are shown in output
-	}
-
-	for _, file := range rootFiles {
-		tmpRoots, _ := splitMultiCertFile(file) // Errors are shown in output
-		roots = append(roots, tmpRoots...)
-	}
-
-	for _, file := range intermediateFiles {
-		tmpInter, _ := splitMultiCertFile(file) // Errors are shown in output
-		inters = append(inters, tmpInter...)
-	}
-
-	// Catch errors
-	switch {
-	case len(roots) == 0 && !remoteChain:
-		fmt.Println("error: no local root certificates found")
-		return false
-	case len(inters) == 0 && remoteChain:
-		fmt.Println("error: no remote intermediate certificates found")
-		return false
-	case len(certs) != 1 && !remoteChain:
-		fmt.Println("error: only a single local certificate can be verified")
-		return false
-	}
-
-	return verifyChain(roots, inters, certs[0])
-}
-
-// Internal
 func splitMultiCertFile(certFile string) ([]*x509.Certificate, error) {
 	var certs []*x509.Certificate
 	pemData, err := ioutil.ReadFile(certFile)
@@ -171,5 +109,71 @@ func verifyChain(roots, intermediates []*x509.Certificate, cert *x509.Certificat
 	}
 
 	fmt.Println("certificate is valid for the supplied chain")
+	return true
+}
+
+func verifyChainFromFiles(rootFiles, intermediateFiles []string, certLoc, network string, remoteChain bool) bool {
+	var roots, inters, certs []*x509.Certificate
+	if network != "" {
+		certs, err := retrieveCerts(network, certLoc) // Errors are shown in output
+		if err != nil {                               // Errors are shown in output
+			return false
+		}
+		if remoteChain && len(certs) > 1 {
+			inters = append(inters, certs[1:]...)
+		}
+	} else {
+		certs, _ = splitMultiCertFile(certLoc) // Errors are shown in output
+	}
+
+	for _, file := range rootFiles {
+		tmpRoots, _ := splitMultiCertFile(file) // Errors are shown in output
+		roots = append(roots, tmpRoots...)
+	}
+
+	for _, file := range intermediateFiles {
+		tmpInter, _ := splitMultiCertFile(file) // Errors are shown in output
+		inters = append(inters, tmpInter...)
+	}
+
+	// Catch errors
+	switch {
+	case len(roots) == 0 && !remoteChain:
+		fmt.Println("error: no local root certificates found")
+		return false
+	case len(inters) == 0 && remoteChain:
+		fmt.Println("error: no remote intermediate certificates found")
+		return false
+	case len(certs) != 1 && !remoteChain:
+		fmt.Println("error: only a single local certificate can be verified")
+		return false
+	}
+
+	return verifyChain(roots, inters, certs[0])
+}
+
+func verifyKey(certLoc, keyFile, network string) bool {
+	fmt.Printf("Certificate location %s and key file %s:\n", certLoc, keyFile)
+	var err error
+	if network != "" {
+		certs, err := retrieveCerts(network, certLoc) // Errors are shown in output
+		if err != nil || len(certs) == 0 {
+			return false
+		}
+		pemData, err := ioutil.ReadFile(keyFile)
+		if err != nil {
+			fmt.Printf("error: %s\n", err)
+			return false
+		}
+		_, err = tls.X509KeyPair(certs[0].Raw, pemData)
+	} else {
+		_, err = tls.LoadX509KeyPair(certLoc, keyFile)
+	}
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	fmt.Println("certificate and key match")
 	return true
 }
