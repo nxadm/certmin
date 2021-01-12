@@ -13,32 +13,47 @@ go get github.com/nxadm/certmin
 ## Help page
 ```
 $ ./certmin
-certmin, 0.1.1. A minimalist certificate utility.
+certmin, 0.2.0. A minimalist certificate utility.
 See https://github.com/nxadm/certmin for more information.
 
 Usage:
-  certmin skim certificate1 certificate2 ...
-  certmin vk certificate key
-  certmin vc certificate
+  certmin skim [--tcp|--udp] [--remote-chain] cert-location1 cert-location2...
+  certmin vk   [--tcp|--udp] cert-location key-file
+  certmin vc   [--tcp|--udp] [--remote-chain] cert-location 
     --root=ca-file1 [--root=ca-file2 ...]
     --inter=inter-file1 [--inter=inter-file2 ...]
   certmin [-h]
   certmin [-v]
 
 Actions:
-  skim         | s         : skim information from PEM certificates.
-  verify-key   | vk        : verify that a PEM certificate matches an unencrypted PEM key.
-  verify-chain | vc        : verify that a PEM certificate matches a PEM chain.
-    --root                 : root PEM certificates to verify against (at least 1 file).
-    --inter                : intermediate PEM certificates to verify against (0 or more).
+  skim         | sc        : skim PEM certificate files (including bundles)
+							 and show information.
+    --remote-chain         : also retrieve the chain (if offered) when
+							 retrieving remote certificates (--tcp or --udp).
+
+  verify-key   | vk        : verify that a PEM certificate and unencrypted key
+                             match.
+
+  verify-chain | vc        : verify that a PEM certificate matches its chain.
+    --remote-chain         : match against the chain remotely retrieved with
+							 the certificate.
+    --root                 : root PEM certificate file to verify against (at
+                             least 1 file if not remotely retrieved). 
+    --inter                : intermediate PEM certificates files to verify
+                             against (0 or more).
+
+Global options:
+  --tcp                    : retrieve the certificate files through TCP
+                             (format "hostname:port"). 
+  --udp                    : retrieve the certificate files through UDP
+                             (format "hostname:port").
   -h           | --help    : This help message.
   -v           | --version : Version message.
-
 ```
 
 ## Examples
 
-### Skim certificate information
+### Skim local certificate information
 
 ```
 $ ./certmin skim t/chain.crt

@@ -130,7 +130,7 @@ func verifyChainFromLoc(rootFiles, interFiles []string, certLoc, network string,
 
 	if network != "" {
 		certs, err = retrieveCerts(network, certLoc, remoteChain) // Errors are shown in output
-		if err != nil {                                            // Errors are shown in output
+		if err != nil {                                           // Errors are shown in output
 			return false
 		}
 		if remoteChain && len(certs) > 0 {

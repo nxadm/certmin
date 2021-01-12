@@ -72,8 +72,11 @@ func getAction() (func(), int) {
 		panic(err)
 	}
 
-	network := "tcp"
-	if *udp {
+	var network string
+	switch {
+	case *tcp:
+		network = "tcp"
+	case *udp:
 		network = "udp"
 	}
 

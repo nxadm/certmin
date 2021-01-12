@@ -62,7 +62,7 @@ func TestVerifyChainFromLoc(t *testing.T) {
 	assert.False(t, verifyChainFromLoc(
 		[]string{"t/empty.crt"}, nil, "t/myserver.crt", "", false))
 	assert.False(t, verifyChainFromLoc(
-		[]string{"t/ca.crt"}, nil, "t/chain.crt","", false))
+		[]string{"t/ca.crt"}, nil, "t/chain.crt", "", false))
 	assert.False(t, verifyChainFromLoc(
 		[]string{"t/ca.crt"}, nil, "t/myserver-fromca2.crt", "", false))
 
