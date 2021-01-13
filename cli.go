@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	flag "github.com/spf13/pflag"
 )
@@ -70,6 +71,17 @@ func getAction() (actionFunc, string, error) {
 	err := flags.Parse(os.Args)
 	if err != nil {
 		panic(err)
+	}
+
+	all := append(*roots, *inters...)
+	var notFound []string
+	for _, cert := range all {
+		if _, err := os.Stat(cert); err != nil {
+			notFound = append(notFound, cert)
+		}
+	}
+	if len(notFound) > 0 {
+		return nil, "", fmt.Errorf("can not find the given file (%s)", strings.Join(notFound, ", "))
 	}
 
 	return verifyAndDispatch(*help, *progVersion, *remoteChain, *roots, *inters, flags.Args())
