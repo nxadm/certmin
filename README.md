@@ -142,8 +142,8 @@ the certificate and the chain match
 ### Verify the chain of a remote certificate
 
 ```
-$ ./certmin verify-chain --tcp github.com:443 --remote-chain
+$ ./certmin verify-chain github.com:443 --remote-chain
 the certificate and the chain match
-$ ./certmin verify-chain --tcp github.com:443 --root ~/tmp/chain.crt
+$ ./certmin verify-chain github.com:443 --root ~/tmp/chain.crt
 the certificate and the chain match
 ```
