@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -34,6 +35,11 @@ func parseURL(remote string) (string, error) {
 		return "", err
 	}
 
+	host := parsedURL.Host
+	if host == "" {
+		return "", errors.New("no hostname found")
+	}
+
 	scheme := parsedURL.Scheme
 	portStr := parsedURL.Port()
 	var port int
@@ -50,7 +56,6 @@ func parseURL(remote string) (string, error) {
 		}
 	}
 
-	fmt.Println(port)
 	return parsedURL.Hostname() + ":" + strconv.Itoa(port), nil
 }
 

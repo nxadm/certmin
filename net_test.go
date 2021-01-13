@@ -41,4 +41,8 @@ func TestParseURL(t *testing.T) {
 
 	_, err = parseURL("foo://foo:1AA23")
 	assert.NotNil(t, err)
+	_, err = parseURL("BLAH:123")
+	assert.NotNil(t, err)
+	_, err = parseURL("BLAH.BOE")
+	assert.NotNil(t, err)
 }
