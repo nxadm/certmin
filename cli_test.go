@@ -1,111 +1,90 @@
 package main
 
 import (
-	"testing"
-
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestGetAction(t *testing.T) {
 	t.SkipNow()
 }
 
-func TestSkimCmdParse(t *testing.T) {
-	action, exitStatus := skimCmdParse(nil, false)
-	assert.NotNil(t, action)
-	assert.Equal(t, -1, exitStatus)
-}
-
-func TestVerifyChainCmdParse(t *testing.T) {
-	action, exitStatus := verifyChainCmdParse([]string{}, []string{}, "", false)
-	assert.NotNil(t, action)
-	assert.Equal(t, -1, exitStatus)
-}
-
-func TestVerifyKeyCmdParse(t *testing.T) {
-	action, exitStatus := verifyKeyCmdParse("", "")
-	assert.NotNil(t, action)
-	assert.Equal(t, -1, exitStatus)
-}
-
 func TestVerifyAndDispatch(t *testing.T) {
 	// help
-	action, exitStatus :=
+	action, msg, err :=
 		verifyAndDispatch(true, false, false, nil, nil, nil)
 	assert.Nil(t, action)
-	assert.Equal(t, exitStatus, 0)
+	assert.NotEmpty(t, msg)
+	assert.Nil(t, err)
+
+	// version
+	action, msg, err =
+		verifyAndDispatch(false, true, false, nil, nil, nil)
+	assert.Nil(t, action)
+	assert.NotEmpty(t, msg)
+	assert.Nil(t, err)
 
 	// empty
-	action, exitStatus =
+	action, msg, err =
 		verifyAndDispatch(false, false, false, nil, nil, []string{"certmin"})
 	assert.Nil(t, action)
-	assert.Equal(t, 0, exitStatus)
-
-	// illegal no certs
-	action, exitStatus =
-		verifyAndDispatch(
-			false, false, false, nil, nil, []string{"certmin", "foo"})
-	assert.Nil(t, action)
-	assert.Equal(t, 1, exitStatus)
+	assert.NotEmpty(t, msg)
+	assert.Nil(t, err)
 
 	// unknown command
-	action, exitStatus = verifyAndDispatch(
-		false, false, false, nil, nil, []string{"certmin", "foo", "foo"})
+	action, msg, err =
+		verifyAndDispatch(
+			false, false, false, nil, nil, []string{"certmin", "foo", "t/myserver.crt"})
 	assert.Nil(t, action)
-	assert.Equal(t, 1, exitStatus)
+	assert.Empty(t, msg)
+	assert.NotNil(t, err)
 
-	// Illegal verify-chain
-	action, exitStatus = verifyAndDispatch(false, false, false,
-		nil, nil, []string{"certmin", "verify-chain", "foo", "bar"})
+	// no certs
+	action, msg, err =
+		verifyAndDispatch(false, false, false, nil, nil, []string{"certmin", "skim"})
 	assert.Nil(t, action)
-	assert.Equal(t, 1, exitStatus)
+	assert.Contains(t, "unkmown command", msg)
+	assert.NotNil(t, err)
 
-	action, exitStatus = verifyAndDispatch(false, false,
-		false, nil, nil, []string{"certmin", "verify-chain", "foo"})
+	// illegal verify-chain
+	action, msg, err = verifyAndDispatch(
+		false, false, false, nil, nil, []string{"certmin", "verify-chain", "foo"})
 	assert.Nil(t, action)
-	assert.Equal(t, 1, exitStatus)
+	assert.NotNil(t, err)
 
-	// Illegal verify key
-	action, exitStatus =
-		verifyAndDispatch(false, false, true,
-			nil, nil, []string{"certmin", "verify-key", "foo", "bar"})
+	// illegal verify key
+	action, msg, err = verifyAndDispatch(
+		false, false, true, nil, nil, []string{"certmin", "verify-key", "foo"})
 	assert.Nil(t, action)
-	assert.Equal(t, 1, exitStatus)
+	assert.NotNil(t, err)
 
-	action, exitStatus =
-		verifyAndDispatch(false, false, false,
-			nil, nil, []string{"certmin", "verify-key", "foo"})
+	action, msg, err = verifyAndDispatch(
+		false, false, false, nil, nil, []string{"certmin", "verify-key", "foo"})
 	assert.Nil(t, action)
-	assert.Equal(t, 1, exitStatus)
+	assert.NotNil(t, err)
 
-	// Legal actions
-	action, exitStatus =
-		verifyAndDispatch(false, false, false,
-			nil, nil, []string{"certmin", "skim", "foo", "bar"})
+	// legal actions
+	action, msg, err = verifyAndDispatch(
+		false, false, false, nil, nil, []string{"certmin", "skim", "foo", "bar"})
 	assert.NotNil(t, action)
-	assert.Equal(t, -1, exitStatus)
+	assert.Nil(t, err)
 
-	action, exitStatus =
-		verifyAndDispatch(false, false, false,
-			[]string{"foo"}, nil, []string{"certmin", "verify-chain", "foo"})
+	action, msg, err = verifyAndDispatch(
+		false, false, false,
+		[]string{"foo"}, nil, []string{"certmin", "verify-chain", "foo"})
 	assert.NotNil(t, action)
-	assert.Equal(t, -1, exitStatus)
+	assert.Nil(t, err)
 
-	action, exitStatus =
-		verifyAndDispatch(false, false, true,
-			nil, nil, []string{"certmin", "verify-chain", "foo"})
+	action, msg, err = verifyAndDispatch(
+		false, false, true,
+		nil, nil, []string{"certmin", "verify-chain", "foo"})
 	assert.NotNil(t, action)
-	assert.Equal(t, -1, exitStatus)
+	assert.Nil(t, err)
 
-	action, exitStatus =
-		verifyAndDispatch(false, false, false,
-			nil, nil, []string{"certmin", "verify-key", "foo", "bar"})
-	assert.NotNil(t, action)
-	assert.Equal(t, -1, exitStatus)
-
-	action, exitStatus =
-		verifyAndDispatch(false, false, false,
+	action, msg, err =
+		verifyAndDispatch(
+			false, false, false,
 			nil, nil, []string{"certmin", "verify-key", "foo", "bar"})
 	assert.NotNil(t, action)
-	assert.Equal(t, -1, exitStatus)
+	assert.Nil(t, err)
 }

@@ -17,30 +17,15 @@ var (
 	}
 )
 
-func TestSkimCerts(t *testing.T) {
-	output, err := skimCerts([]string{"t/myserver.crt"}, false)
-	assert.Regexp(t, "Subject:\\s+CN=myserver", output)
-	assert.Nil(t, err)
-
-	_, err = skimCerts([]string{"main.go"}, false)
-	assert.NotNil(t, err)
+func TestGetCertificates(t *testing.T) {
+	certs, err := getCertificates("t/myserver.crt", false)
+	assert.NotEmpty(t, certs)
+	assert.NoError(t, err)
 
 	if os.Getenv("AUTHOR_TESTING") != "" {
-		output, err = skimCerts([]string{"https://github.com"}, false)
-		assert.Regexp(t, "Subject:\\s+CN=github.com", output)
-		assert.Nil(t, err)
-
-		output, err = skimCerts([]string{"github.com:443"}, false)
-		assert.Regexp(t, "Subject:\\s+CN=github.com", output)
-		assert.Nil(t, err)
-
-		output, err = skimCerts([]string{"github.com"}, false)
-		assert.Regexp(t, "Subject:\\s+CN=github.com", output)
-		assert.Nil(t, err)
-
-		output, err = skimCerts([]string{"github.com"}, true)
-		assert.Regexp(t, "Subject:\\s+CN=github.com", output)
-		assert.Nil(t, err)
+		certs, err = getCertificates("github.com", false)
+		assert.NotEmpty(t, certs)
+		assert.NoError(t, err)
 	}
 }
 
@@ -62,41 +47,13 @@ func TestSplitMultiCertFile(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestVerifyChain(t *testing.T) {
+func TestVerifyChainFromX509(t *testing.T) {
 	ca, err := splitMultiCertFile("t/ca.crt")
 	assert.NoError(t, err)
 	cert, err := splitMultiCertFile("t/myserver.crt")
 	assert.NoError(t, err)
-	verified, err := verifyChain([]*x509.Certificate{ca[0]}, nil, cert[0])
-	assert.True(t, verified)
-	assert.Nil(t, err)
+	assert.True(t, verifyChainFromX509([]*x509.Certificate{ca[0]}, nil, cert[0]))
 	cert, err = splitMultiCertFile("t/myserver-fromca2.crt")
-	assert.Nil(t, err)
-	verified, err = verifyChain([]*x509.Certificate{ca[0]}, nil, cert[0])
-	assert.False(t, verified)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
+	assert.False(t, verifyChainFromX509([]*x509.Certificate{ca[0]}, nil, cert[0]))
 }
-
-func TestVerifyChainFromLoc(t *testing.T) {
-	verified, err := verifyChainFromLoc(
-		[]string{"t/ca.crt"}, nil, "t/myserver.crt", false)
-	assert.True(t, verified)
-	assert.Nil(t, err)
-	//assert.False(t, verifyChainFromLoc(nil, nil, "", "", false))
-	//assert.False(t, verifyChainFromLoc(
-	//	[]string{"t/empty.crt"}, nil, "t/myserver.crt", "", false))
-	//assert.False(t, verifyChainFromLoc(
-	//	[]string{"t/ca.crt"}, nil, "t/chain.crt", "", false))
-	//assert.False(t, verifyChainFromLoc(
-	//	[]string{"t/ca.crt"}, nil, "t/myserver-fromca2.crt", "", false))
-
-	//if os.Getenv("AUTHOR_TESTING") != "" {
-	//	assert.True(t, verifyChainFromLoc(
-	//		nil, nil, "github.com:443", "tcp", true))
-	//}
-}
-//
-//func TestVerifyKey(t *testing.T) {
-//	assert.True(t, verifyKey("t/myserver.crt", "t/myserver.key", ""))
-//	assert.False(t, verifyKey("t/myserver.crt", "t/myserver-fromca2.key", ""))
-//}

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 )
 
 const (
@@ -12,15 +11,24 @@ const (
 )
 
 func main() {
-	action, _ := getAction()
-	action()
-}
-
-func keepAndPrintOutput(sb *strings.Builder, msg string, isErr bool) {
-	if isErr {
-		fmt.Fprintf(os.Stderr, "error: %s\n", msg)
-	} else {
-		fmt.Printf("%s\n", msg)
+	action, msg, err := getAction()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
+		os.Exit(1)
 	}
-	sb.WriteString("[" + msg + "]")
+	if action == nil {
+		fmt.Println(msg)
+		os.Exit(0)
+	}
+
+	output, err := action()
+	if output != "" {
+		fmt.Println(output)
+	}
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
+		os.Exit(1)
+	} else {
+		os.Exit(0)
+	}
 }

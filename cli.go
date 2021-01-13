@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -47,9 +48,11 @@ Global options:
 //[not yet implemented]
 //generate-selfsigned | gs : generate a self-signed PEM certificate.
 
-type actionFunc func()
+type actionFunc func() (string, error)
 
-func getAction() (func(), int) {
+// getAction returns an action function, a msg for early exit and an error.
+// getAction returns an action function, a msg for early exit and an error.
+func getAction() (actionFunc, string, error) {
 	flags := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	flags.Usage = func() { fmt.Print(usage) }
 
@@ -69,74 +72,39 @@ func getAction() (func(), int) {
 		panic(err)
 	}
 
-	action, exitStatus :=
-		verifyAndDispatch(*help, *progVersion, *remoteChain, *roots, *inters, flags.Args())
-	if exitStatus != -1 {
-		os.Exit(exitStatus)
-	}
-
-	return action, -1 // the exitcode facilitates testing
-}
-
-func skimCmdParse(certLocs []string, remoteChain bool) (func(), int) {
-	return func() {
-		skimCerts(certLocs, remoteChain)
-	}, -1
-}
-
-func verifyChainCmdParse(roots, inters []string, certLoc string, remoteChain bool) (func(), int) {
-	return func() {
-		verifyChainFromLoc(roots, inters, certLoc, remoteChain)
-	}, -1
-}
-
-func verifyKeyCmdParse(certLoc, keyFile string) (func(), int) {
-	return func() {
-		verifyKey(certLoc, keyFile)
-	}, -1
+	return verifyAndDispatch(*help, *progVersion, *remoteChain, *roots, *inters, flags.Args())
 }
 
 // verifyAndDispatch takes the cli parameters, verifies them amd returns an action to
 // be run and an possible exitstatus.
 func verifyAndDispatch(
-	help, progVersion, remoteChain bool, roots, inters, args []string) (actionFunc, int) {
-	var exitStatus int
-	var action actionFunc
-
+	help, progVersion, remoteChain bool, roots, inters, args []string) (actionFunc, string, error) {
 	switch {
 	case help || len(args) == 1:
-		fmt.Println(usage)
+		return nil, usage, nil
 	case progVersion:
-		fmt.Println("certmin, " + version)
+		return nil, "certmin, " + version, nil
 	case len(args) < 3:
-		fmt.Fprintf(os.Stderr, "error: no certificate location given\n")
-		exitStatus = 1
+		return nil, "", errors.New("no certificate location given")
 
 	case args[1] == "skim" || args[1] == "sc":
-		action, exitStatus = skimCmdParse(args[2:], remoteChain)
+		return func() (string, error) { return skimCerts(args[2:], remoteChain) }, "", nil
 
 	case (args[1] == "verify-chain" || args[1] == "vc") && len(args) != 3:
-		fmt.Fprintf(os.Stderr, "error: only a single certificate is valid for verify-chain\n")
-		exitStatus = 1
+		return nil, "", errors.New("only a single certificate is valid for verify-chain")
 	case (args[1] == "verify-chain" || args[1] == "vc") && (!remoteChain && len(roots) == 0):
-		fmt.Fprintf(os.Stderr, "error: no local root certificates given to verify-chain\n")
-		exitStatus = 1
+		return nil, "", errors.New("no local root certificates given to verify-chain")
 	case args[1] == "verify-chain" || args[1] == "vc":
-		action, exitStatus = verifyChainCmdParse(roots, inters, args[2], remoteChain)
+		return func() (string, error) { return verifyChain(roots, inters, args[2], remoteChain) }, "", nil
 
 	case (args[1] == "verify-key" || args[1] == "vk") && remoteChain:
-		fmt.Fprintf(os.Stderr, "error: remote-chain is not valid with verify-key\n")
-		exitStatus = 1
+		return nil, "", errors.New("remote-chain is not valid with verify-key")
 	case (args[1] == "verify-key" || args[1] == "vk") && len(args) != 4:
-		fmt.Fprintf(os.Stderr, "error: verify-key needs 1 certificate localtion and 1 key file\n")
-		exitStatus = 1
+		return nil, "", errors.New("verify-key needs 1 certificate location and 1 key file")
 	case args[1] == "verify-key" || args[1] == "vk":
-		action, exitStatus = verifyKeyCmdParse(args[2], args[3])
+		return func() (string, error) { return verifyKey(args[2], args[3]) }, "", nil
 
 	default:
-		fmt.Fprintf(os.Stderr, "error: unknown command and parameters\n")
-		exitStatus = 1
+		return nil, "", errors.New("unknown command")
 	}
-
-	return action, exitStatus
 }

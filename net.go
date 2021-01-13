@@ -4,10 +4,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
-	"fmt"
 	"net"
 	"net/url"
-	"os"
 	"strconv"
 )
 
@@ -45,14 +43,17 @@ func parseURL(remote string) (string, error) {
 func retrieveCerts(addr string, remoteChain bool) ([]*x509.Certificate, error) {
 	conn, err := tls.Dial("tcp", addr, nil)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		return nil, err
 	}
 	defer conn.Close()
 
+	if len(conn.ConnectionState().PeerCertificates) == 0 {
+		err := errors.New("no certificates found")
+		return nil, err
+	}
+
 	if remoteChain {
 		return conn.ConnectionState().PeerCertificates, nil
-
 	}
 	return []*x509.Certificate{conn.ConnectionState().PeerCertificates[0]}, nil
 }
