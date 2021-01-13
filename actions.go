@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -107,8 +108,18 @@ func verifyKey(loc, keyFile string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	decoded, _ := pem.Decode(pemData)
 
-	_, err = tls.X509KeyPair(certs[0].Raw, pemData)
+	certPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: certs[0].Raw,
+	})
+	keyPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: decoded.Bytes,
+	})
+
+	_, err = tls.X509KeyPair(certPEM, keyPEM)
 	if err != nil {
 		fmt.Printf("HERE: %s\n", err)
 		return msgNOK, nil

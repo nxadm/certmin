@@ -83,8 +83,8 @@ func TestVerifyKey(t *testing.T) {
 	fmt.Println(output)
 	assert.Contains(t, output, "the certificate and key match")
 	assert.Nil(t, err)
-	//
-	//output, err = verifyKey("t/myserver.crt", "t/myserver-fromca2.key")
-	//assert.Contains(t, output, "the certificate and key do not match")
-	//assert.Nil(t, err)
+
+	output, err = verifyKey("t/myserver.crt", "t/myserver-fromca2.key")
+	assert.Contains(t, output, "the certificate and key do not match")
+	assert.Nil(t, err)
 }
