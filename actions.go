@@ -13,7 +13,7 @@ import (
 func skimCerts(locs []string, remoteChain bool) (string, error) {
 	var sb strings.Builder
 	for _, loc := range locs {
-		sb.WriteString("Certificate location " + loc + ":\n")
+		sb.WriteString("\ncertificate location " + loc + ":\n\n")
 		certs, err := getCertificates(loc, remoteChain)
 		if err != nil {
 			return "", err
@@ -51,8 +51,8 @@ func skimCerts(locs []string, remoteChain bool) (string, error) {
 }
 
 func verifyChain(rootFiles, interFiles []string, loc string, remoteChain bool) (string, error) {
-	msgOK := "the certificate and the chain match"
-	msgNOK := "the certificate and the chain do not match"
+	msgOK := "\nthe certificate and the chain match"
+	msgNOK := "\nthe certificate and the chain do not match"
 
 	var roots, inters, certs []*x509.Certificate
 	var err error
@@ -93,8 +93,8 @@ func verifyChain(rootFiles, interFiles []string, loc string, remoteChain bool) (
 }
 
 func verifyKey(loc, keyFile string) (string, error) {
-	msgOK := "the certificate and key match"
-	msgNOK := "the certificate and key do not match"
+	msgOK := "\nthe certificate and key match"
+	msgNOK := "\nthe certificate and key do not match"
 	certs, err := getCertificates(loc, false)
 	if err != nil {
 		return "", err
