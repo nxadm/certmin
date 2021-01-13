@@ -13,7 +13,7 @@ go get github.com/nxadm/certmin
 ## Help page
 ```
 $ ./certmin
-certmin, 0.3.1. A minimalist certificate utility.
+certmin, 0.3.2. A minimalist certificate utility.
 See https://github.com/nxadm/certmin for more information.
 
 Usage:
@@ -115,6 +115,25 @@ OCSP servers:           http://ocsp.digicert.com
 CRL locations:          http://crl4.digicert.com/DigiCertHighAssuranceEVRootCA.crl
 Not before:             2013-10-22 12:00:00 +0000 UTC
 Not after:              2028-10-22 12:00:00 +0000 UTC
+
+---
+```
+
+### Skim remote certificate information using a URI scheme
+
+```
+./certmin skim smtps://smtp.gmail.com
+Certificate location smtps://smtp.gmail.com:
+Subject:                CN=smtp.gmail.com,O=Google LLC,L=Mountain View,ST=California,C=US
+DNS names:              smtp.gmail.com
+Issuer:                 CN=GTS CA 1O1,O=Google Trust Services,C=US
+Serial number:          257235496908235390426179598999401729070
+Public key algorithm:   ECDSA
+Signature algorithm:    SHA256-RSA
+OCSP servers:           http://ocsp.pki.goog/gts1o1core
+CRL locations:          http://crl.pki.goog/GTS1O1core.crl
+Not before:             2020-12-15 14:48:07 +0000 UTC
+Not after:              2021-03-09 14:48:06 +0000 UTC
 
 ---
 ```
