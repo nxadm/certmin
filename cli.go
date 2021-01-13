@@ -26,7 +26,7 @@ Actions:
   skim         | sc        : skim PEM certificates (including bundles)
 							 and show information.
     --remote-chain         : also retrieve the chain (if offered) when
-							 retrieving remote certificates (--tcp or --udp).
+							 retrieving remote certificates.
 
   verify-key   | vk        : verify that a PEM certificate and unencrypted key
                              match.
@@ -63,24 +63,14 @@ func getAction() (func(), int) {
 	roots := flags.StringSlice("root", []string{}, "")
 	inters := flags.StringSlice("inter", []string{}, "")
 	remoteChain := flags.BoolP("remote-chain", "r", false, "")
-	tcp := flags.BoolP("tcp", "t", false, "")
-	udp := flags.BoolP("udp", "u", false, "")
 
 	err := flags.Parse(os.Args)
 	if err != nil {
 		panic(err)
 	}
 
-	var network string
-	switch {
-	case *tcp:
-		network = "tcp"
-	case *udp:
-		network = "udp"
-	}
-
 	action, exitStatus :=
-		verifyAndDispatch(*help, *progVersion, *tcp, *udp, *remoteChain, network, *roots, *inters, flags.Args())
+		verifyAndDispatch(*help, *progVersion, *remoteChain, *roots, *inters, flags.Args())
 	if exitStatus != -1 {
 		os.Exit(exitStatus)
 	}
@@ -88,15 +78,28 @@ func getAction() (func(), int) {
 	return action, -1 // the exitcode facilitates testing
 }
 
-func skimCmdParse(certLocs []string, network string, remoteChain bool) (func(), int) {
+func skimCmdParse(certLocs []string, remoteChain bool) (func(), int) {
 	return func() {
-		skimCerts(certLocs, network, remoteChain)
+		skimCerts(certLocs, remoteChain)
 	}, -1
 }
 
-// verifyAndDispatch takes the cli parameters, verifies them amd returns an action to be run and an possible exitstatus.
+func verifyChainCmdParse(roots, inters []string, certLoc string, remoteChain bool) (func(), int) {
+	return func() {
+		verifyChainFromLoc(roots, inters, certLoc, remoteChain)
+	}, -1
+}
+
+func verifyKeyCmdParse(certLoc, keyFile string) (func(), int) {
+	return func() {
+		verifyKey(certLoc, keyFile)
+	}, -1
+}
+
+// verifyAndDispatch takes the cli parameters, verifies them amd returns an action to
+// be run and an possible exitstatus.
 func verifyAndDispatch(
-	help, progVersion, tcp, udp, remoteChain bool, network string, roots, inters, args []string) (actionFunc, int) {
+	help, progVersion, remoteChain bool, roots, inters, args []string) (actionFunc, int) {
 	var exitStatus int
 	var action actionFunc
 
@@ -105,18 +108,12 @@ func verifyAndDispatch(
 		fmt.Println(usage)
 	case progVersion:
 		fmt.Println("certmin, " + version)
-	case tcp && udp:
-		fmt.Fprintf(os.Stderr, "error: --tcp and --udp can not be combined\n")
-		exitStatus = 1
-	case remoteChain && !(tcp || udp):
-		fmt.Fprintf(os.Stderr, "error: remote-chain is only valid with --tcp or --udp\n")
-		exitStatus = 1
 	case len(args) < 3:
 		fmt.Fprintf(os.Stderr, "error: no certificate location given\n")
 		exitStatus = 1
 
 	case args[1] == "skim" || args[1] == "sc":
-		action, exitStatus = skimCmdParse(args[2:], network, remoteChain)
+		action, exitStatus = skimCmdParse(args[2:], remoteChain)
 
 	case (args[1] == "verify-chain" || args[1] == "vc") && len(args) != 3:
 		fmt.Fprintf(os.Stderr, "error: only a single certificate is valid for verify-chain\n")
@@ -125,7 +122,7 @@ func verifyAndDispatch(
 		fmt.Fprintf(os.Stderr, "error: no local root certificates given to verify-chain\n")
 		exitStatus = 1
 	case args[1] == "verify-chain" || args[1] == "vc":
-		action, exitStatus = verifyChainCmdParse(roots, inters, args[2], network, remoteChain)
+		action, exitStatus = verifyChainCmdParse(roots, inters, args[2], remoteChain)
 
 	case (args[1] == "verify-key" || args[1] == "vk") && remoteChain:
 		fmt.Fprintf(os.Stderr, "error: remote-chain is not valid with verify-key\n")
@@ -134,24 +131,12 @@ func verifyAndDispatch(
 		fmt.Fprintf(os.Stderr, "error: verify-key needs 1 certificate localtion and 1 key file\n")
 		exitStatus = 1
 	case args[1] == "verify-key" || args[1] == "vk":
-		action, exitStatus = verifyKeyCmdParse(args[2], args[3], network)
+		action, exitStatus = verifyKeyCmdParse(args[2], args[3])
 
 	default:
-		fmt.Println(usage)
+		fmt.Fprintf(os.Stderr, "error: unknown command and parameters\n")
 		exitStatus = 1
 	}
 
 	return action, exitStatus
-}
-
-func verifyChainCmdParse(roots, inters []string, certLoc, network string, remoteChain bool) (func(), int) {
-	return func() {
-		verifyChainFromLoc(roots, inters, certLoc, network, remoteChain)
-	}, -1
-}
-
-func verifyKeyCmdParse(certLoc, keyFile, network string) (func(), int) {
-	return func() {
-		verifyKey(certLoc, keyFile, network)
-	}, -1
 }

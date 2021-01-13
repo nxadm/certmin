@@ -5,29 +5,11 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"net"
 	"net/url"
 	"os"
 	"strconv"
 )
-
-var schemes = map[string]int{
-	"ftp":    21,
-	"ftps":   990,
-	"gopher": 70,
-	"http":   80,
-	"https":  443,
-	"imap2":  143,
-	"imap3":  220,
-	"imaps":  993,
-	"ldap":   389,
-	"ldaps":  636,
-	"pop3":   110,
-	"pop3s":  995,
-	"smtp":   25,
-	"smtps":  587,
-	"ssh":    22,
-	"telnet": 23,
-}
 
 func parseURL(remote string) (string, error) {
 	parsedURL, err := url.Parse(remote)
@@ -44,8 +26,9 @@ func parseURL(remote string) (string, error) {
 	portStr := parsedURL.Port()
 	var port int
 	if portStr == "" {
-		if defaultPort, ok := schemes[scheme]; ok {
-			port = defaultPort
+		foundPort, err := net.LookupPort("tcp", scheme)
+		if err == nil {
+			port = foundPort
 		} else {
 			port = 443
 		}

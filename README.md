@@ -13,23 +13,26 @@ go get github.com/nxadm/certmin
 ## Help page
 ```
 $ ./certmin
-certmin, 0.2.0. A minimalist certificate utility.
+certmin, 0.3.0. A minimalist certificate utility.
 See https://github.com/nxadm/certmin for more information.
 
 Usage:
-  certmin skim [--tcp|--udp] [--remote-chain] cert-location1 cert-location2...
-  certmin vk   [--tcp|--udp] cert-location key-file
-  certmin vc   [--tcp|--udp] [--remote-chain] cert-location 
+  certmin skim [--remote-chain] cert-location1 cert-location2...
+  certmin vk   cert-location key-file
+  certmin vc   [--remote-chain] cert-location 
     --root=ca-file1 [--root=ca-file2 ...]
     --inter=inter-file1 [--inter=inter-file2 ...]
   certmin [-h]
   certmin [-v]
 
+Certificate locations can be a file, a hostname:port (default 443) string
+or a URL.
+
 Actions:
   skim         | sc        : skim PEM certificate files (including bundles)
                              and show information.
     --remote-chain         : also retrieve the chain (if offered) when
-                             retrieving remote certificates (--tcp or --udp).
+                             retrieving remote certificates.
 
   verify-key   | vk        : verify that a PEM certificate and unencrypted key
                              match.
@@ -43,10 +46,6 @@ Actions:
                              against (0 or more).
 
 Global options:
-  --tcp                    : retrieve the certificate files through TCP
-                             (format "hostname:port"). 
-  --udp                    : retrieve the certificate files through UDP
-                             (format "hostname:port").
   -h           | --help    : This help message.
   -v           | --version : Version message.
 ```
