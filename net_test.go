@@ -8,11 +8,11 @@ import (
 )
 
 func TestRetrieveCerts(t *testing.T) {
-	certs, err := retrieveCerts("foo", "faa", true)
+	certs, err := retrieveCerts("faa", true)
 	assert.Nil(t, certs)
 	assert.Error(t, err)
 	if os.Getenv("AUTHOR_TESTING") != "" {
-		certs, err = retrieveCerts("tcp", "github.com:443", true)
+		certs, err = retrieveCerts("github.com:443", true)
 		assert.NoError(t, err)
 		assert.True(t, len(certs) >= 2)
 	}

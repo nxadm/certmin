@@ -42,8 +42,8 @@ func parseURL(remote string) (string, error) {
 	return parsedURL.Hostname() + ":" + strconv.Itoa(port), nil
 }
 
-func retrieveCerts(network, addr string, remoteChain bool) ([]*x509.Certificate, error) {
-	conn, err := tls.Dial(network, addr, nil)
+func retrieveCerts(addr string, remoteChain bool) ([]*x509.Certificate, error) {
+	conn, err := tls.Dial("tcp", addr, nil)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		return nil, err
