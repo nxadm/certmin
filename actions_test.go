@@ -77,7 +77,6 @@ func TestVerifyChain(t *testing.T) {
 	}
 }
 
-
 func TestVerifyKey(t *testing.T) {
 	output, err := verifyKey("t/myserver.crt", "t/myserver.key")
 	fmt.Println(output)
