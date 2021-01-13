@@ -92,10 +92,12 @@ func getAction() (actionFunc, string, error) {
 func verifyAndDispatch(
 	help, progVersion, remoteChain bool, roots, inters, args []string) (actionFunc, string, error) {
 	switch {
-	case help || len(args) == 1:
+	case help:
 		return nil, usage, nil
 	case progVersion:
 		return nil, "certmin, " + version, nil
+	case len(args) == 1:
+		return nil, usage, nil
 	case len(args) < 3:
 		return nil, "", errors.New("no certificate location given")
 
