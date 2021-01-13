@@ -1,4 +1,4 @@
-module github.con/nxadm/certmin
+module github.com/nxadm/certmin
 
 go 1.15
 
