@@ -13,7 +13,7 @@ go get github.com/nxadm/certmin
 ## Help page
 ```
 $ ./certmin
-certmin, 0.3.2. A minimalist certificate utility.
+certmin, 0.3.3. A minimalist certificate utility.
 See https://github.com/nxadm/certmin for more information.
 
 Usage:
@@ -56,8 +56,10 @@ Global options:
 ### Skim local certificate information
 
 ```
-$ ./certmin skim t/chain.crt 
-Certificate location t/chain.crt:
+$ ./certmin skim t/chain.crt
+ 
+certificate location t/chain.crt:
+
 Subject:                CN=AAA Certificate Services,O=Comodo CA Limited,L=Salford,ST=Greater Manchester,C=GB
 Issuer:                 CN=AAA Certificate Services,O=Comodo CA Limited,L=Salford,ST=Greater Manchester,C=GB
 Serial number:          1
@@ -142,6 +144,7 @@ Not after:              2021-03-09 14:48:06 +0000 UTC
 
 ```
 $ ./certmin verify-key t/myserver.crt t/myserver.key
+
 the certificate and key match
 ```
 
@@ -149,6 +152,7 @@ the certificate and key match
 
 ```
 $ ./certmin verify-key myserver.com myserver.key
+
 the certificate and key match
 ```
 
@@ -156,6 +160,7 @@ the certificate and key match
 
 ```
 $ ./certmin verify-chain t/myserver.crt --root t/ca.crt
+
 the certificate and the chain match
 ```
 
@@ -163,7 +168,9 @@ the certificate and the chain match
 
 ```
 $ ./certmin verify-chain github.com:443 --remote-chain
+
 the certificate and the chain match
 $ ./certmin verify-chain github.com:443 --root ~/tmp/chain.crt
+
 the certificate and the chain match
 ```
