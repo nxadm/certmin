@@ -21,29 +21,30 @@ Usage:
   certmin [-h]
   certmin [-v]
 
-Certificate locations can be a file, a string in the form of hostname:port
-(default 443 if not :port supplied) or an URL.
+Certificate locations can be a file, a string in the form of
+hostname:port (default 443 if not :port supplied) or an URL.
 
 Actions:
-  skim         | sc        : skim PEM certificates (including bundles)
-							 and show information.
-    --remote-chain         : also retrieve the chain (if offered) when
-							 retrieving remote certificates.
+  skim | sc         : skim PEM certificates (including bundles)
+                     and show information.
+    --remote-chain  : also retrieve the chain (if offered) when
+                      retrieving remote certificates.
 
-  verify-key   | vk        : verify that a PEM certificate and unencrypted key
-                             match.
+  verify-key | vk   : verify that a PEM certificate and
+                      unencrypted key match.
 
-  verify-chain | vc        : verify that a PEM certificate matches its chain.
-    --remote-chain         : match against the chain remotely retrieved with
-							 the certificate.
-    --root                 : root PEM certificate file to verify against (at
-                             least 1 file if not remotely retrieved). 
-    --inter                : intermediate PEM certificates files to verify
-                             against (0 or more).
+  verify-chain | vc : verify that a PEM certificate matches its
+                      chain.
+    --remote-chain  : match against the chain remotely retrieved
+                      with the certificate.
+    --root          : root PEM certificate file to verify.
+                      against (remote or at least 1 file). 
+    --inter         : intermediate PEM certificates files
+                      to verify against (0 or more).
 
 Global options:
-  -h           | --help    : This help message.
-  -v           | --version : Version message.
+  -h | --help    : This help message.
+  -v | --version : Version message.
 `
 
 //[not yet implemented]
