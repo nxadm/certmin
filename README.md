@@ -17,16 +17,16 @@ certmin, 0.3.0. A minimalist certificate utility.
 See https://github.com/nxadm/certmin for more information.
 
 Usage:
-  certmin skim [--remote-chain] cert-location1 cert-location2...
+  certmin skim cert-location1 cert-location2... [--remote-chain] 
   certmin vk   cert-location key-file
-  certmin vc   [--remote-chain] cert-location 
-    --root=ca-file1 [--root=ca-file2 ...]
-    --inter=inter-file1 [--inter=inter-file2 ...]
+  certmin vc   cert-location [--remote-chain]  
+    --root=ca-file1 [--root=ca-file2...]
+    --inter=inter-file1 [--inter=inter-file2...]
   certmin [-h]
   certmin [-v]
 
-Certificate locations can be a file, a hostname:port (default 443) string
-or a URL.
+Certificate locations can be a file, a string in the form of hostname:port
+(default 443 if not :port supplied) or an URL.
 
 Actions:
   skim         | sc        : skim PEM certificate files (including bundles)
@@ -92,8 +92,8 @@ Not after:              2033-05-01 23:59:59 +0000 UTC
 ### Skim remote certificate information
 
 ```
-$ ./certmin skim github.com:443 --tcp --remote-chain
-Certificate location github.com:443:
+$ ./certmin skim github.com --remote-chain
+Certificate location github.com:
 Subject:                CN=github.com,O=GitHub\, Inc.,L=San Francisco,ST=California,C=US
 DNS names:              github.com, www.github.com
 Issuer:                 CN=DigiCert SHA2 High Assurance Server CA,OU=www.digicert.com,O=DigiCert Inc,C=US
@@ -122,30 +122,28 @@ Not after:              2028-10-22 12:00:00 +0000 UTC
 
 ```
 $ ./certmin verify-key t/myserver.crt t/myserver.key
-Certificate location t/myserver.crt and key file t/myserver.key:
-certificate and key match
+the certificate and key match
 ```
 
 ### Verify that a remote certificate and a key match
 
 ```
-$ ./certmin verify-key --tcp myserver.com:443 myserver.key
-Certificate location myserver.com:443 and key file myserver.key:
-certificate and key match
+$ ./certmin verify-key myserver.com myserver.key
+the certificate and key match
 ```
 
 ### Verify the chain of a certificate
 
 ```
 $ ./certmin verify-chain t/myserver.crt --root t/ca.crt
-certificate is valid for the supplied chain
+the certificate and the chain match
 ```
 
 ### Verify the chain of a remote certificate
 
 ```
 $ ./certmin verify-chain --tcp github.com:443 --remote-chain
-certificate is valid for the supplied chain
+the certificate and the chain match
 $ ./certmin verify-chain --tcp github.com:443 --root ~/tmp/chain.crt
-certificate is valid for the supplied chain
+the certificate and the chain match
 ```

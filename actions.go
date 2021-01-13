@@ -51,8 +51,8 @@ func skimCerts(locs []string, remoteChain bool) (string, error) {
 }
 
 func verifyChain(rootFiles, interFiles []string, loc string, remoteChain bool) (string, error) {
-	msgOK := "the certificate matches the chain"
-	msgNOK := "the certificate does not match the chain"
+	msgOK := "the certificate and the chain match"
+	msgNOK := "the certificate and the chain do not match"
 
 	var roots, inters, certs []*x509.Certificate
 	var err error

@@ -13,16 +13,16 @@ const usage = `certmin, ` + version + `. A minimalist certificate utility.
 See ` + website + ` for more information.
 
 Usage:
-  certmin skim [--remote-chain] cert-location1 cert-location2...
+  certmin skim cert-location1 cert-location2... [--remote-chain] 
   certmin vk   cert-location key-file
-  certmin vc   [--remote-chain] cert-location 
-    --root=ca-file1 [--root=ca-file2 ...]
-    --inter=inter-file1 [--inter=inter-file2 ...]
+  certmin vc   cert-location [--remote-chain]  
+    --root=ca-file1 [--root=ca-file2...]
+    --inter=inter-file1 [--inter=inter-file2...]
   certmin [-h]
   certmin [-v]
 
-Certificate locations can be a file, a hostname:port (default 443) string
-or a URL.
+Certificate locations can be a file, a string in the form of hostname:port
+(default 443 if not :port supplied) or an URL.
 
 Actions:
   skim         | sc        : skim PEM certificates (including bundles)
