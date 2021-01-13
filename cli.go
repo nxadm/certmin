@@ -92,6 +92,21 @@ func getAction() (actionFunc, string, error) {
 // be run and an possible exitstatus.
 func verifyAndDispatch(
 	help, progVersion, remoteChain bool, roots, inters, args []string) (actionFunc, string, error) {
+	cmds := map[string]bool{
+		"sc":           true,
+		"skim":         true,
+		"vc":           true,
+		"verify-chain": true,
+		"vk":           true,
+		"verify-key":   true,
+	}
+	var invalidAction bool
+	if len(args) > 1 {
+		if _, ok := cmds[args[1]]; !ok {
+			invalidAction = true
+		}
+	}
+
 	switch {
 	case help:
 		return nil, usage, nil
@@ -99,6 +114,8 @@ func verifyAndDispatch(
 		return nil, "certmin, " + version, nil
 	case len(args) == 1:
 		return nil, usage, nil
+	case invalidAction:
+		return nil, "", errors.New("invalid action")
 	case len(args) < 3:
 		return nil, "", errors.New("no certificate location given")
 
