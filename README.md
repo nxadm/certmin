@@ -122,7 +122,7 @@ Not after:              2028-10-22 12:00:00 +0000 UTC
 ### Skim remote certificate information using a URI scheme
 
 ```
-./certmin skim smtps://smtp.gmail.com
+$ ./certmin skim smtps://smtp.gmail.com
 Certificate location smtps://smtp.gmail.com:
 Subject:                CN=smtp.gmail.com,O=Google LLC,L=Mountain View,ST=California,C=US
 DNS names:              smtp.gmail.com
