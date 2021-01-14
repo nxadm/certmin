@@ -13,7 +13,7 @@ go get github.com/nxadm/certmin
 ## Help page
 ```
 $ ./certmin
-certmin, 0.3.3. A minimalist certificate utility.
+certmin, 0.3.4. A minimalist certificate utility.
 See https://github.com/nxadm/certmin for more information.
 
 Usage:
