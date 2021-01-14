@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/x509"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -26,6 +27,18 @@ func TestGetCertificates(t *testing.T) {
 		certs, err = getCertificates("github.com", false)
 		assert.NotEmpty(t, certs)
 		assert.NoError(t, err)
+	}
+}
+
+//func orderRemoteChain(certs []*x509.Certificate) []*x509.Certificate {
+func TestOrderRemoteChain(t *testing.T) {
+	certs, err := splitMultiCertFile("t/chain-out-of-order.crt")
+	assert.NotNil(t, certs)
+	assert.NoError(t, err)
+	ordered := orderRemoteChain(certs)
+	assert.NotNil(t, ordered)
+	for _, c := range ordered {
+		fmt.Printf("subj: %+v\n", c.Subject)
 	}
 }
 
