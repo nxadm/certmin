@@ -121,7 +121,6 @@ func verifyKey(loc, keyFile string) (string, error) {
 
 	_, err = tls.X509KeyPair(certPEM, keyPEM)
 	if err != nil {
-		fmt.Printf("HERE: %s\n", err)
 		return msgNOK, nil
 	}
 	return msgOK, nil
