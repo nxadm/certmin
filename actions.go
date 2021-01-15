@@ -6,9 +6,10 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/fatih/color"
 	"io/ioutil"
 	"strings"
+
+	"github.com/fatih/color"
 )
 
 type colourKeeper map[string]int

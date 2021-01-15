@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/fatih/color"
 	"os"
 	"testing"
 
+	"github.com/fatih/color"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -5,11 +5,12 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"github.com/fatih/color"
 	"net"
 	"net/url"
 	"os"
 	"strconv"
+
+	"github.com/fatih/color"
 )
 
 func parseURL(remote string) (string, error) {

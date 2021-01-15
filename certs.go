@@ -4,9 +4,10 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"github.com/fatih/color"
 	"io/ioutil"
 	"os"
+
+	"github.com/fatih/color"
 )
 
 func getCertificates(loc string, remoteChain, remoteInters bool) ([]*x509.Certificate, bool, error) {
