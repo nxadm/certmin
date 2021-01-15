@@ -16,10 +16,11 @@ See ` + website + ` for more information.
 Usage:
   certmin skim cert-location1 cert-location2... 
 	 [--no-colour] [--remote-chain] 
-  certmin vk cert-location key-file [--no-colour]
-  certmin vc cert-location  [--no-colour] [--remote-chain]  
-    --root=ca-file1 [--root=ca-file2...]
-    --inter=inter-file1 [--inter=inter-file2...]
+  certmin verify-key cert-location key-file [--no-colour]
+  certmin verify-chain cert-location
+    [--no-colour] [--remote-chain]  
+    [--root=ca-file1 --root=ca-file2...]
+    [--inter=inter-file1 --inter=inter-file2...]
   certmin [-h]
   certmin [-v]
 
@@ -40,9 +41,11 @@ Actions:
     --remote-chain  : match against the chain remotely retrieved
                       with the certificate.
     --root          : root PEM certificate file to verify.
-                      against (remote or at least 1 file). 
+                      against (optional). 
+                      If no roots are given, the OS trust
+                      store will be used.
     --inter         : intermediate PEM certificates files
-                      to verify against (0 or more).
+                      to verify against (optional).
 
 Global options:
   --no-colour | -c : don't colourise the output'
@@ -132,8 +135,6 @@ func verifyAndDispatch(
 
 	case (args[1] == "verify-chain" || args[1] == "vc") && len(args) != 3:
 		return nil, "", errors.New("only a single certificate is valid for verify-chain")
-	case (args[1] == "verify-chain" || args[1] == "vc") && (!remoteChain && len(roots) == 0):
-		return nil, "", errors.New("no local root certificates given to verify-chain")
 	case args[1] == "verify-chain" || args[1] == "vc":
 		return func() (string, error) { return verifyChain(roots, inters, args[2], remoteChain) }, "", nil
 
