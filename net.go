@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"github.com/fatih/color"
 	"net"
 	"net/url"
 	"os"
@@ -51,7 +52,7 @@ func retrieveCerts(addr string, remoteChain bool) ([]*x509.Certificate, error) {
 		if err2 != nil {
 			return nil, err2
 		}
-		fmt.Fprintf(os.Stderr, "\nWARNING: %s\n", err1)
+		fmt.Fprintf(os.Stderr, color.YellowString("\nWARNING: %s\n"), err1)
 	}
 	defer conn.Close()
 

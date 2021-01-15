@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 	"os"
 	"testing"
 
@@ -17,7 +18,13 @@ import (
 //	}
 //)
 //
+
+func TestColourise(t *testing.T) {
+	t.SkipNow()
+}
+
 func TestSkimCerts(t *testing.T) {
+	color.NoColor = true
 	output, err := skimCerts([]string{"t/myserver.crt"}, false)
 	assert.Regexp(t, "Subject:\\s+CN=myserver", output)
 	assert.Nil(t, err)
