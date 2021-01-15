@@ -154,13 +154,15 @@ func verifyChainFromX509(roots, inters []*x509.Certificate, cert *x509.Certifica
 		interPool.AddCert(inter)
 	}
 
-	options := x509.VerifyOptions{
-		Roots:         rootPool,
-		Intermediates: interPool,
+	var verifyOptions x509.VerifyOptions
+	if len(rootPool.Subjects()) != 0 {
+		verifyOptions.Roots = rootPool
+	}
+	if len(interPool.Subjects()) != 0 {
+		verifyOptions.Intermediates = interPool
 	}
 
-	if _, err := cert.Verify(options); err != nil {
-		color.Red(err.Error() + "\n")
+	if _, err := cert.Verify(verifyOptions); err != nil {
 		return false, color.RedString(err.Error() + "\n")
 	}
 

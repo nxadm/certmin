@@ -55,34 +55,34 @@ func TestSkimCerts(t *testing.T) {
 }
 
 func TestVerifyChain(t *testing.T) {
-	//output, err := verifyChain(
-	//	[]string{"t/ca.crt"}, nil, []string{"t/myserver.crt"}, false, false)
-	//assert.Contains(t, output, "its chain match")
-	//assert.Nil(t, err)
-	//
-	//output, err = verifyChain(
-	//	[]string{"t/empty.crt"}, nil, []string{"t/myserver.crt"}, false, false)
-	//assert.NotNil(t, err)
-	//
-	//output, err = verifyChain(
-	//	[]string{"t/chain.crt"}, nil, []string{"t/chain.crt"}, false, false)
-	//assert.NotNil(t, err)
-	//
-	//output, err = verifyChain(
-	//	[]string{"t/ca2.crt"}, nil, []string{"t/myserver.crt"}, false, false)
-	//assert.Contains(t, output, "its chain do not match")
-	//assert.Nil(t, err)
+	output, err := verifyChain(
+		[]string{"t/ca.crt"}, nil, []string{"t/myserver.crt"}, false, false)
+	assert.Contains(t, output, "its chain match")
+	assert.Nil(t, err)
+
+	output, err = verifyChain(
+		[]string{"t/empty.crt"}, nil, []string{"t/myserver.crt"}, false, false)
+	assert.NotNil(t, err)
+
+	output, err = verifyChain(
+		[]string{"t/chain.crt"}, nil, []string{"t/chain.crt"}, false, false)
+	assert.NotNil(t, err)
+
+	output, err = verifyChain(
+		[]string{"t/ca2.crt"}, nil, []string{"t/myserver.crt"}, false, false)
+	assert.Contains(t, output, "its chain do not match")
+	assert.Nil(t, err)
 
 	if os.Getenv("AUTHOR_TESTING") != "" {
 		output, err := verifyChain(
 			nil, nil, []string{"github.com"}, true, false)
 		assert.Contains(t, output, "its chain match")
 		assert.Nil(t, err)
-		//
-		//output, err = verifyChain(
-		//	nil, nil, []string{"github.com"}, false, true)
-		//assert.Contains(t, output, "its chain match")
-		//assert.Nil(t, err)
+
+		output, err = verifyChain(
+			nil, nil, []string{"github.com"}, false, true)
+		assert.Contains(t, output, "its chain match")
+		assert.Nil(t, err)
 	}
 }
 

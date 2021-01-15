@@ -27,8 +27,8 @@ Usage:
 
 Certificate locations can be a file, a string in the form of
 hostname:port (default 443 if not :port supplied) or an URL.
-When verifying a chain, if no roots are given, the OS trust
-store will be used.
+When verifying a chain, the OS trust store will be used if
+if no roots certificates are given or requested. 
 
 Actions:
   skim | sc         : skim PEM certificates (including bundles)

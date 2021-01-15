@@ -116,13 +116,6 @@ func verifyChain(rootFiles, interFiles, locs []string, remoteChain, remoteInters
 			}
 		}
 
-		if locRoots != nil {
-			fmt.Printf("LOCROOTS %s: %#v\n", cert.Subject, locRoots)
-		}
-		if locInters != nil {
-			fmt.Printf("LOCINTERS %s: %#v\n", cert.Subject, locInters[0].Subject.String())
-		}
-
 		verified, msg := verifyChainFromX509(locRoots, locInters, cert)
 		if msg != "" {
 			sb.WriteString(msg)
