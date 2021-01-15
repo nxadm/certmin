@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/fatih/color"
 	flag "github.com/spf13/pflag"
 )
 
@@ -13,9 +14,10 @@ const usage = `certmin, ` + version + `. A minimalist certificate utility.
 See ` + website + ` for more information.
 
 Usage:
-  certmin skim cert-location1 cert-location2... [--remote-chain] 
-  certmin vk   cert-location key-file
-  certmin vc   cert-location [--remote-chain]  
+  certmin skim cert-location1 cert-location2... 
+	 [--no-colour] [--remote-chain] 
+  certmin vk cert-location key-file [--no-colour]
+  certmin vc cert-location  [--no-colour] [--remote-chain]  
     --root=ca-file1 [--root=ca-file2...]
     --inter=inter-file1 [--inter=inter-file2...]
   certmin [-h]
@@ -43,8 +45,9 @@ Actions:
                       to verify against (0 or more).
 
 Global options:
-  -h | --help    : This help message.
-  -v | --version : Version message.
+  --no-colour | -c : don't colourise the output'
+  --help      | -h : this help message.
+  --version   | -v : version message.
 `
 
 //[not yet implemented]
@@ -68,10 +71,15 @@ func getAction() (actionFunc, string, error) {
 	roots := flags.StringSlice("root", []string{}, "")
 	inters := flags.StringSlice("inter", []string{}, "")
 	remoteChain := flags.BoolP("remote-chain", "r", false, "")
+	noColour := flags.BoolP("no-colour", "c", false, "")
 
 	err := flags.Parse(os.Args)
 	if err != nil {
 		panic(err)
+	}
+
+	if *noColour {
+		color.NoColor = true // disables colorized output
 	}
 
 	all := append(*roots, *inters...)

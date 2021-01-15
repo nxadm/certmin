@@ -6,6 +6,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"github.com/fatih/color"
 	"io/ioutil"
 	"strings"
 )
@@ -51,8 +52,8 @@ func skimCerts(locs []string, remoteChain bool) (string, error) {
 }
 
 func verifyChain(rootFiles, interFiles []string, loc string, remoteChain bool) (string, error) {
-	msgOK := "\nthe certificate and the chain match"
-	msgNOK := "\nthe certificate and the chain do not match"
+	msgOK := color.GreenString("\nthe certificate and the chain match\n")
+	msgNOK := color.RedString("\nthe certificate and the chain do not match\n")
 
 	var roots, inters, certs []*x509.Certificate
 	var err error
@@ -93,8 +94,8 @@ func verifyChain(rootFiles, interFiles []string, loc string, remoteChain bool) (
 }
 
 func verifyKey(loc, keyFile string) (string, error) {
-	msgOK := "\nthe certificate and key match"
-	msgNOK := "\nthe certificate and key do not match"
+	msgOK := color.GreenString("\nthe certificate and key match\n")
+	msgNOK := color.RedString("\nthe certificate and key do not match\n")
 	certs, err := getCertificates(loc, false)
 	if err != nil {
 		return "", err

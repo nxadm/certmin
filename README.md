@@ -13,13 +13,14 @@ go get github.com/nxadm/certmin
 ## Help page
 ```
 $ ./certmin
-certmin, 0.3.4. A minimalist certificate utility.
+certmin, 0.3.5. A minimalist certificate utility.
 See https://github.com/nxadm/certmin for more information.
 
 Usage:
-  certmin skim cert-location1 cert-location2... [--remote-chain] 
-  certmin vk   cert-location key-file
-  certmin vc   cert-location [--remote-chain]  
+  certmin skim cert-location1 cert-location2... 
+	 [--no-colour] [--remote-chain] 
+  certmin vk cert-location key-file [--no-colour]
+  certmin vc cert-location  [--no-colour] [--remote-chain]  
     --root=ca-file1 [--root=ca-file2...]
     --inter=inter-file1 [--inter=inter-file2...]
   certmin [-h]
@@ -47,8 +48,10 @@ Actions:
                       to verify against (0 or more).
 
 Global options:
-  -h | --help    : This help message.
-  -v | --version : Version message.
+  --no-colour | -c : don't colourise the output'
+  --help      | -h : this help message.
+  --version   | -v : version message.
+
 ```
 
 ## Examples
