@@ -48,6 +48,7 @@ func TestSkimCerts(t *testing.T) {
 		assert.Regexp(t, "Subject:\\s+CN=github.com", output)
 		assert.Nil(t, err)
 	}
+	color.NoColor = false
 }
 
 func TestVerifyChain(t *testing.T) {
