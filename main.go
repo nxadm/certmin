@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 	"os"
 )
 
@@ -26,7 +27,7 @@ func main() {
 		fmt.Println(output)
 	}
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %s\n", err)
+		fmt.Fprintf(os.Stderr, color.RedString("error: %s\n"), err)
 		os.Exit(1)
 	} else {
 		os.Exit(0)

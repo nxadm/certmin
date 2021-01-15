@@ -52,8 +52,8 @@ func skimCerts(locs []string, remoteChain bool) (string, error) {
 }
 
 func verifyChain(rootFiles, interFiles []string, loc string, remoteChain bool) (string, error) {
-	msgOK := color.GreenString("\nthe certificate and the chain match\n")
-	msgNOK := color.RedString("\nthe certificate and the chain do not match\n")
+	msgOK := color.GreenString("the certificate and the chain match")
+	msgNOK := color.RedString("the certificate and the chain do not match")
 
 	var roots, inters, certs []*x509.Certificate
 	var err error
@@ -94,8 +94,8 @@ func verifyChain(rootFiles, interFiles []string, loc string, remoteChain bool) (
 }
 
 func verifyKey(loc, keyFile string) (string, error) {
-	msgOK := color.GreenString("\nthe certificate and key match\n")
-	msgNOK := color.RedString("\nthe certificate and key do not match\n")
+	msgOK := color.GreenString("the certificate and key match")
+	msgNOK := color.RedString("the certificate and key do not match")
 	certs, err := getCertificates(loc, false)
 	if err != nil {
 		return "", err
