@@ -1,6 +1,6 @@
 # certmin, a minimalistic certificate tool
 
-In short: nothing that openSSL can't do, just a few easy shortcuts (without needing openSSL).
+In short: nothing that openSSL can't do, just a few easy shortcuts (without needing openSSL) and colourised output.
 
 Binaries can be found at [releases](https://github.com/nxadm/certmin/releases)
 or retrieved with go.
@@ -147,7 +147,6 @@ Not after:              2021-03-09 14:48:06 +0000 UTC
 
 ```
 $ ./certmin verify-key t/myserver.crt t/myserver.key
-
 the certificate and key match
 ```
 
@@ -155,7 +154,6 @@ the certificate and key match
 
 ```
 $ ./certmin verify-key myserver.com myserver.key
-
 the certificate and key match
 ```
 
@@ -163,7 +161,6 @@ the certificate and key match
 
 ```
 $ ./certmin verify-chain t/myserver.crt --root t/ca.crt
-
 the certificate and the chain match
 ```
 
@@ -171,9 +168,7 @@ the certificate and the chain match
 
 ```
 $ ./certmin verify-chain github.com:443 --remote-chain
-
 the certificate and the chain match
 $ ./certmin verify-chain github.com:443 --root ~/tmp/chain.crt
-
 the certificate and the chain match
 ```
