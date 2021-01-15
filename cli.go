@@ -15,10 +15,10 @@ See ` + website + ` for more information.
 
 Usage:
   certmin skim cert-location1 [cert-location2...] 
-	 [--remote-chain] [--no-colour] 
+	 [--remote-chain] [--remote-inters] [--no-colour] 
   certmin verify-key cert-location key-file [--no-colour]
   certmin verify-chain cert-location [cert-location2...]
-	[--remote-chain]
+	[--remote-chain] [--remote-inters] 
     [--root=ca-file1 --root=ca-file2...]
     [--inter=inter-file1 --inter=inter-file2...]
     [--no-colour]
@@ -33,14 +33,18 @@ store will be used.
 Actions:
   skim | sc         : skim PEM certificates (including bundles)
                      and show information.
-    --remote-chain  : also retrieve the chain (if offered) when
-                      retrieving remote certificates.
+    --remote-chain  : retrieve the chain (if offered) for
+                      remote certificates.
 
   verify-key | vk   : verify that a PEM certificate and
                       unencrypted key match.
 
   verify-chain | vc : verify that a PEM certificate matches its
                       chain.
+    --remote-chain  : retrieve the chain (if offered) for
+                      remote certificates.
+    --remote-inters : retrieve the chain (if offered) for
+                      remote certificates, without root CAs.
     --root          : root PEM certificate file to verify.
                       against (optional). 
     --inter         : intermediate PEM certificates files
@@ -73,6 +77,7 @@ func getAction() (actionFunc, string, error) {
 	roots := flags.StringSlice("root", []string{}, "")
 	inters := flags.StringSlice("inter", []string{}, "")
 	remoteChain := flags.BoolP("remote-chain", "r", false, "")
+	remoteInters := flags.BoolP("remote-inters", "i", false, "")
 	noColour := flags.BoolP("no-colour", "c", false, "")
 
 	err := flags.Parse(os.Args)
@@ -95,13 +100,13 @@ func getAction() (actionFunc, string, error) {
 		return nil, "", fmt.Errorf("can not find the given file (%s)", strings.Join(notFound, ", "))
 	}
 
-	return verifyAndDispatch(*help, *progVersion, *remoteChain, *roots, *inters, flags.Args())
+	return verifyAndDispatch(*help, *progVersion, *remoteChain, *remoteInters, *roots, *inters, flags.Args())
 }
 
 // verifyAndDispatch takes the cli parameters, verifies them amd returns an action to
 // be run and an possible exitstatus.
 func verifyAndDispatch(
-	help, progVersion, remoteChain bool, roots, inters, args []string) (actionFunc, string, error) {
+	help, progVersion, remoteChain, remoteInters bool, roots, inters, args []string) (actionFunc, string, error) {
 	cmds := map[string]bool{
 		"sc":           true,
 		"skim":         true,
@@ -126,14 +131,18 @@ func verifyAndDispatch(
 		return nil, usage, nil
 	case invalidAction:
 		return nil, "", errors.New("invalid action")
+	case remoteChain && remoteInters:
+		return nil, "", errors.New("--remote-chain and --remote-inters are mutually exclusive")
 	case len(args) < 3:
 		return nil, "", errors.New("no certificate location given")
 
 	case args[1] == "skim" || args[1] == "sc":
-		return func() (string, error) { return skimCerts(args[2:], remoteChain) }, "", nil
+		return func() (string, error) { return skimCerts(args[2:], remoteChain, remoteInters) }, "", nil
 
 	case args[1] == "verify-chain" || args[1] == "vc":
-		return func() (string, error) { return verifyChain(roots, inters, args[2:], remoteChain) }, "", nil
+		return func() (string, error) {
+			return verifyChain(roots, inters, args[2:], remoteChain, remoteInters)
+		}, "", nil
 
 	case (args[1] == "verify-key" || args[1] == "vk") && len(args) != 4:
 		return nil, "", errors.New("verify-key needs 1 certificate location and 1 key file")

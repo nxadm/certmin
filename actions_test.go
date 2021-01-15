@@ -23,27 +23,31 @@ func TestColourise(t *testing.T) {
 
 func TestSkimCerts(t *testing.T) {
 	color.NoColor = true
-	output, err := skimCerts([]string{"t/myserver.crt"}, false)
+	output, err := skimCerts([]string{"t/myserver.crt"}, false, false)
 	assert.Regexp(t, "Subject:\\s+CN=myserver", output)
 	assert.Nil(t, err)
 
-	_, err = skimCerts([]string{"main.go"}, false)
+	_, err = skimCerts([]string{"main.go"}, false, false)
 	assert.NotNil(t, err)
 
 	if os.Getenv("AUTHOR_TESTING") != "" {
-		output, err = skimCerts([]string{"https://github.com"}, false)
+		output, err = skimCerts([]string{"https://github.com"}, false, false)
 		assert.Regexp(t, "Subject:\\s+CN=github.com", output)
 		assert.Nil(t, err)
 
-		output, err = skimCerts([]string{"github.com:443"}, false)
+		output, err = skimCerts([]string{"github.com:443"}, false, false)
 		assert.Regexp(t, "Subject:\\s+CN=github.com", output)
 		assert.Nil(t, err)
 
-		output, err = skimCerts([]string{"github.com"}, false)
+		output, err = skimCerts([]string{"github.com"}, false, false)
 		assert.Regexp(t, "Subject:\\s+CN=github.com", output)
 		assert.Nil(t, err)
 
-		output, err = skimCerts([]string{"github.com"}, true)
+		output, err = skimCerts([]string{"github.com"}, true, false)
+		assert.Regexp(t, "Subject:\\s+CN=github.com", output)
+		assert.Nil(t, err)
+
+		output, err = skimCerts([]string{"github.com"}, true, false)
 		assert.Regexp(t, "Subject:\\s+CN=github.com", output)
 		assert.Nil(t, err)
 	}
@@ -52,35 +56,34 @@ func TestSkimCerts(t *testing.T) {
 
 func TestVerifyChain(t *testing.T) {
 	//output, err := verifyChain(
-	//	[]string{"t/ca.crt"}, nil, "t/myserver.crt")
-	//assert.Contains(t, output, "the certificate and the chain match")
+	//	[]string{"t/ca.crt"}, nil, []string{"t/myserver.crt"}, false, false)
+	//assert.Contains(t, output, "its chain match")
 	//assert.Nil(t, err)
 	//
-	//output, err = verifyChain(nil, nil, "")
+	//output, err = verifyChain(
+	//	[]string{"t/empty.crt"}, nil, []string{"t/myserver.crt"}, false, false)
 	//assert.NotNil(t, err)
 	//
 	//output, err = verifyChain(
-	//	[]string{"t/empty.crt"}, nil, "t/myserver.crt")
-	//assert.Contains(t, output, "the certificate and the chain do not match")
-	//assert.Nil(t, err)
-	//
-	//output, err = verifyChain([]string{"t/ca.crt"}, nil, "t/chain.crt")
+	//	[]string{"t/chain.crt"}, nil, []string{"t/chain.crt"}, false, false)
 	//assert.NotNil(t, err)
 	//
 	//output, err = verifyChain(
-	//	[]string{"t/ca.crt"}, nil, "t/myserver-fromca2.crt")
-	//assert.Contains(t, output, "the certificate and the chain do not match")
+	//	[]string{"t/ca2.crt"}, nil, []string{"t/myserver.crt"}, false, false)
+	//assert.Contains(t, output, "its chain do not match")
 	//assert.Nil(t, err)
-	//
-	//if os.Getenv("AUTHOR_TESTING") != "" {
-	//	output, err = verifyChain(nil, nil, "github.com")
-	//	assert.Contains(t, output, "the certificate and the chain match")
-	//	assert.Nil(t, err)
-	//
-	//	output, err = verifyChain([]string{"t/ca.crt"}, nil, "github.com")
-	//	assert.Contains(t, output, "the certificate and the chain do not match")
-	//	assert.Nil(t, err)
-	//}
+
+	if os.Getenv("AUTHOR_TESTING") != "" {
+		output, err := verifyChain(
+			nil, nil, []string{"github.com"}, true, false)
+		assert.Contains(t, output, "its chain match")
+		assert.Nil(t, err)
+		//
+		//output, err = verifyChain(
+		//	nil, nil, []string{"github.com"}, false, true)
+		//assert.Contains(t, output, "its chain match")
+		//assert.Nil(t, err)
+	}
 }
 
 func TestVerifyKey(t *testing.T) {

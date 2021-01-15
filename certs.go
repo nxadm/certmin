@@ -4,21 +4,23 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"github.com/fatih/color"
 	"io/ioutil"
 	"os"
 )
 
-func getCertificates(loc string, remoteChain bool) ([]*x509.Certificate, bool, error) {
+func getCertificates(loc string, remoteChain, remoteInters bool) ([]*x509.Certificate, bool, error) {
 	var addr, file string
 	var err error
 	var certs []*x509.Certificate
+	var remote bool
 
 	result, err := parseURL(loc)
 	if err == nil {
 		addr = result
 	} else {
 		_, err := os.Stat(loc)
-		if !remoteChain && err == nil {
+		if !(remoteChain || remoteInters) && err == nil {
 			file = loc
 		} else {
 			result, err = parseURL("certmin://" + loc)
@@ -30,15 +32,41 @@ func getCertificates(loc string, remoteChain bool) ([]*x509.Certificate, bool, e
 	}
 
 	if file != "" {
-		certs, err = splitMultiCertFile(file) // Errors are shown in output
-
-		return certs, false, err
+		certs, err = splitMultiCertFile(file)
+		if err != nil {
+			return nil, false, err
+		}
 	} else {
-		certs, err = retrieveCerts(addr, remoteChain) // Errors are shown in output
+		certs, err = retrieveCerts(addr)
+		if err != nil {
+			return nil, true, err
+		}
 		certs = orderRemoteChain(certs)
-
-		return certs, true, err
+		remote = true
 	}
+
+	switch {
+	case !remote:
+		return certs, remote, nil
+	case !(remoteChain || remoteInters):
+		return []*x509.Certificate{certs[0]}, remote, nil
+	case remoteChain:
+		return certs, remote, nil
+	case remoteInters:
+		var filtered []*x509.Certificate
+		for _, cert := range certs {
+			if !isRootCA(cert) {
+				filtered = append(filtered, cert)
+			}
+		}
+		return filtered, remote, nil
+	default:
+		panic("unexpected combination")
+	}
+}
+
+func isRootCA(cert *x509.Certificate) bool {
+	return cert.Subject.String() == cert.Issuer.String()
 }
 
 // Just try to order the results and return the original array if
@@ -115,25 +143,26 @@ func splitMultiCertFile(certFile string) ([]*x509.Certificate, error) {
 	return certs, nil
 }
 
-func verifyChainFromX509(roots, intermediates []*x509.Certificate, cert *x509.Certificate) bool {
+func verifyChainFromX509(roots, inters []*x509.Certificate, cert *x509.Certificate) (bool, string) {
 	rootPool := x509.NewCertPool()
 	for _, root := range roots {
 		rootPool.AddCert(root)
 	}
 
-	intermediatePool := x509.NewCertPool()
-	for _, intermediate := range intermediates {
-		intermediatePool.AddCert(intermediate)
+	interPool := x509.NewCertPool()
+	for _, inter := range inters {
+		interPool.AddCert(inter)
 	}
 
 	options := x509.VerifyOptions{
 		Roots:         rootPool,
-		Intermediates: intermediatePool,
+		Intermediates: interPool,
 	}
 
 	if _, err := cert.Verify(options); err != nil {
-		return false
+		color.Red(err.Error() + "\n")
+		return false, color.RedString(err.Error() + "\n")
 	}
 
-	return true
+	return true, ""
 }

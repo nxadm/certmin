@@ -43,7 +43,7 @@ func parseURL(remote string) (string, error) {
 	return parsedURL.Hostname() + ":" + strconv.Itoa(port), nil
 }
 
-func retrieveCerts(addr string, remoteChain bool) ([]*x509.Certificate, error) {
+func retrieveCerts(addr string) ([]*x509.Certificate, error) {
 	var conn *tls.Conn
 	var err1, err2 error
 	conn, err1 = tls.Dial("tcp", addr, nil)
@@ -61,8 +61,5 @@ func retrieveCerts(addr string, remoteChain bool) ([]*x509.Certificate, error) {
 		return nil, err
 	}
 
-	if remoteChain {
-		return conn.ConnectionState().PeerCertificates, nil
-	}
-	return []*x509.Certificate{conn.ConnectionState().PeerCertificates[0]}, nil
+	return conn.ConnectionState().PeerCertificates, nil
 }

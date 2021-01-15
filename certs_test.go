@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/x509"
 	"os"
 	"strings"
 	"testing"
@@ -18,20 +17,29 @@ var (
 )
 
 func TestGetCertificates(t *testing.T) {
-	certs, remote, err := getCertificates("t/myserver.crt", false)
+	certs, remote, err := getCertificates("t/myserver.crt", false, false)
 	assert.NotEmpty(t, certs)
 	assert.False(t, remote)
 	assert.NoError(t, err)
 
 	if os.Getenv("AUTHOR_TESTING") != "" {
-		certs, remote, err = getCertificates("github.com", false)
+		certs, remote, err = getCertificates("github.com", false, false)
 		assert.NotEmpty(t, certs)
 		assert.True(t, remote)
 		assert.NoError(t, err)
 	}
 }
 
-//func orderRemoteChain(certs []*x509.Certificate) []*x509.Certificate {
+func TestIsRootCA(t *testing.T) {
+	certs, err := splitMultiCertFile("t/myserver.crt")
+	assert.Nil(t, err)
+	assert.False(t, isRootCA(certs[0]))
+
+	certs, err = splitMultiCertFile("t/ca.crt")
+	assert.Nil(t, err)
+	assert.True(t, isRootCA(certs[0]))
+}
+
 func TestOrderRemoteChain(t *testing.T) {
 	certs, err := splitMultiCertFile("t/chain-out-of-order.crt")
 	assert.NotNil(t, certs)
@@ -63,8 +71,13 @@ func TestVerifyChainFromX509(t *testing.T) {
 	assert.NoError(t, err)
 	cert, err := splitMultiCertFile("t/myserver.crt")
 	assert.NoError(t, err)
-	assert.True(t, verifyChainFromX509([]*x509.Certificate{ca[0]}, nil, cert[0]))
+	verified, output := verifyChainFromX509(ca, nil, cert[0])
+	assert.NoError(t, err)
+	assert.Equal(t, "", output)
+
 	cert, err = splitMultiCertFile("t/myserver-fromca2.crt")
 	assert.NoError(t, err)
-	assert.False(t, verifyChainFromX509([]*x509.Certificate{ca[0]}, nil, cert[0]))
+	verified, output = verifyChainFromX509(ca, nil, cert[0])
+	assert.False(t, verified)
+	assert.NotEqual(t, "", output)
 }

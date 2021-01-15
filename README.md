@@ -16,36 +16,43 @@ $ ./certmin
 certmin, 0.3.5. A minimalist certificate utility.
 See https://github.com/nxadm/certmin for more information.
 
+
 Usage:
-  certmin skim cert-location1 cert-location2... 
-	 [--no-colour] [--remote-chain] 
-  certmin vk cert-location key-file [--no-colour]
-  certmin vc cert-location  [--no-colour] [--remote-chain]  
-    --root=ca-file1 [--root=ca-file2...]
-    --inter=inter-file1 [--inter=inter-file2...]
+  certmin skim cert-location1 [cert-location2...] 
+	 [--remote-chain] [--remote-inters] [--no-colour] 
+  certmin verify-key cert-location key-file [--no-colour]
+  certmin verify-chain cert-location [cert-location2...]
+	[--remote-chain] [--remote-inters] 
+    [--root=ca-file1 --root=ca-file2...]
+    [--inter=inter-file1 --inter=inter-file2...]
+    [--no-colour]
   certmin [-h]
   certmin [-v]
 
 Certificate locations can be a file, a string in the form of
 hostname:port (default 443 if not :port supplied) or an URL.
+When verifying a chain, if no roots are given, the OS trust
+store will be used.
 
 Actions:
   skim | sc         : skim PEM certificates (including bundles)
                      and show information.
-    --remote-chain  : also retrieve the chain (if offered) when
-                      retrieving remote certificates.
+    --remote-chain  : retrieve the chain (if offered) for
+                      remote certificates.
 
   verify-key | vk   : verify that a PEM certificate and
                       unencrypted key match.
 
   verify-chain | vc : verify that a PEM certificate matches its
                       chain.
-    --remote-chain  : match against the chain remotely retrieved
-                      with the certificate.
+    --remote-chain  : retrieve the chain (if offered) for
+                      remote certificates.
+    --remote-inters : retrieve the chain (if offered) for
+                      remote certificates, without root CAs.
     --root          : root PEM certificate file to verify.
-                      against (remote or at least 1 file). 
+                      against (optional). 
     --inter         : intermediate PEM certificates files
-                      to verify against (0 or more).
+                      to verify against (optional).
 
 Global options:
   --no-colour | -c : don't colourise the output'

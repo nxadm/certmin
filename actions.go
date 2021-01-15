@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -33,12 +34,12 @@ func (colourKeeper *colourKeeper) colourise(msg string) string {
 	return msg
 }
 
-func skimCerts(locs []string, remoteChain bool) (string, error) {
+func skimCerts(locs []string, remoteChain, remoteInters bool) (string, error) {
 	var sb strings.Builder
 	colourKeeper := make(colourKeeper)
 	for _, loc := range locs {
 		sb.WriteString("\ncertificate location " + loc + ":\n\n")
-		certs, _, err := getCertificates(loc, remoteChain)
+		certs, _, err := getCertificates(loc, remoteChain, remoteInters)
 		if err != nil {
 			return "", err
 		}
@@ -49,7 +50,7 @@ func skimCerts(locs []string, remoteChain bool) (string, error) {
 			if len(cert.DNSNames) > 0 {
 				sb.WriteString(fmt.Sprintf("DNS names:\t\t%s\n", strings.Join(cert.DNSNames, ", ")))
 			}
-			sb.WriteString(fmt.Sprintf("Is CA:\t\t%t\n", cert.IsCA))
+			sb.WriteString(fmt.Sprintf("Is CA:\t\t\t%t\n", cert.IsCA))
 			sb.WriteString(fmt.Sprintf("Serial number:\t\t%s\n", cert.SerialNumber))
 			if cert.MaxPathLen > 0 {
 				sb.WriteString(fmt.Sprintf("MaxPathLen:\t\t%d\n", cert.MaxPathLen))
@@ -75,42 +76,74 @@ func skimCerts(locs []string, remoteChain bool) (string, error) {
 	return sb.String(), nil
 }
 
-func verifyChain(rootFiles, interFiles, locs []string, remoteChain bool) (string, error) {
-	//msgOK := color.GreenString("the certificate and the chain match")
-	msgNOK := color.RedString("the certificate and the chain do not match")
-	//
-	//var roots, inters []*x509.Certificate
-	//certs, remote, err := getCertificates(loc, false)
-	//if err != nil {
-	//	return "", err
-	//}
-	//
-	//if remote && len(certs) > 0 {
-	//	roots = append(roots, certs[1:]...)
-	//}
-	//
-	//for _, file := range rootFiles {
-	//	tmpRoots, _ := splitMultiCertFile(file) // Errors are shown in output
-	//	roots = append(roots, tmpRoots...)
-	//}
-	//
-	//for _, file := range interFiles {
-	//	tmpInter, _ := splitMultiCertFile(file) // Errors are shown in output
-	//	inters = append(inters, tmpInter...)
-	//}
-	//
-	//verified := verifyChainFromX509(roots, inters, certs[0])
-	//if verified {
-	//	return msgOK, nil
-	//}
+func verifyChain(rootFiles, interFiles, locs []string, remoteChain, remoteInters bool) (string, error) {
+	var roots, inters []*x509.Certificate
+	var sb strings.Builder
 
-	return msgNOK, nil
+	for _, file := range rootFiles {
+		tmpRoots, err := splitMultiCertFile(file)
+		if err != nil {
+			return "", err
+		}
+		roots = append(roots, tmpRoots...)
+	}
+
+	for _, file := range interFiles {
+		tmpInter, err := splitMultiCertFile(file)
+		if err != nil {
+			return "", err
+		}
+		inters = append(inters, tmpInter...)
+	}
+
+	for _, loc := range locs {
+		locRoots := roots
+		locInters := inters
+		certs, remote, err := getCertificates(loc, remoteChain, remoteInters)
+		if err != nil {
+			return "", err
+		}
+		if !remote && len(certs) > 1 {
+			return "", errors.New("the certificate file contains more than 1 certificate")
+		}
+
+		cert := certs[0]
+		for _, chainElem := range certs[1:] {
+			if isRootCA(chainElem) {
+				locRoots = append(locRoots, chainElem)
+			} else {
+				locInters = append(locInters, chainElem)
+			}
+		}
+
+		if locRoots != nil {
+			fmt.Printf("LOCROOTS %s: %#v\n", cert.Subject, locRoots)
+		}
+		if locInters != nil {
+			fmt.Printf("LOCINTERS %s: %#v\n", cert.Subject, locInters[0].Subject.String())
+		}
+
+		verified, msg := verifyChainFromX509(locRoots, locInters, cert)
+		if msg != "" {
+			sb.WriteString(msg)
+		}
+
+		if verified {
+			msg := "certificate " + cert.Subject.String() + " and its chain match"
+			sb.WriteString(color.GreenString((msg)))
+		} else {
+			msg := "certificate " + cert.Subject.String() + " and its chain do not match"
+			sb.WriteString(color.RedString((msg)))
+		}
+	}
+
+	return sb.String(), nil
 }
 
 func verifyKey(loc, keyFile string) (string, error) {
 	msgOK := color.GreenString("the certificate and key match")
 	msgNOK := color.RedString("the certificate and key do not match")
-	certs, _, err := getCertificates(loc, false)
+	certs, _, err := getCertificates(loc, false, false)
 	if err != nil {
 		return "", err
 	}
