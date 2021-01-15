@@ -18,13 +18,15 @@ var (
 )
 
 func TestGetCertificates(t *testing.T) {
-	certs, err := getCertificates("t/myserver.crt", false)
+	certs, remote, err := getCertificates("t/myserver.crt", false)
 	assert.NotEmpty(t, certs)
+	assert.False(t, remote)
 	assert.NoError(t, err)
 
 	if os.Getenv("AUTHOR_TESTING") != "" {
-		certs, err = getCertificates("github.com", false)
+		certs, remote, err = getCertificates("github.com", false)
 		assert.NotEmpty(t, certs)
+		assert.True(t, remote)
 		assert.NoError(t, err)
 	}
 }

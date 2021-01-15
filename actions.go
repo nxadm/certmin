@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -39,7 +38,7 @@ func skimCerts(locs []string, remoteChain bool) (string, error) {
 	colourKeeper := make(colourKeeper)
 	for _, loc := range locs {
 		sb.WriteString("\ncertificate location " + loc + ":\n\n")
-		certs, err := getCertificates(loc, remoteChain)
+		certs, _, err := getCertificates(loc, remoteChain)
 		if err != nil {
 			return "", err
 		}
@@ -50,6 +49,7 @@ func skimCerts(locs []string, remoteChain bool) (string, error) {
 			if len(cert.DNSNames) > 0 {
 				sb.WriteString(fmt.Sprintf("DNS names:\t\t%s\n", strings.Join(cert.DNSNames, ", ")))
 			}
+			sb.WriteString(fmt.Sprintf("Is CA:\t\t%t\n", cert.IsCA))
 			sb.WriteString(fmt.Sprintf("Serial number:\t\t%s\n", cert.SerialNumber))
 			if cert.MaxPathLen > 0 {
 				sb.WriteString(fmt.Sprintf("MaxPathLen:\t\t%d\n", cert.MaxPathLen))
@@ -75,44 +75,34 @@ func skimCerts(locs []string, remoteChain bool) (string, error) {
 	return sb.String(), nil
 }
 
-func verifyChain(rootFiles, interFiles []string, loc string, remoteChain bool) (string, error) {
-	msgOK := color.GreenString("the certificate and the chain match")
+func verifyChain(rootFiles, interFiles, locs []string, remoteChain bool) (string, error) {
+	//msgOK := color.GreenString("the certificate and the chain match")
 	msgNOK := color.RedString("the certificate and the chain do not match")
-
-	var roots, inters, certs []*x509.Certificate
-	var err error
-
-	certs, err = getCertificates(loc, remoteChain)
-	if err != nil {
-		return "", err
-	}
-
-	if remoteChain && len(certs) > 0 {
-		roots = append(roots, certs[1:]...)
-	}
-
-	for _, file := range rootFiles {
-		tmpRoots, _ := splitMultiCertFile(file) // Errors are shown in output
-		roots = append(roots, tmpRoots...)
-	}
-
-	for _, file := range interFiles {
-		tmpInter, _ := splitMultiCertFile(file) // Errors are shown in output
-		inters = append(inters, tmpInter...)
-	}
-
-	// Catch errors
-	switch {
-	case !remoteChain && len(certs) != 1:
-		return "", errors.New("only a single local certificate can be verified")
-	case remoteChain && len(roots) == 0:
-		return "", errors.New("no remote chain certificates found")
-	}
-
-	verified := verifyChainFromX509(roots, inters, certs[0])
-	if verified {
-		return msgOK, nil
-	}
+	//
+	//var roots, inters []*x509.Certificate
+	//certs, remote, err := getCertificates(loc, false)
+	//if err != nil {
+	//	return "", err
+	//}
+	//
+	//if remote && len(certs) > 0 {
+	//	roots = append(roots, certs[1:]...)
+	//}
+	//
+	//for _, file := range rootFiles {
+	//	tmpRoots, _ := splitMultiCertFile(file) // Errors are shown in output
+	//	roots = append(roots, tmpRoots...)
+	//}
+	//
+	//for _, file := range interFiles {
+	//	tmpInter, _ := splitMultiCertFile(file) // Errors are shown in output
+	//	inters = append(inters, tmpInter...)
+	//}
+	//
+	//verified := verifyChainFromX509(roots, inters, certs[0])
+	//if verified {
+	//	return msgOK, nil
+	//}
 
 	return msgNOK, nil
 }
@@ -120,7 +110,7 @@ func verifyChain(rootFiles, interFiles []string, loc string, remoteChain bool) (
 func verifyKey(loc, keyFile string) (string, error) {
 	msgOK := color.GreenString("the certificate and key match")
 	msgNOK := color.RedString("the certificate and key do not match")
-	certs, err := getCertificates(loc, false)
+	certs, _, err := getCertificates(loc, false)
 	if err != nil {
 		return "", err
 	}

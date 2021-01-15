@@ -46,18 +46,7 @@ func TestVerifyAndDispatch(t *testing.T) {
 	assert.Contains(t, "unkmown command", msg)
 	assert.NotNil(t, err)
 
-	// illegal verify-chain
-	action, msg, err = verifyAndDispatch(
-		false, false, false, nil, nil, []string{"certmin", "verify-chain", "foo"})
-	assert.Nil(t, action)
-	assert.NotNil(t, err)
-
 	// illegal verify key
-	action, msg, err = verifyAndDispatch(
-		false, false, true, nil, nil, []string{"certmin", "verify-key", "foo"})
-	assert.Nil(t, action)
-	assert.NotNil(t, err)
-
 	action, msg, err = verifyAndDispatch(
 		false, false, false, nil, nil, []string{"certmin", "verify-key", "foo"})
 	assert.Nil(t, action)
@@ -71,13 +60,13 @@ func TestVerifyAndDispatch(t *testing.T) {
 
 	action, msg, err = verifyAndDispatch(
 		false, false, false,
-		[]string{"foo"}, nil, []string{"certmin", "verify-chain", "foo"})
+		[]string{"foo"}, nil, []string{"certmin", "verify-chain", "foo", "fa"})
 	assert.NotNil(t, action)
 	assert.Nil(t, err)
 
 	action, msg, err = verifyAndDispatch(
 		false, false, true,
-		nil, nil, []string{"certmin", "verify-chain", "foo"})
+		nil, nil, []string{"certmin", "verify-chain", "foo", "fa"})
 	assert.NotNil(t, action)
 	assert.Nil(t, err)
 

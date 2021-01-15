@@ -14,18 +14,21 @@ const usage = `certmin, ` + version + `. A minimalist certificate utility.
 See ` + website + ` for more information.
 
 Usage:
-  certmin skim cert-location1 cert-location2... 
-	 [--no-colour] [--remote-chain] 
+  certmin skim cert-location1 [cert-location2...] 
+	 [--remote-chain] [--no-colour] 
   certmin verify-key cert-location key-file [--no-colour]
-  certmin verify-chain cert-location
-    [--no-colour] [--remote-chain]  
+  certmin verify-chain cert-location [cert-location2...]
+	[--remote-chain]
     [--root=ca-file1 --root=ca-file2...]
     [--inter=inter-file1 --inter=inter-file2...]
+    [--no-colour]
   certmin [-h]
   certmin [-v]
 
 Certificate locations can be a file, a string in the form of
 hostname:port (default 443 if not :port supplied) or an URL.
+When verifying a chain, if no roots are given, the OS trust
+store will be used.
 
 Actions:
   skim | sc         : skim PEM certificates (including bundles)
@@ -38,12 +41,8 @@ Actions:
 
   verify-chain | vc : verify that a PEM certificate matches its
                       chain.
-    --remote-chain  : match against the chain remotely retrieved
-                      with the certificate.
     --root          : root PEM certificate file to verify.
                       against (optional). 
-                      If no roots are given, the OS trust
-                      store will be used.
     --inter         : intermediate PEM certificates files
                       to verify against (optional).
 
@@ -133,13 +132,9 @@ func verifyAndDispatch(
 	case args[1] == "skim" || args[1] == "sc":
 		return func() (string, error) { return skimCerts(args[2:], remoteChain) }, "", nil
 
-	case (args[1] == "verify-chain" || args[1] == "vc") && len(args) != 3:
-		return nil, "", errors.New("only a single certificate is valid for verify-chain")
 	case args[1] == "verify-chain" || args[1] == "vc":
-		return func() (string, error) { return verifyChain(roots, inters, args[2], remoteChain) }, "", nil
+		return func() (string, error) { return verifyChain(roots, inters, args[2:], remoteChain) }, "", nil
 
-	case (args[1] == "verify-key" || args[1] == "vk") && remoteChain:
-		return nil, "", errors.New("remote-chain is not valid with verify-key")
 	case (args[1] == "verify-key" || args[1] == "vk") && len(args) != 4:
 		return nil, "", errors.New("verify-key needs 1 certificate location and 1 key file")
 	case args[1] == "verify-key" || args[1] == "vk":

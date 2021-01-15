@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-func getCertificates(loc string, remoteChain bool) ([]*x509.Certificate, error) {
+func getCertificates(loc string, remoteChain bool) ([]*x509.Certificate, bool, error) {
 	var addr, file string
 	var err error
 	var certs []*x509.Certificate
@@ -23,7 +23,7 @@ func getCertificates(loc string, remoteChain bool) ([]*x509.Certificate, error) 
 		} else {
 			result, err = parseURL("certmin://" + loc)
 			if err != nil {
-				return nil, err
+				return nil, false, err
 			}
 			addr = result
 		}
@@ -31,12 +31,14 @@ func getCertificates(loc string, remoteChain bool) ([]*x509.Certificate, error) 
 
 	if file != "" {
 		certs, err = splitMultiCertFile(file) // Errors are shown in output
+
+		return certs, false, err
 	} else {
 		certs, err = retrieveCerts(addr, remoteChain) // Errors are shown in output
 		certs = orderRemoteChain(certs)
-	}
 
-	return certs, err
+		return certs, true, err
+	}
 }
 
 // Just try to order the results and return the original array if
