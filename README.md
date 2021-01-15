@@ -106,8 +106,9 @@ Not after:              2033-05-01 23:59:59 +0000 UTC
 $ ./certmin skim github.com --remote-chain
 Certificate location github.com:
 Subject:                CN=github.com,O=GitHub\, Inc.,L=San Francisco,ST=California,C=US
-DNS names:              github.com, www.github.com
 Issuer:                 CN=DigiCert SHA2 High Assurance Server CA,OU=www.digicert.com,O=DigiCert Inc,C=US
+DNS names:              github.com, www.github.com
+Is CA:                  false  
 Serial number:          7101927171473588541993819712332065657
 Public key algorithm:   RSA
 Signature algorithm:    SHA256-RSA
@@ -118,6 +119,7 @@ Not after:              2022-05-10 12:00:00 +0000 UTC
 
 Subject:                CN=DigiCert SHA2 High Assurance Server CA,OU=www.digicert.com,O=DigiCert Inc,C=US
 Issuer:                 CN=DigiCert High Assurance EV Root CA,OU=www.digicert.com,O=DigiCert Inc,C=US
+Is CA:                  true
 Serial number:          6489877074546166222510380951761917343
 Public key algorithm:   RSA
 Signature algorithm:    SHA256-RSA
@@ -135,8 +137,8 @@ Not after:              2028-10-22 12:00:00 +0000 UTC
 $ ./certmin skim smtps://smtp.gmail.com
 Certificate location smtps://smtp.gmail.com:
 Subject:                CN=smtp.gmail.com,O=Google LLC,L=Mountain View,ST=California,C=US
-DNS names:              smtp.gmail.com
 Issuer:                 CN=GTS CA 1O1,O=Google Trust Services,C=US
+DNS names:              smtp.gmail.com
 Serial number:          257235496908235390426179598999401729070
 Public key algorithm:   ECDSA
 Signature algorithm:    SHA256-RSA
@@ -166,14 +168,16 @@ the certificate and key match
 
 ```
 $ ./certmin verify-chain t/myserver.crt --root t/ca.crt
-the certificate and the chain match
+certificate CN=myserver and its chain match
 ```
 
 ### Verify the chain of a remote certificate
 
 ```
 $ ./certmin verify-chain github.com:443 --remote-chain
-the certificate and the chain match
+certificate CN=github.com,O=GitHub\, Inc.,L=San Francisco,ST=California,C=US and its chain match
 $ ./certmin verify-chain github.com:443 --root ~/tmp/chain.crt
-the certificate and the chain match
+x509: certificate signed by unknown authority
+certificate CN=github.com,O=GitHub\, Inc.,L=San Francisco,ST=California,C=US and its chain do not match
+
 ```
