@@ -34,12 +34,12 @@ if no roots certificates are given or requested.
 
 Actions:
   skim | sc         : skim PEM certificates (including bundles)
-                     and show information.
+                      and show information.
     --remote-chain  : retrieve the chain (if offered) for
                       remote certificates.
 
   verify-key | vk   : verify that a PEM certificate and
-                      unencrypted key match.
+                      key match.
 
   verify-chain | vc : verify that a PEM certificate matches its
                       chain.

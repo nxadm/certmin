@@ -13,7 +13,7 @@ go get github.com/nxadm/certmin
 ## Help page
 ```
 $ ./certmin
-certmin, 0.4.0. A minimalist certificate utility.
+certmin, 0.4.1. A minimalist certificate utility.
 See https://github.com/nxadm/certmin for more information.
 
 Usage:
@@ -35,12 +35,12 @@ if no roots certificates are given or requested.
 
 Actions:
   skim | sc         : skim PEM certificates (including bundles)
-                     and show information.
+                      and show information.
     --remote-chain  : retrieve the chain (if offered) for
                       remote certificates.
 
   verify-key | vk   : verify that a PEM certificate and
-                      unencrypted key match.
+                      key match.
 
   verify-chain | vc : verify that a PEM certificate matches its
                       chain.
