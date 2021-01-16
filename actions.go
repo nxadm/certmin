@@ -1,17 +1,19 @@
 package main
 
 import (
+	"crypto/ecdsa"
+	"crypto/ed25519"
 	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"github.com/youmark/pkcs8"
 	"io/ioutil"
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/youmark/pkcs8"
 )
 
 type colourKeeper map[string]int
@@ -156,7 +158,7 @@ func verifyKey(loc, keyFile string, passwordBytes []byte) (string, error) {
 
 	keyPEMBlock, _ := pem.Decode(pemBytes)
 	keyPEM := pem.EncodeToMemory(&pem.Block{
-		Type:  "RSA PRIVATE KEY",
+		Type:  "PRIVATE KEY",
 		Bytes: keyPEMBlock.Bytes,
 	})
 	certPEM := pem.EncodeToMemory(&pem.Block{
@@ -176,10 +178,29 @@ func verifyKey(loc, keyFile string, passwordBytes []byte) (string, error) {
 		if err != nil {
 			return "", err
 		}
+		castedRSA, okRSA := parsedKey.(*rsa.PrivateKey)
+		castedECDSA, okECDSA := parsedKey.(*ecdsa.PrivateKey)
+		castedED25519, okED25519 := parsedKey.(*ed25519.PrivateKey)
+		var keyBytes []byte
+		switch {
+		case okRSA:
+			keyBytes, err = x509.MarshalPKCS8PrivateKey(castedRSA)
+		case okECDSA:
+			keyBytes, err = x509.MarshalPKCS8PrivateKey(castedECDSA)
+		case okED25519:
+			keyBytes, err = x509.MarshalPKCS8PrivateKey(castedED25519)
+		default:
+			err = errors.New("unknown signature algorithm of private key")
+		}
+
+		if err != nil {
+			return "", err
+		}
+
 		keyPEM = pem.EncodeToMemory(
 			&pem.Block{
-				Type:  "RSA PRIVATE KEY",
-				Bytes: x509.MarshalPKCS1PrivateKey(parsedKey.(*rsa.PrivateKey)),
+				Type:  "PRIVATE KEY",
+				Bytes: keyBytes,
 			},
 		)
 	}

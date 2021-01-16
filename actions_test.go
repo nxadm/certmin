@@ -97,7 +97,22 @@ func TestVerifyKey(t *testing.T) {
 	assert.Contains(t, output, "the certificate and key do not match")
 	assert.Nil(t, err)
 
+	// rsa
 	output, err = verifyKey("t/myserver.crt", "t/myserver_enc.key", testPasswordBytes)
 	assert.Contains(t, output, "the certificate and key match")
 	assert.Nil(t, err)
+
+	// ec
+	output, err = verifyKey("t/ecdsa_prime256v1.crt", "t/ecdsa_prime256v1.key", nil)
+	assert.Contains(t, output, "the certificate and key match")
+	assert.Nil(t, err)
+
+	output, err = verifyKey("t/ecdsa_prime256v1_2.crt", "t/ecdsa_prime256v1_2_enc.key", testPasswordBytes)
+	assert.Contains(t, output, "the certificate and key match")
+	assert.Nil(t, err)
+
+	//output, err = verifyKey("t/ecdsa_secp384r1.crt", "t/ecdsa_secp384r1.crt", nil)
+	//assert.Contains(t, output, "the certificate and key match")
+	//assert.Nil(t, err)
+
 }
