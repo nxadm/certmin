@@ -8,6 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var testPasswordBytes = []byte("1234")
+
 func TestColourise(t *testing.T) {
 	colourKeeper := make(colourKeeper)
 	assert.NotEmpty(t, colourKeeper.colourise("0"))
@@ -87,11 +89,15 @@ func TestVerifyChain(t *testing.T) {
 }
 
 func TestVerifyKey(t *testing.T) {
-	output, err := verifyKey("t/myserver.crt", "t/myserver.key")
+	output, err := verifyKey("t/myserver.crt", "t/myserver.key", nil)
 	assert.Contains(t, output, "the certificate and key match")
 	assert.Nil(t, err)
 
-	output, err = verifyKey("t/myserver.crt", "t/myserver-fromca2.key")
+	output, err = verifyKey("t/myserver.crt", "t/myserver-fromca2.key", nil)
 	assert.Contains(t, output, "the certificate and key do not match")
+	assert.Nil(t, err)
+
+	output, err = verifyKey("t/myserver.crt", "t/myserver_enc.key", testPasswordBytes)
+	assert.Contains(t, output, "the certificate and key match")
 	assert.Nil(t, err)
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
@@ -10,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/youmark/pkcs8"
 )
 
 type colourKeeper map[string]int
@@ -135,7 +137,7 @@ func verifyChain(rootFiles, interFiles, locs []string, remoteChain, remoteInters
 	return sb.String(), nil
 }
 
-func verifyKey(loc, keyFile string) (string, error) {
+func verifyKey(loc, keyFile string, passwordBytes []byte) (string, error) {
 	msgOK := color.GreenString("the certificate and key match")
 	msgNOK := color.RedString("the certificate and key do not match")
 	certs, _, err := getCertificates(loc, false, false)
@@ -147,20 +149,40 @@ func verifyKey(loc, keyFile string) (string, error) {
 		return "", errors.New("only 1 certificate can be verified")
 	}
 
-	pemData, err := ioutil.ReadFile(keyFile)
+	pemBytes, err := ioutil.ReadFile(keyFile)
 	if err != nil {
 		return "", err
 	}
-	decoded, _ := pem.Decode(pemData)
 
+	keyPEMBlock, _ := pem.Decode(pemBytes)
+	keyPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: keyPEMBlock.Bytes,
+	})
 	certPEM := pem.EncodeToMemory(&pem.Block{
 		Type:  "CERTIFICATE",
 		Bytes: certs[0].Raw,
 	})
-	keyPEM := pem.EncodeToMemory(&pem.Block{
-		Type:  "RSA PRIVATE KEY",
-		Bytes: decoded.Bytes,
-	})
+
+	if strings.Contains(keyPEMBlock.Type, "ENCRYPTED") {
+		if passwordBytes == nil {
+			passwordBytes, err = promptForPassword()
+			if err != nil {
+				return "", err
+			}
+		}
+
+		parsedKey, err := pkcs8.ParsePKCS8PrivateKey(keyPEMBlock.Bytes, passwordBytes)
+		if err != nil {
+			return "", err
+		}
+		keyPEM = pem.EncodeToMemory(
+			&pem.Block{
+				Type:  "RSA PRIVATE KEY",
+				Bytes: x509.MarshalPKCS1PrivateKey(parsedKey.(*rsa.PrivateKey)),
+			},
+		)
+	}
 
 	_, err = tls.X509KeyPair(certPEM, keyPEM)
 	if err != nil {

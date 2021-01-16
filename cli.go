@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"syscall"
 
 	"github.com/fatih/color"
 	flag "github.com/spf13/pflag"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 const usage = `certmin, ` + version + `. A minimalist certificate utility.
@@ -103,6 +105,16 @@ func getAction() (actionFunc, string, error) {
 	return verifyAndDispatch(*help, *progVersion, *remoteChain, *remoteInters, *roots, *inters, flags.Args())
 }
 
+func promptForPassword() ([]byte, error) {
+	fmt.Print("Enter password of private key: ")
+	bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
+	fmt.Println()
+	if err != nil {
+		return nil, err
+	}
+	return bytePassword, nil
+}
+
 // verifyAndDispatch takes the cli parameters, verifies them amd returns an action to
 // be run and an possible exitstatus.
 func verifyAndDispatch(
@@ -147,7 +159,7 @@ func verifyAndDispatch(
 	case (args[1] == "verify-key" || args[1] == "vk") && len(args) != 4:
 		return nil, "", errors.New("verify-key needs 1 certificate location and 1 key file")
 	case args[1] == "verify-key" || args[1] == "vk":
-		return func() (string, error) { return verifyKey(args[2], args[3]) }, "", nil
+		return func() (string, error) { return verifyKey(args[2], args[3], nil) }, "", nil
 
 	default:
 		return nil, "", errors.New("unknown command")

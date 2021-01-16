@@ -10,6 +10,10 @@ func TestGetAction(t *testing.T) {
 	t.SkipNow()
 }
 
+func TestPromptForPassword(t *testing.T) {
+	t.SkipNow()
+}
+
 func TestVerifyAndDispatch(t *testing.T) {
 	// help
 	action, msg, err :=
