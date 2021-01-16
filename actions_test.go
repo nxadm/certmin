@@ -129,5 +129,4 @@ func TestVerifyKey(t *testing.T) {
 	//output, err = verifyKey("t/ed25519_2.crt", "t/ed25519_2_enc.key", testPasswordBytes)
 	//assert.Contains(t, output, "the certificate and key match")
 	//assert.Nil(t, err)
-
 }

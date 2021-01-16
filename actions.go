@@ -9,11 +9,12 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/youmark/pkcs8"
 	"io/ioutil"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/fatih/color"
+	"github.com/youmark/pkcs8"
 )
 
 type colourKeeper map[string]int
@@ -43,41 +44,100 @@ func (colourKeeper *colourKeeper) colourise(msg string) string {
 func skimCerts(locs []string, remoteChain, remoteInters bool) (string, error) {
 	var sb strings.Builder
 	colourKeeper := make(colourKeeper)
+	w := tabwriter.NewWriter(&sb, 1, 4, 1, ' ', 0)
 	for _, loc := range locs {
-		sb.WriteString("\ncertificate location " + loc + ":\n\n")
+		fmt.Fprint(w, "\ncertificate location "+loc+":\n\n")
 		certs, _, err := getCertificates(loc, remoteChain, remoteInters)
 		if err != nil {
 			return "", err
 		}
 
-		for _, cert := range certs {
-			sb.WriteString(fmt.Sprintf("Subject:\t\t%s\n", colourKeeper.colourise(cert.Subject.String())))
-			sb.WriteString(fmt.Sprintf("Issuer:\t\t\t%s\n", colourKeeper.colourise(cert.Issuer.String())))
+		for idx, cert := range certs {
+			fmt.Fprintf(w, "Subject:\t%s\n", colourKeeper.colourise(cert.Subject.String()))
+			fmt.Fprintf(w, "Issuer:\t%s\n", colourKeeper.colourise(cert.Issuer.String()))
 			if len(cert.DNSNames) > 0 {
-				sb.WriteString(fmt.Sprintf("DNS names:\t\t%s\n", strings.Join(cert.DNSNames, ", ")))
+				fmt.Fprintf(w, "DNS names:\t%s\n", strings.Join(cert.DNSNames, ", "))
 			}
-			sb.WriteString(fmt.Sprintf("Is CA:\t\t\t%t\n", cert.IsCA))
-			sb.WriteString(fmt.Sprintf("Serial number:\t\t%s\n", cert.SerialNumber))
+			if len(cert.EmailAddresses) > 0 {
+				fmt.Fprintf(w, "Email addresses:\t%s\n", strings.Join(cert.EmailAddresses, ", "))
+			}
+			if len(cert.IPAddresses) > 0 {
+				var ips []string
+				for _, ip := range cert.IPAddresses {
+					ips = append(ips, ip.String())
+				}
+				fmt.Fprintf(w, "IP addresses:\t%s\n", strings.Join(ips, ", "))
+			}
+			if len(cert.URIs) > 0 {
+				var uris []string
+				for _, uri := range cert.URIs {
+					uris = append(uris, uri.String())
+				}
+				fmt.Fprintf(w, "URIs:\t%s\n", strings.Join(uris, ", "))
+			}
+			fmt.Fprintf(w, "Serial number:\t%s\n", cert.SerialNumber)
+			fmt.Fprintf(w, "Version:\t%d\n", cert.Version)
+			if cert.IsCA {
+				fmt.Fprintf(w, "Is CA:\t%t\n", true)
+			}
 			if cert.MaxPathLen > 0 {
-				sb.WriteString(fmt.Sprintf("MaxPathLen:\t\t%d\n", cert.MaxPathLen))
+				fmt.Fprintf(w, "MaxPathLen:\t%d\n", cert.MaxPathLen)
 			}
-			sb.WriteString(fmt.Sprintf("Public key algorithm:\t%s\n", cert.PublicKeyAlgorithm.String()))
-			sb.WriteString(fmt.Sprintf("Signature algorithm:\t%s\n", cert.SignatureAlgorithm.String()))
+			if cert.MaxPathLenZero {
+				fmt.Fprintf(w, "MaxPathLen is 0:\t\t%t\n", cert.MaxPathLenZero)
+			}
+			fmt.Fprintf(w, "Public key algorithm:\t%s\n", cert.PublicKeyAlgorithm.String())
+			fmt.Fprintf(w, "Signature algorithm:\t%s\n", cert.SignatureAlgorithm.String())
+			if cert.PermittedDNSDomainsCritical {
+				fmt.Fprintf(w, "Permitted DNS domains critical:\t%t\n", true)
+			}
+			if len(cert.PermittedDNSDomains) > 0 {
+				fmt.Fprintf(w, "Permitted DNS domains:\t%s\n", strings.Join(cert.PermittedDNSDomains, ", "))
+			}
+			if len(cert.ExcludedDNSDomains) > 0 {
+				fmt.Fprintf(w, "Excluded DNS domains:\t%s\n", strings.Join(cert.ExcludedDNSDomains, ", "))
+			}
+			if len(cert.PermittedURIDomains) > 0 {
+				fmt.Fprintf(w, "Permitted URI domains:\t%s\n", strings.Join(cert.PermittedURIDomains, ", "))
+			}
+			if len(cert.ExcludedURIDomains) > 0 {
+				fmt.Fprintf(w, "Excluded URI domains:\t%s\n", strings.Join(cert.ExcludedURIDomains, ", "))
+			}
+			if len(cert.PermittedEmailAddresses) > 0 {
+				fmt.Fprintf(w, "Permitted email addresses:\t%s\n", strings.Join(cert.PermittedEmailAddresses, ", "))
+			}
+			if len(cert.ExcludedEmailAddresses) > 0 {
+				fmt.Fprintf(w, "Excluded email addresses:\t%s\n", strings.Join(cert.ExcludedEmailAddresses, ", "))
+			}
+			if len(cert.PermittedIPRanges) > 0 {
+				var iprs []string
+				for _, ipr := range cert.PermittedIPRanges {
+					iprs = append(iprs, ipr.String())
+				}
+				fmt.Fprintf(w, "Permitted IP ranges:\t%s\n", strings.Join(iprs, ", "))
+			}
+			if len(cert.ExcludedIPRanges) > 0 {
+				var iprs []string
+				for _, ipr := range cert.ExcludedIPRanges {
+					iprs = append(iprs, ipr.String())
+				}
+				fmt.Fprintf(w, "Excluded IP ranges:\t%s\n", strings.Join(iprs, ", "))
+			}
 			if len(cert.OCSPServer) > 0 {
-				sb.WriteString(fmt.Sprintf("OCSP servers:\t\t%s\n", strings.Join(cert.OCSPServer, ", ")))
-
+				fmt.Fprintf(w, "OCSP servers:\t%s\n", strings.Join(cert.OCSPServer, ", "))
 			}
 			if len(cert.CRLDistributionPoints) > 0 {
-				sb.WriteString(fmt.Sprintf("CRL locations:\t\t%s\n", strings.Join(cert.CRLDistributionPoints, ", ")))
-
+				fmt.Fprintf(w, "CRL locations:\t%s\n", strings.Join(cert.CRLDistributionPoints, ", "))
 			}
-			sb.WriteString(fmt.Sprintf("Not before:\t\t%s\n", cert.NotBefore))
-			sb.WriteString(fmt.Sprintf("Not after:\t\t%s\n", cert.NotAfter))
-			sb.WriteString("\n")
+			fmt.Fprintf(w, "Not before:\t%s\n", cert.NotBefore)
+			fmt.Fprintf(w, "Not after:\t%s\n", cert.NotAfter)
+			if idx < len(certs)-1 {
+				fmt.Fprintln(w)
+			}
 		}
-
-		sb.WriteString("---\n")
+		fmt.Fprint(w, "---")
 	}
+	w.Flush()
 
 	return sb.String(), nil
 }
