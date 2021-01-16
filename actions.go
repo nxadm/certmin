@@ -27,8 +27,9 @@ func (colourKeeper *colourKeeper) colourise(msg string) string {
 	colourStr[7] = color.HiCyanString
 	if idx, ok := (*colourKeeper)[msg]; ok {
 		return colourStr[idx](msg)
-	} else if len(*colourKeeper) < 8 {
-		idx = len(*colourKeeper)
+	}
+	if len(*colourKeeper) < 8 {
+		idx := len(*colourKeeper)
 		(*colourKeeper)[msg] = idx
 		return colourStr[idx](msg)
 	}
