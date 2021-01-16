@@ -111,7 +111,22 @@ func TestVerifyKey(t *testing.T) {
 	assert.Contains(t, output, "the certificate and key match")
 	assert.Nil(t, err)
 
-	//output, err = verifyKey("t/ecdsa_secp384r1.crt", "t/ecdsa_secp384r1.crt", nil)
+	//ec with unsupported signature
+	output, err = verifyKey("t/ecdsa_secp384r1.crt", "t/ecdsa_secp384r1.key", nil)
+	assert.Contains(t, output, "the certificate and key match")
+	assert.Nil(t, err)
+
+	output, err = verifyKey("t/ecdsa_secp384r1_2.crt", "t/ecdsa_secp384r1_2_enc.key", testPasswordBytes)
+	assert.Contains(t, output, "the certificate and key match")
+	assert.Nil(t, err)
+
+	// ed22519
+	output, err = verifyKey("t/ed25519.crt", "t/ed25519.key", nil)
+	assert.Contains(t, output, "the certificate and key match")
+	assert.Nil(t, err)
+
+	// TODO: encrypted ed22519, better testfiles
+	//output, err = verifyKey("t/ed25519_2.crt", "t/ed25519_2_enc.key", testPasswordBytes)
 	//assert.Contains(t, output, "the certificate and key match")
 	//assert.Nil(t, err)
 

@@ -178,6 +178,7 @@ func verifyKey(loc, keyFile string, passwordBytes []byte) (string, error) {
 		if err != nil {
 			return "", err
 		}
+
 		castedRSA, okRSA := parsedKey.(*rsa.PrivateKey)
 		castedECDSA, okECDSA := parsedKey.(*ecdsa.PrivateKey)
 		castedED25519, okED25519 := parsedKey.(*ed25519.PrivateKey)
