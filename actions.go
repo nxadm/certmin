@@ -88,7 +88,7 @@ func skimCerts(locs []string, remoteChain, remoteInters bool) (string, error) {
 				fmt.Fprintf(w, "MaxPathLen:\t%d\n", cert.MaxPathLen)
 			}
 			if cert.MaxPathLenZero {
-				fmt.Fprintf(w, "MaxPathLen is 0:\t\t%t\n", cert.MaxPathLenZero)
+				fmt.Fprintf(w, "MaxPathLen is 0:\t%t\n", cert.MaxPathLenZero)
 			}
 			fmt.Fprintf(w, "Public key algorithm:\t%s\n", cert.PublicKeyAlgorithm.String())
 			fmt.Fprintf(w, "Signature algorithm:\t%s\n", cert.SignatureAlgorithm.String())
