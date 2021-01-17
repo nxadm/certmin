@@ -1,5 +1,5 @@
 # certmin, a minimalistic certificate tool
-![CI](https://github.com/nxadm/certmin/workflows/dev/badge.svg)[![Go Reference](https://pkg.go.dev/badge/github.com/nxadm/certmin.svg)](https://pkg.go.dev/github.com/nxadm/certmin)
+![CI](https://github.com/nxadm/certmin/workflows/ci/badge.svg)[![Go Reference](https://pkg.go.dev/badge/github.com/nxadm/certmin.svg)](https://pkg.go.dev/github.com/nxadm/certmin)
 
 In short: nothing that openSSL can't do, just a few easy shortcuts (without needing openSSL) and colourised output.
 
@@ -18,11 +18,11 @@ certmin, 0.4.2. A minimalist certificate utility.
 See https://github.com/nxadm/certmin for more information.
 
 Usage:
-  certmin skim cert-location1 [cert-location2...] 
-	 [--remote-chain] [--remote-inters] [--no-colour] 
+  certmin skim cert-location1 [cert-location2...]
+	 [--remote-chain] [--remote-inters] [--no-colour]
   certmin verify-key cert-location key-file [--no-colour]
   certmin verify-chain cert-location [cert-location2...]
-	[--remote-chain] [--remote-inters] 
+	[--remote-chain] [--remote-inters]
     [--root=ca-file1 --root=ca-file2...]
     [--inter=inter-file1 --inter=inter-file2...]
     [--no-colour]
@@ -32,7 +32,7 @@ Usage:
 Certificate locations can be a file, a string in the form of
 hostname:port (default 443 if not :port supplied) or an URL.
 When verifying a chain, the OS trust store will be used if
-if no roots certificates are given or requested. 
+if no roots certificates are given or requested.
 
 Actions:
   skim | sc         : skim PEM certificates (including bundles)
@@ -50,7 +50,7 @@ Actions:
     --remote-inters : retrieve the chain (if offered) for
                       remote certificates, without root CAs.
     --root          : root PEM certificate file to verify.
-                      against (optional). 
+                      against (optional).
     --inter         : intermediate PEM certificates files
                       to verify against (optional).
 
@@ -66,7 +66,7 @@ Global options:
 
 ```
 $ ./certmin skim t/chain.crt
- 
+
 certificate location t/chain.crt:
 
 Subject:              CN=AAA Certificate Services,O=Comodo CA Limited,L=Salford,ST=Greater Manchester,C=GB
