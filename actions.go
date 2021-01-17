@@ -44,7 +44,7 @@ func (colourKeeper *colourKeeper) colourise(msg string) string {
 func skimCerts(locs []string, remoteChain, remoteInters bool) (string, error) {
 	var sb strings.Builder
 	colourKeeper := make(colourKeeper)
-	w := tabwriter.NewWriter(&sb, 1, 4, 1, ' ', 0)
+	w := tabwriter.NewWriter(&sb, 0, 0, 1, ' ', tabwriter.StripEscape)
 	for _, loc := range locs {
 		fmt.Fprint(w, "\ncertificate location "+loc+":\n\n")
 		certs, _, err := getCertificates(loc, remoteChain, remoteInters)
@@ -136,13 +136,13 @@ func skimCerts(locs []string, remoteChain, remoteInters bool) (string, error) {
 			fmt.Fprintf(w, "Not before:\t%s\n", cert.NotBefore)
 			fmt.Fprintf(w, "Not after:\t%s\n", cert.NotAfter)
 			if idx < len(certs)-1 {
-				fmt.Fprintln(w)
+				fmt.Fprintln(w, "\t")
 			}
 		}
 		fmt.Fprint(w, "---")
 	}
-	w.Flush()
 
+	w.Flush()
 	return sb.String(), nil
 }
 
