@@ -37,6 +37,8 @@ Actions:
                       and show information.
     --remote-chain  : retrieve the chain (if offered) for
                       remote certificates.
+    --remote-inters : retrieve the chain (if offered) for
+                      remote certificates, without root CAs.
 
   verify-key | vk   : verify that a PEM certificate and
                       key match.
@@ -53,7 +55,7 @@ Actions:
                       to verify against (optional).
 
 Global options:
-  --no-colour | -c : don't colourise the output'
+  --no-colour | -c : don't colourise the output.
   --help      | -h : this help message.
   --version   | -v : version message.
 `
