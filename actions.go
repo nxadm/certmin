@@ -239,21 +239,13 @@ func verifyKey(loc, keyFile string, passwordBytes []byte) (string, error) {
 			return "", err
 		}
 
-		castedRSA, okRSA := parsedKey.(*rsa.PrivateKey)
-		castedECDSA, okECDSA := parsedKey.(*ecdsa.PrivateKey)
-		castedED25519, okED25519 := parsedKey.(*ed25519.PrivateKey)
 		var keyBytes []byte
-		switch {
-		case okRSA:
-			keyBytes, err = x509.MarshalPKCS8PrivateKey(castedRSA)
-		case okECDSA:
-			keyBytes, err = x509.MarshalPKCS8PrivateKey(castedECDSA)
-		case okED25519:
-			keyBytes, err = x509.MarshalPKCS8PrivateKey(castedED25519)
+		switch key := parsedKey.(type) {
+		case *rsa.PrivateKey, *ecdsa.PrivateKey, *ed25519.PrivateKey:
+			keyBytes, err = x509.MarshalPKCS8PrivateKey(key)
 		default:
 			err = errors.New("unknown signature algorithm of private key")
 		}
-
 		if err != nil {
 			return "", err
 		}
