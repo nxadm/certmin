@@ -1,4 +1,5 @@
 # certmin, a minimalistic certificate tool
+![CI](https://github.com/nxadm/certmin/workflows/dev/badge.svg)[![Go Reference](https://pkg.go.dev/badge/github.com/nxadm/certmin.svg)](https://pkg.go.dev/github.com/nxadm/certmin)
 
 In short: nothing that openSSL can't do, just a few easy shortcuts (without needing openSSL) and colourised output.
 
