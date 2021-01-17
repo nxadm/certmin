@@ -55,6 +55,10 @@ func skimCerts(locs []string, remoteChain, remoteInters bool) (string, error) {
 		for idx, cert := range certs {
 			fmt.Fprintf(w, "Subject:\t%s\n", colourKeeper.colourise(cert.Subject.String()))
 			fmt.Fprintf(w, "Issuer:\t%s\n", colourKeeper.colourise(cert.Issuer.String()))
+			if len(cert.IssuingCertificateURL) > 0 {
+				fmt.Fprintf(w, "Issuer Certificate URLs:\t%s\n",
+					strings.Join(cert.IssuingCertificateURL, ", "))
+			}
 			if len(cert.DNSNames) > 0 {
 				fmt.Fprintf(w, "DNS names:\t%s\n", strings.Join(cert.DNSNames, ", "))
 			}
