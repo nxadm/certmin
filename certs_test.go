@@ -1,11 +1,5 @@
 package certmin
 
-import "testing"
-
-func TestPromptForKeyPassword(t *testing.T) {
-	t.SkipNow()
-}
-
 //
 //import (
 //	"os"

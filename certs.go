@@ -1,21 +1,5 @@
 package certmin
 
-import (
-	"fmt"
-	"golang.org/x/crypto/ssh/terminal"
-	"syscall"
-)
-
-func PromptForKeyPassword() ([]byte, error) {
-	fmt.Print("Enter password of private key: ")
-	bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
-	fmt.Println()
-	if err != nil {
-		return nil, err
-	}
-	return bytePassword, nil
-}
-
 //
 //import (
 //	"crypto/x509"

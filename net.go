@@ -14,37 +14,7 @@ package certmin
 //	"github.com/fatih/color"
 //)
 //
-//func parseURL(remote string) (string, error) {
-//	parsedURL, err := url.Parse(remote)
-//	if err != nil {
-//		return "", err
-//	}
-//
-//	host := parsedURL.Host
-//	if host == "" {
-//		return "", errors.New("no hostname found")
-//	}
-//
-//	scheme := parsedURL.Scheme
-//	portStr := parsedURL.Port()
-//	var port int
-//	if portStr == "" {
-//		foundPort, err := net.LookupPort("tcp", scheme)
-//		if err == nil {
-//			port = foundPort
-//		} else {
-//			port = 443
-//		}
-//	} else {
-//		port, err = strconv.Atoi(portStr) // prefer explicit port
-//		if err != nil {
-//			port = 443
-//		}
-//	}
-//
-//	return parsedURL.Hostname() + ":" + strconv.Itoa(port), nil
-//}
-//
+
 //func retrieveCerts(addr string) ([]*x509.Certificate, error) {
 //	var conn *tls.Conn
 //	var err1, err2 error
