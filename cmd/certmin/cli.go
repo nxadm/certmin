@@ -60,12 +60,6 @@ Global options:
   --version   | -v : version message.
 `
 
-//[not yet implemented]
-//generate-selfsigned | gs : generate a self-signed PEM certificate.
-
-type actionFunc func() (string, error)
-
-// getAction returns an action function, a msg for early exit and an error.
 // getAction returns an action function, a msg for early exit and an error.
 func getAction() (actionFunc, string, error) {
 	flags := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
@@ -155,7 +149,7 @@ func verifyAndDispatch(
 
 	case args[1] == "verify-chain" || args[1] == "vc":
 		return func() (string, error) {
-			return verifyChain(roots, inters, args[2:], remoteChain, remoteInters)
+			return verifyChain(args[2:], roots, inters, remoteChain, remoteInters)
 		}, "", nil
 
 	case (args[1] == "verify-key" || args[1] == "vk") && len(args) != 4:
