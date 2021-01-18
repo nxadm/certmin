@@ -142,7 +142,7 @@ func verifyAndDispatch(
 	case (args[1] == "verify-key" || args[1] == "vk") && len(args) != 4:
 		return nil, "", errors.New("verify-key needs 1 certificate location and 1 key file")
 	case args[1] == "verify-key" || args[1] == "vk":
-		return func() (string, error) { return verifyKey(args[2], args[3], nil) }, "", nil
+		return func() (string, error) { return verifyKey(args[2], args[3], nil, true) }, "", nil
 
 	default:
 		return nil, "", errors.New("unknown command")

@@ -10,6 +10,6 @@ func verifyChain(locations, rootFiles, interFiles []string, remoteChain, remoteI
 	return "", nil
 }
 
-func verifyKey(location, keyFile string, passwordBytes []byte) (string, error) {
+func verifyKey(location, keyFile string, passwordBytes []byte, prompt bool) (string, error) {
 	return "", nil
 }
