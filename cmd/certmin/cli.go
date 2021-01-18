@@ -14,47 +14,40 @@ See ` + website + ` for more information.
 
 Usage:
   certmin skim cert-location1 [cert-location2...] 
-	 [--remote-chain] [--remote-inters] [--no-colour] 
-  certmin verify-key cert-location key-file [--no-colour]
+     [--remotes] [--issuer-uris] [--no-remote-roots]
+     [--keep] [--no-colour]
   certmin verify-chain cert-location [cert-location2...]
-	[--remote-chain] [--remote-inters] 
     [--root=ca-file1 --root=ca-file2...]
     [--inter=inter-file1 --inter=inter-file2...]
-    [--no-colour]
+    [--remotes] [--issuer-uris] [--no-remote-roots]
+    [--keep] [--no-colour]
+  certmin verify-key key-file cert-location1 [cert-location2...]
+    [--keep] [--no-colour]
   certmin [-h]
   certmin [-v]
 
-Certificate locations can be a file, a string in the form of
-hostname:port (default 443 if not :port supplied) or an URL.
-When verifying a chain, the OS trust store will be used if
-if no roots certificates are given or requested. 
+Certificate locations can be local files or remote addresses. Remote locations
+can be a hostname with optionally a port attached by ":" (defaults to port
+443) or an URL (scheme://hostname for known schemes like https, ldaps, smtps,
+etc. or scheme://hostname:port for non-standard ports). When verifying a
+chain, the OS trust store will be used if no roots certificates are given as
+files or remotely requested. 
 
 Actions:
-  skim | sc         : skim PEM certificates (including bundles)
-                      and show information.
-    --remote-chain  : retrieve the chain (if offered) for
-                      remote certificates.
-    --remote-inters : retrieve the chain (if offered) for
-                      remote certificates, without root CAs.
+  skim         | sc : skim PEM certificates (including bundles).
+  verify-chain | vc : match PEM certificates again its chain(s).
+  verify-key   | vk : match PEM keys against certificate(s).
 
-  verify-key | vk   : verify that a PEM certificate and
-                      key match.
-
-  verify-chain | vc : verify that a PEM certificate matches its
-                      chain.
-    --remote-chain  : retrieve the chain (if offered) for
-                      remote certificates.
-    --remote-inters : retrieve the chain (if offered) for
-                      remote certificates, without root CAs.
-    --root          : root PEM certificate file to verify.
-                      against (optional). 
-    --inter         : intermediate PEM certificates files
-                      to verify against (optional).
-
-Global options:
-  --no-colour | -c : don't colourise the output.
-  --help      | -h : this help message.
-  --version   | -v : version message.
+Global options (optional):
+  --remotes         : retrieve the chain offered by the remote host.
+  --issuer-uris     : retrieve the chain by following Issuer Certificate URIs.
+  --no-remote-roots : don't retrieve root certificates.
+  --root            : root PEM certificates. 
+  --inter           : intermediate PEM certificates.
+  --keep      | -k  : write the requested certificates and chains to files.
+  --no-colour | -c  : don't colourise the output.
+  --help      | -h  : this help message.
+  --version   | -v  : version message.
 `
 
 // getAction returns an action function, a msg for early exit and an error.
@@ -71,8 +64,10 @@ func getAction() (actionFunc, string, error) {
 	progVersion := flags.BoolP("version", "v", false, "")
 	roots := flags.StringSlice("root", []string{}, "")
 	inters := flags.StringSlice("inter", []string{}, "")
-	remoteChain := flags.BoolP("remote-chain", "r", false, "")
-	remoteInters := flags.BoolP("remote-inters", "i", false, "")
+	remotes := flags.Bool("remotes", false, "")
+	issuerURIs := flags.Bool("issuer-uris", false, "")
+	noRemoteRoots := flags.Bool("no-remote-roots", false, "")
+	keep := flags.BoolP("keep", "k", false, "")
 	noColour := flags.BoolP("no-colour", "c", false, "")
 
 	err := flags.Parse(os.Args)
@@ -95,13 +90,14 @@ func getAction() (actionFunc, string, error) {
 		return nil, "", fmt.Errorf("can not find the given file (%s)", strings.Join(notFound, ", "))
 	}
 
-	return verifyAndDispatch(*help, *progVersion, *remoteChain, *remoteInters, *roots, *inters, flags.Args())
+	return verifyAndDispatch(*help, *progVersion, *remotes, *issuerURIs,
+		*noRemoteRoots, *keep, *roots, *inters, flags.Args())
 }
 
 // verifyAndDispatch takes the cli parameters, verifies them
 // and returns an action to be run and an possible exit status.
-func verifyAndDispatch(
-	help, progVersion, remoteChain, remoteInters bool, roots, inters, args []string) (actionFunc, string, error) {
+func verifyAndDispatch(help, progVersion, remotes, issuerURIs, noRemoteRoots, keep bool,
+	roots, inters, args []string) (actionFunc, string, error) {
 	cmds := map[string]bool{
 		"sc":           true,
 		"skim":         true,
@@ -126,23 +122,25 @@ func verifyAndDispatch(
 		return nil, usage, nil
 	case invalidAction:
 		return nil, "", errors.New("invalid action")
-	case remoteChain && remoteInters:
-		return nil, "", errors.New("--remote-chain and --remote-inters are mutually exclusive")
+	case remotes && issuerURIs:
+		return nil, "", errors.New("--remotes and --issuerURIs are mutually exclusive")
 	case len(args) < 3:
 		return nil, "", errors.New("no certificate location given")
 
 	case args[1] == "skim" || args[1] == "sc":
-		return func() (string, error) { return skimCerts(args[2:], remoteChain, remoteInters) }, "", nil
+		return func() (string, error) {
+			return skimCerts(args[2:], remotes, issuerURIs, noRemoteRoots, keep)
+		}, "", nil
 
 	case args[1] == "verify-chain" || args[1] == "vc":
 		return func() (string, error) {
-			return verifyChain(args[2:], roots, inters, remoteChain, remoteInters)
+			return verifyChain(args[2:], roots, inters, remotes, issuerURIs, noRemoteRoots, keep)
 		}, "", nil
 
 	case (args[1] == "verify-key" || args[1] == "vk") && len(args) != 4:
 		return nil, "", errors.New("verify-key needs 1 certificate location and 1 key file")
 	case args[1] == "verify-key" || args[1] == "vk":
-		return func() (string, error) { return verifyKey(args[2], args[3], nil, true) }, "", nil
+		return func() (string, error) { return verifyKey(args[2], args[3], nil, true, keep) }, "", nil
 
 	default:
 		return nil, "", errors.New("unknown command")
