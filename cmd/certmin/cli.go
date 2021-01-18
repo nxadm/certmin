@@ -98,8 +98,8 @@ func getAction() (actionFunc, string, error) {
 	return verifyAndDispatch(*help, *progVersion, *remoteChain, *remoteInters, *roots, *inters, flags.Args())
 }
 
-// verifyAndDispatch takes the cli parameters, verifies them amd returns an action to
-// be run and an possible exitstatus.
+// verifyAndDispatch takes the cli parameters, verifies them
+// and returns an action to be run and an possible exit status.
 func verifyAndDispatch(
 	help, progVersion, remoteChain, remoteInters bool, roots, inters, args []string) (actionFunc, string, error) {
 	cmds := map[string]bool{
