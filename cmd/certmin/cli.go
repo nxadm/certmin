@@ -3,13 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
-	"os"
-	"strings"
-	"syscall"
-
 	"github.com/fatih/color"
 	flag "github.com/spf13/pflag"
-	"golang.org/x/crypto/ssh/terminal"
+	"os"
+	"strings"
 )
 
 const usage = `certmin, ` + version + `. A minimalist certificate utility.
@@ -99,16 +96,6 @@ func getAction() (actionFunc, string, error) {
 	}
 
 	return verifyAndDispatch(*help, *progVersion, *remoteChain, *remoteInters, *roots, *inters, flags.Args())
-}
-
-func promptForPassword() ([]byte, error) {
-	fmt.Print("Enter password of private key: ")
-	bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
-	fmt.Println()
-	if err != nil {
-		return nil, err
-	}
-	return bytePassword, nil
 }
 
 // verifyAndDispatch takes the cli parameters, verifies them amd returns an action to
