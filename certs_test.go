@@ -7,15 +7,6 @@ import (
 	"testing"
 )
 
-//
-//import (
-//	"os"
-//	"strings"
-//	"testing"
-//
-//	"github.com/stretchr/testify/assert"
-//)
-//
 var (
 	testGeantSerial = "290123421899608141648701916708796095456"
 	testSerials     = []string{
@@ -25,24 +16,17 @@ var (
 	}
 )
 
-//
-//func TestGetCertificates(t *testing.T) {
-//	certs, remote, err := getCertificates("t/myserver.crt", false, false)
-//	assert.NotEmpty(t, certs)
-//	assert.False(t, remote)
-//	assert.NoError(t, err)
-//
-//	if os.Getenv("AUTHOR_TESTING") != "" {
-//		certs, remote, err = getCertificates("github.com", false, false)
-//		assert.NotEmpty(t, certs)
-//		assert.True(t, remote)
-//		assert.NoError(t, err)
-//	}
-//}
-//
+func TestEncodeCertAsPEMBytes(t *testing.T) {
+	certs, err := DecodeCertFile("t/myserver.crt")
+	assert.NoError(t, err)
+	assert.True(t, len(certs) > 0)
+	bytes, err := EncodeCertAsPEMBytes(certs[0])
+	assert.Contains(t, string(bytes), "-BEGIN CERTIFICATE-")
+}
+
 func TestIsRootCA(t *testing.T) {
 	certs, err := DecodeCertFile("t/myserver.crt")
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.False(t, IsRootCA(certs[0]))
 
 	certs, err = DecodeCertFile("t/ca.crt")

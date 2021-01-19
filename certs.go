@@ -15,74 +15,29 @@ type CertTree struct {
 	Intermediates, Roots []*x509.Certificate
 }
 
-//import (
-//	"crypto/x509"
-//	"encoding/pem"
-//	"errors"
-//	"io/ioutil"
-//	"os"
-//
-//	"github.com/fatih/color"
-//)
-//
-//func getCertificates(loc string, remoteChain, remoteInters bool) ([]*x509.Certificate, bool, error) {
-//	var addr, file string
-//	var err error
-//	var certs []*x509.Certificate
-//	var remote bool
-//
-//	result, err := parseURL(loc)
-//	if err == nil {
-//		addr = result
-//	} else {
-//		_, err := os.Stat(loc)
-//		if !(remoteChain || remoteInters) && err == nil {
-//			file = loc
-//		} else {
-//			result, err = parseURL("certmin://" + loc)
-//			if err != nil {
-//				return nil, false, err
-//			}
-//			addr = result
-//		}
-//	}
-//
-//	if file != "" {
-//		certs, err = splitMultiCertFile(file)
-//		if err != nil {
-//			return nil, false, err
-//		}
-//	} else {
-//		certs, err = retrieveCerts(addr)
-//		if err != nil {
-//			return nil, true, err
-//		}
-//		certs = SortCerts(certs)
-//		remote = true
-//	}
-//
-//	switch {
-//	case !remote:
-//		return certs, remote, nil
-//	case !(remoteChain || remoteInters):
-//		return []*x509.Certificate{certs[0]}, remote, nil
-//	case remoteChain:
-//		return certs, remote, nil
-//	case remoteInters:
-//		var filtered []*x509.Certificate
-//		for _, cert := range certs {
-//			if !isRootCA(cert) {
-//				filtered = append(filtered, cert)
-//			}
-//		}
-//		return filtered, remote, nil
-//	default:
-//		panic("unexpected combination")
-//	}
-//}
+// EncodeCertAsPEMBytes converts *x509.Certificate to a []byte with
+// data encoded as PEM and an error.
+func EncodeCertAsPEMBytes(cert *x509.Certificate) ([]byte, error) {
+	if cert == nil {
+		return nil, errors.New("no certificate found")
+	}
 
+	block := &pem.Block{
+		Type: "CERTIFICATE",
+		Bytes: cert.Raw,
+	}
+
+	var buf bytes.Buffer
+	err := pem.Encode(&buf, block);
+
+	return buf.Bytes(), err
+}
+
+// IsRootCA returns for a given *x509.Certificate true if
+// the CA is marked as IsCA and the Subject and the Issuer
+// are the same.
 func IsRootCA(cert *x509.Certificate) bool {
-	return cert.Subject.String() == cert.Issuer.String()
+	return cert.IsCA && cert.Subject.String() == cert.Issuer.String()
 }
 
 // DecodeCertBytes reads a []byte with one DER encoded certificate or one or more

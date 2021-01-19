@@ -5,14 +5,18 @@ import (
 	"errors"
 	"fmt"
 	"github.com/fatih/color"
+	"github.com/nxadm/certmin"
 	"golang.org/x/crypto/ssh/terminal"
+	"io/ioutil"
 	"net"
 	"net/url"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
 	"text/tabwriter"
+	"time"
 )
 
 // colourKeeper keeps track of certain output that must have the same color.
@@ -196,7 +200,23 @@ func promptForKeyPassword() ([]byte, error) {
 	return bytePassword, nil
 }
 
-func writeCertFiles(certs *[]x509.Certificate) error {
+// writeCertFiles writes certificates to disk
+func writeCertFiles(certs []*x509.Certificate) error {
+	tree := certmin.SplitCertsAsTree(certs)
+	if tree.Certificate == nil {
+		return errors.New("no certificate found")
+	}
+
+	rx := regexp.MustCompile("[^a-zA-Z0-9_-]")
+	baseName := "certmin_" + rx.ReplaceAllString(tree.Certificate.Subject.CommonName, "_") + "_" +
+		time.Now().Format("20060102150405")
+	fmt.Println(baseName)
+
+	err := ioutil.WriteFile(baseName + ".crt", tree.Certificate.Raw, 0644)
+	if err != nil {
+		return err
+	}
+
 
 	return nil
 }
