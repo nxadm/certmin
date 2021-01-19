@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"fmt"
 	"io/ioutil"
 )
 
@@ -99,12 +98,9 @@ func SortCerts(certs []*x509.Certificate, reverse bool) []*x509.Certificate {
 
 	seen := make(map[string]bool)
 	for _, cert := range certs {
-		fmt.Println("looking at " + cert.Subject.String())
 		if _, ok := seen[cert.Subject.String()]; ok {
-			fmt.Println("skipping " + cert.Subject.String())
 			continue
 		}
-		fmt.Println("appending at " + cert.Subject.String())
 		ordered = append(ordered, cert)
 		seen[cert.Subject.String()] = true
 		for { // follow the chain
@@ -113,7 +109,6 @@ func SortCerts(certs []*x509.Certificate, reverse bool) []*x509.Certificate {
 			if ok && !ok2 {
 				// do we have the next Issuer (e.g. incomplete chain
 				if _, ok := certByName[parentName[cert.Subject.String()]]; ok {
-					fmt.Println("appending at " + certByName[parentName[cert.Subject.String()]].Subject.String())
 					ordered = append(ordered, certByName[parentName[cert.Subject.String()]])
 					seen[parentName[cert.Subject.String()]] = true
 					cert = certByName[parentName[cert.Subject.String()]]

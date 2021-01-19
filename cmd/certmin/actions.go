@@ -14,7 +14,7 @@ type actionFunc func() (string, error)
 
 // skimCerts prints relevant information of local or remote certificates,
 // optionally including a remote chain.
-func skimCerts(locations []string, remotes, issuerURIs, noRemoteRoots, sort, keep bool) (string, error) {
+func skimCerts(locations []string, params Params) (string, error) {
 	var err, warn error
 	var certs []*x509.Certificate
 	var sb strings.Builder
@@ -30,39 +30,40 @@ func skimCerts(locations []string, remotes, issuerURIs, noRemoteRoots, sort, kee
 			return "", err
 		}
 
-		if !remote {
-			certs, err = certmin.DecodeCertFile(loc)
-		} else {
+		if remote {
 			certs, warn, err = certmin.RetrieveCertsFromAddr(loc, timeOut)
-			if err != nil {
+			if warn != nil {
 				sb.WriteString(color.YellowString(warn.Error()))
 			}
+		} else {
+			certs, err = certmin.DecodeCertFile(loc)
 		}
+
+		fmt.Println(len(certs))
 		if err != nil {
 			return "", err
 		}
 
-		if sort {
-			certs = certmin.SortCert(certs, false)
+		if params.leaf || params.follow { // We only want the leaf
+			certs = certmin.SortCerts(certs, false)
+			certs = []*x509.Certificate{certs[0]}
+		}
+
+		if params.follow {
+			certs, err = certmin.RetrieveChainFromIssuerURLs(certs[0], timeOut)
+			if err != nil {
+				return "", err
+			}
+		}
+
+		switch {
+		case params.sort:
+			certs = certmin.SortCerts(certs, false)
+		case params.rsort:
+			certs = certmin.SortCerts(certs, true)
 		}
 
 		for idx, cert := range certs {
-			//var chain, chainNoRoot []*x509.Certificate
-			if remotes {
-				if noRemoteRoots {
-				}
-				if keep {
-				}
-			}
-			if issuerURIs {
-				if noRemoteRoots {
-				}
-				if keep {
-				}
-			}
-			if keep {
-			}
-
 			printCert(cert, w, colourKeeper)
 			if idx < len(certs)-1 {
 				fmt.Fprintln(w, "\t")
@@ -75,7 +76,7 @@ func skimCerts(locations []string, remotes, issuerURIs, noRemoteRoots, sort, kee
 	return sb.String(), nil
 }
 
-func printCert(cert *x509.Certificate, w *tabwriter.Writer, colourKeeper colourKeeper,) {
+func printCert(cert *x509.Certificate, w *tabwriter.Writer, colourKeeper colourKeeper) {
 	fmt.Fprintf(w, "Subject:\t%s\n", colourKeeper.colourise(cert.Subject.String()))
 	fmt.Fprintf(w, "Issuer:\t%s\n", colourKeeper.colourise(cert.Issuer.String()))
 	if len(cert.IssuingCertificateURL) > 0 {
@@ -162,8 +163,7 @@ func printCert(cert *x509.Certificate, w *tabwriter.Writer, colourKeeper colourK
 
 // verifyChain verifies that local or remote certificates match their chain,
 // supplied as local files, system-trust and/or remotely.
-func verifyChain(locations, rootFiles, interFiles []string,
-	remotes, issuerURIs, noRemoteRoots, keep bool) (string, error) {
+func verifyChain(locations []string, params Params) (string, error) {
 	return "", nil
 }
 
