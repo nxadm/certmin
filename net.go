@@ -71,7 +71,8 @@ func RetrieveChainFromIssuerURLs(cert *x509.Certificate, timeOut time.Duration) 
 	var lastErr error
 	certToCheck := cert
 
-	for certToCheck != nil {
+	OUTER:
+	for {
 		fmt.Printf("Checking and appending CERT: %s\n", cert.Subject)
 		retrievedChain = append(retrievedChain, certToCheck)
 		INNER:
@@ -102,7 +103,7 @@ func RetrieveChainFromIssuerURLs(cert *x509.Certificate, timeOut time.Duration) 
 			break INNER
 		}
 
-		certToCheck = nil
+		break OUTER
 	}
 
 	return retrievedChain, lastErr
