@@ -53,20 +53,20 @@ func DecodeCertBytes(certBytes []byte) ([]*x509.Certificate, error) {
 			break
 		}
 
-		cert, err := x509.ParseCertificate(block.Bytes)
+		retrieved, err := x509.ParseCertificates(block.Bytes)
 		if err != nil {
 			return nil, err
 		}
-		certs = append(certs, cert)
+		certs = append(certs, retrieved...)
 		pemBytes = rest
 	}
 
 	if certs == nil {
-		cert, err := x509.ParseCertificate(pemBytes) // DER encoded
+		retrieved, err := x509.ParseCertificates(pemBytes) // DER encoded
 		if err != nil {
 			return nil, err
 		}
-		certs = append(certs, cert)
+		certs = append(certs, retrieved...)
 	}
 
 	if len(certs) == 0 {
