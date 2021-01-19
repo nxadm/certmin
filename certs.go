@@ -5,7 +5,10 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"io/ioutil"
+
+	"go.mozilla.org/pkcs7"
 )
 
 // CertTree represents a chain where certificates are
@@ -45,6 +48,7 @@ func IsRootCA(cert *x509.Certificate) bool {
 // returns the contents as a []*x509.Certificate and an error if encountered.
 func DecodeCertBytes(certBytes []byte) ([]*x509.Certificate, error) {
 	// TODO: decode pkcs7, e.g. http://apps.identrust.com/roots/dstrootcax3.p7c
+	// https://godoc.org/go.mozilla.org/pkcs7
 	var certs []*x509.Certificate
 	pemBytes := certBytes
 	for {
@@ -63,6 +67,9 @@ func DecodeCertBytes(certBytes []byte) ([]*x509.Certificate, error) {
 
 	if certs == nil {
 		retrieved, err := x509.ParseCertificates(pemBytes) // DER encoded
+		p7, err := pkcs7.Parse(pemBytes)
+		fmt.Println(err)
+		fmt.Printf("%#v\n", p7.Certificates[0].Subject.CommonName)
 		if err != nil {
 			return nil, err
 		}
