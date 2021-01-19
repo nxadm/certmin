@@ -3,10 +3,11 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/fatih/color"
-	flag "github.com/spf13/pflag"
 	"os"
 	"strings"
+
+	"github.com/fatih/color"
+	flag "github.com/spf13/pflag"
 )
 
 const usage = `certmin, ` + version + `. A minimalist certificate utility.

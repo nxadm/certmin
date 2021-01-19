@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/nxadm/certmin"
-	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
 	"text/tabwriter"
+
+	"github.com/nxadm/certmin"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestColorKeeper_Colourise(t *testing.T) {
@@ -91,6 +92,7 @@ func TestWriteCertFiles(t *testing.T) {
 	certs, err := certmin.DecodeCertFile("t/cert-and-chain.crt")
 	assert.NoError(t, err)
 	assert.NotNil(t, certs)
-	err = writeCertFiles(certs, true)
+	output, err := writeCertFiles(certs, true)
 	assert.NoError(t, err)
+	assert.Contains(t, output, ".crt")
 }

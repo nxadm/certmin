@@ -4,9 +4,6 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/nxadm/certmin"
-	"golang.org/x/crypto/ssh/terminal"
 	"net"
 	"net/url"
 	"os"
@@ -17,6 +14,10 @@ import (
 	"syscall"
 	"text/tabwriter"
 	"time"
+
+	"github.com/fatih/color"
+	"github.com/nxadm/certmin"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 // colourKeeper keeps track of certain output that must have the same color.
@@ -201,13 +202,11 @@ func promptForKeyPassword() ([]byte, error) {
 }
 
 // writeCertFiles writes certificates to disk
-func writeCertFiles(certs []*x509.Certificate, cleanup bool) error {
+func writeCertFiles(certs []*x509.Certificate, cleanup bool) (string, error) {
 	tree := certmin.SplitCertsAsTree(certs)
 	if tree.Certificate == nil {
-		return errors.New("no certificate found")
+		return "", errors.New("no certificate found")
 	}
-	fmt.Printf("inters: %d\n", len(tree.Intermediates))
-	fmt.Printf("roots: %d\n", len(tree.Roots))
 
 	rx := regexp.MustCompile("[^a-zA-Z0-9_-]")
 	baseName := "certmin_" + rx.ReplaceAllString(tree.Certificate.Subject.CommonName, "_") + "_" +
@@ -218,37 +217,41 @@ func writeCertFiles(certs []*x509.Certificate, cleanup bool) error {
 	ext[1] = "_intermediates.crt"
 	ext[2] = "_roots.crt"
 
+	var sb strings.Builder
+	sb.WriteString("The following files were written:\n")
+
 	for idx, certArray := range [][]*x509.Certificate{{tree.Certificate}, tree.Intermediates, tree.Roots} {
 		var file *os.File
 		var err error
 		if len(certArray) > 0 {
-			file, err = os.Create(baseName+ext[idx])
+			file, err = os.Create(baseName + ext[idx])
 			if err != nil {
 				file, err = os.Create(path.Join(os.TempDir(), baseName+ext[idx]))
 				if err != nil {
-					return err
+					return "", err
 				}
 			}
 		}
 		for _, cert := range certArray {
 			pemBytes, err := certmin.EncodeCertAsPEMBytes(cert)
 			if err != nil {
-				return err
+				return "", err
 			}
 
 			_, err = file.Write(pemBytes)
 			if err != nil {
-				return err
+				return "", err
 			}
 		}
 
 		if file != nil {
 			file.Close()
+			sb.WriteString(file.Name() + "\n")
 		}
 		if cleanup {
 			defer os.Remove(file.Name())
 		}
 	}
 
-	return nil
+	return sb.String(), nil
 }

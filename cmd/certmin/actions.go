@@ -3,10 +3,11 @@ package main
 import (
 	"crypto/x509"
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/nxadm/certmin"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/fatih/color"
+	"github.com/nxadm/certmin"
 )
 
 // actionFunc is a type for actions and their expected output as string and error.
@@ -15,17 +16,16 @@ type actionFunc func() (string, error)
 // skimCerts prints relevant information of local or remote certificates,
 // optionally including a remote chain.
 func skimCerts(locations []string, params Params) (string, error) {
-	var err, warn error
-	var certs []*x509.Certificate
 	var sb strings.Builder
-	var loc string
-	var remote bool
 	w := tabwriter.NewWriter(&sb, 0, 0, 1, ' ', tabwriter.StripEscape)
-	colourKeeper := make(colourKeeper)
 
 	for _, input := range locations {
+		var certs []*x509.Certificate
+		var err, warn error
+		colourKeeper := make(colourKeeper)
+
 		sb.WriteString("\ncertificate location " + input + ":\n\n")
-		loc, remote, err = getLocation(input)
+		loc, remote, err := getLocation(input)
 		if err != nil {
 			return "", err
 		}
@@ -68,9 +68,18 @@ func skimCerts(locations []string, params Params) (string, error) {
 				fmt.Fprintln(w, "\t")
 			}
 		}
+		fmt.Fprint(w, "---\n")
+
+		if params.keep {
+			output, err := writeCertFiles(certs, false)
+			if err != nil {
+				return sb.String(), err
+			}
+			sb.WriteString("\n" + output)
+		}
+
 	}
 
-	fmt.Fprint(w, "---")
 	w.Flush()
 	return sb.String(), nil
 }
