@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"fmt"
 	"io/ioutil"
 )
 
@@ -173,11 +172,9 @@ func SplitCertsAsTree(certs []*x509.Certificate) *CertTree {
 		return nil
 	}
 
-	fmt.Println(len(certs))
 	ordered := SortCerts(certs, false)
-	fmt.Println(len(ordered))
 	var roots, inters []*x509.Certificate
-	for _, cert := range ordered {
+	for _, cert := range ordered[1:] {
 		if IsRootCA(cert) {
 			roots = append(roots, cert)
 		} else {
