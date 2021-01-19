@@ -215,35 +215,29 @@ func writeCertFiles(certs []*x509.Certificate, cleanup bool) error {
 
 	ext := make(map[int]string)
 	ext[0] = ".crt"
-	ext[1] = "_chain.crt"
-	ext[2] = "_chain_with_root.crt"
+	ext[1] = "_intermediates.crt"
+	ext[2] = "_roots.crt"
 
 	for idx, certArray := range [][]*x509.Certificate{{tree.Certificate}, tree.Intermediates, tree.Roots} {
 		var file *os.File
 		var err error
 		if len(certArray) > 0 {
-			file, err = os.Create(baseName + ".crt")
+			file, err = os.Create(baseName+ext[idx])
 			if err != nil {
-				fmt.Println("1")
 				file, err = os.Create(path.Join(os.TempDir(), baseName+ext[idx]))
 				if err != nil {
-					fmt.Println("2")
 					return err
 				}
 			}
 		}
 		for _, cert := range certArray {
-			fmt.Printf("Working on index %d\n", idx)
-			fmt.Printf("Working on %s\n", cert.Subject.CommonName)
 			pemBytes, err := certmin.EncodeCertAsPEMBytes(cert)
 			if err != nil {
-				fmt.Println("3")
 				return err
 			}
 
 			_, err = file.Write(pemBytes)
 			if err != nil {
-				fmt.Println("4")
 				return err
 			}
 		}

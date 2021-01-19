@@ -58,7 +58,7 @@ func TestSplitCertsAsTree(t *testing.T) {
 	tree := SplitCertsAsTree(certs)
 	assert.NotNil(t, tree)
 	assert.Contains(t, tree.Certificate.Subject.CommonName, "exporl")
-	assert.Equal(t, len(certs) - 2, len(tree.Intermediates))
+	assert.Equal(t, 5, len(tree.Intermediates))
 	assert.Equal(t, 1, len(tree.Roots))
 }
 
