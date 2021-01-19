@@ -6,6 +6,7 @@ type actionFunc func() (string, error)
 // skimCerts prints relevant information of local or remote certificates,
 // optionally including a remote chain.
 func skimCerts(locations []string, remotes, issuerURIs, noRemoteRoots, keep bool) (string, error) {
+
 	return "", nil
 }
 

@@ -126,7 +126,7 @@ func IsRootCA(cert *x509.Certificate) bool {
 //	return ordered
 //}
 
-// DecodeCertBytes reads []byte with one DER encoded certificate or one or more
+// DecodeCertBytes reads a []byte with one DER encoded certificate or one or more
 // PEM encoded certificates (e.g. read from a file of a HTTP response body), and
 // returns the contents as a []*x509.Certificate and an error if encountered.
 func DecodeCertBytes(certBytes []byte) ([]*x509.Certificate, error) {
@@ -161,7 +161,7 @@ func DecodeCertBytes(certBytes []byte) ([]*x509.Certificate, error) {
 	return certs, nil
 }
 
-// DecodeCertFile reads a files with one DER encoded certificate or one or more
+// DecodeCertFile reads a file with one DER encoded certificate or one or more
 // PEM encoded certificates and returns the contents as a []*x509.Certificate and
 // an error if encountered.
 func DecodeCertFile(certFile string) ([]*x509.Certificate, error) {

@@ -1,4 +1,4 @@
-package certmin
+package main
 
 import (
 	"testing"
@@ -6,8 +6,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPromptForKeyPassword(t *testing.T) {
-	t.SkipNow()
+func TestGetLocation(t *testing.T) {
+	loc, remote, err := getLocation("util.go")
+	assert.NoError(t, err)
+	assert.Equal(t, "util.go", loc)
+	assert.False(t, remote)
+
+	loc, remote, err = getLocation("https://foo.fa/bar?baz")
+	assert.NoError(t, err)
+	assert.Equal(t, "foo.fa:443", loc)
+	assert.True(t, remote)
+
+	loc, remote, err = getLocation("foo/fa")
+	assert.NoError(t, err)
+	assert.Equal(t, "foo:443", loc)
+	assert.True(t, remote)
+
+	loc, remote, err = getLocation("foo:abc123")
+	assert.Error(t, err)
 }
 
 func TestParseURL(t *testing.T) {
@@ -37,4 +53,8 @@ func TestParseURL(t *testing.T) {
 	assert.NotNil(t, err)
 	_, err = parseURL("BLAH.BOE")
 	assert.NotNil(t, err)
+}
+
+func TestPromptForKeyPassword(t *testing.T) {
+	t.SkipNow()
 }
