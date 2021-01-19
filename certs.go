@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"io/ioutil"
 )
 
@@ -51,7 +52,7 @@ import (
 //		if err != nil {
 //			return nil, true, err
 //		}
-//		certs = orderRemoteChain(certs)
+//		certs = SortCerts(certs)
 //		remote = true
 //	}
 //
@@ -79,52 +80,59 @@ func IsRootCA(cert *x509.Certificate) bool {
 	return cert.Subject.String() == cert.Issuer.String()
 }
 
-//
-//// Just try to order the results and return the original array if
-//// something fishy is going on
-//func orderRemoteChain(certs []*x509.Certificate) []*x509.Certificate {
-//	var ordered []*x509.Certificate
-//	parentName := make(map[string]string)
-//	certByName := make(map[string]*x509.Certificate)
-//
-//	// Get the information needed to follow the chain
-//	for _, cert := range certs {
-//		// the chain is fishy
-//		if _, ok := certByName[cert.Subject.String()]; ok {
-//			return certs
-//		}
-//		if _, ok := parentName[cert.Subject.String()]; ok {
-//			return certs
-//		}
-//
-//		certByName[cert.Subject.String()] = cert
-//		parentName[cert.Subject.String()] = cert.Issuer.String()
-//	}
-//
-//	seen := make(map[string]bool)
-//	for _, cert := range certs {
-//		if _, ok := seen[cert.Subject.String()]; ok {
-//			continue
-//		}
-//		ordered = append(ordered, cert)
-//		for { // follow the chain
-//			_, ok := certByName[parentName[cert.Subject.String()]] // we have that cert
-//			_, ok2 := seen[parentName[cert.Subject.String()]]      // the parent has not been seen
-//			if ok && !ok2 {
-//				// do we have the next Issuer (e.g. incomplete chain
-//				if _, ok := certByName[parentName[cert.Subject.String()]]; ok {
-//					ordered = append(ordered, certByName[parentName[cert.Subject.String()]])
-//					seen[parentName[cert.Subject.String()]] = true
-//					cert = certByName[parentName[cert.Subject.String()]]
-//					continue
-//				}
-//			}
-//			break
-//		}
-//	}
-//
-//	return ordered
-//}
+// SortCerts sorts a []*x509.Certificate from leaf to root CA, or the other
+// way around if a the supplied boolean is set to true. Double identical
+// elements are removed.
+func SortCerts(certs []*x509.Certificate, reverse bool) []*x509.Certificate {
+	var ordered []*x509.Certificate
+
+	// Get the information needed to follow the chain
+	parentName := make(map[string]string)
+	certByName := make(map[string]*x509.Certificate)
+	for _, cert := range certs {
+		if _, ok := certByName[cert.Subject.String()]; ok {
+			continue
+		}
+		certByName[cert.Subject.String()] = cert
+		parentName[cert.Subject.String()] = cert.Issuer.String()
+	}
+
+	seen := make(map[string]bool)
+	for _, cert := range certs {
+		fmt.Println("looking at " + cert.Subject.String())
+		if _, ok := seen[cert.Subject.String()]; ok {
+			fmt.Println("skipping " + cert.Subject.String())
+			continue
+		}
+		fmt.Println("appending at " + cert.Subject.String())
+		ordered = append(ordered, cert)
+		seen[cert.Subject.String()] = true
+		for { // follow the chain
+			_, ok := certByName[parentName[cert.Subject.String()]] // we have that cert
+			_, ok2 := seen[parentName[cert.Subject.String()]]      // the parent has not been seen
+			if ok && !ok2 {
+				// do we have the next Issuer (e.g. incomplete chain
+				if _, ok := certByName[parentName[cert.Subject.String()]]; ok {
+					fmt.Println("appending at " + certByName[parentName[cert.Subject.String()]].Subject.String())
+					ordered = append(ordered, certByName[parentName[cert.Subject.String()]])
+					seen[parentName[cert.Subject.String()]] = true
+					cert = certByName[parentName[cert.Subject.String()]]
+					continue
+				}
+			}
+			break
+		}
+	}
+
+	if reverse {
+		var reversed []*x509.Certificate
+		for idx := len(ordered) - 1; idx >= 0; idx-- {
+			reversed = append(reversed, ordered[idx])
+		}
+		return reversed
+	}
+	return ordered
+}
 
 // DecodeCertBytes reads a []byte with one DER encoded certificate or one or more
 // PEM encoded certificates (e.g. read from a file of a HTTP response body), and

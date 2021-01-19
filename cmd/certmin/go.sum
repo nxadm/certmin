@@ -8,6 +8,8 @@ github.com/mattn/go-isatty v0.0.12 h1:wuysRhFDzyxgEmMf5xjvJ2M9dZoWAXNNr5LSBS7uHX
 github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Kysco4FUpU=
 github.com/nxadm/certmin v0.4.3 h1:W/ILlyCctGgvpNxSo/2OOgXgLkJphCm2Q8Wr44XTyFo=
 github.com/nxadm/certmin v0.4.3/go.mod h1:qyBAGqgVhulgfWgjXwY9CksVnHRUv7j3Ka4BlB8Pg18=
+github.com/nxadm/certmin v0.4.4-0.20210119121510-f812e26704d1 h1:AGrYl9VY1DgB1TMV8rTFx0MgJ1ZiCvNaWGjcDf25MMA=
+github.com/nxadm/certmin v0.4.4-0.20210119121510-f812e26704d1/go.mod h1:2LUilEfOy0CyiTrwSGetV0RzCqs7Qtac1fJhlui1tew=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=

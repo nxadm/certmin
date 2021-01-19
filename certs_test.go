@@ -50,15 +50,21 @@ func TestIsRootCA(t *testing.T) {
 	assert.True(t, IsRootCA(certs[0]))
 }
 
-//
-//func TestOrderRemoteChain(t *testing.T) {
-//	certs, err := splitMultiCertFile("t/chain-out-of-order.crt")
-//	assert.NotNil(t, certs)
-//	assert.NoError(t, err)
-//	ordered := orderRemoteChain(certs)
-//	assert.NotNil(t, ordered)
-//}
-//
+func TestSortCerts(t *testing.T) {
+	certs, err := DecodeCertFile("t/chain-out-of-order.crt")
+	assert.NotNil(t, certs)
+	assert.NoError(t, err)
+
+	ordered := SortCerts(certs, false)
+	assert.NotNil(t, ordered)
+	assert.Equal(t, 6, len(ordered))
+	assert.Equal(t, testGeantSerial, ordered[1].SerialNumber.String())
+
+	ordered = SortCerts(certs, true)
+	assert.NotNil(t, ordered)
+	assert.Equal(t, 6, len(ordered))
+	assert.Equal(t, testGeantSerial, ordered[len(ordered)-2].SerialNumber.String())
+}
 
 func TestDecodeCertBytes(t *testing.T) {
 	certBytes, err := ioutil.ReadFile("t/chain.crt")

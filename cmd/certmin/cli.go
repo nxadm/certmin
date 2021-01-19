@@ -14,13 +14,13 @@ See ` + website + ` for more information.
 
 Usage:
   certmin skim cert-location1 [cert-location2...] 
-     [--remotes] [--issuer-uris] [--no-remote-roots]
-     [--keep] [--no-colour]
+     [--remotes] [--no-roots] [--follow]
+     [--sort] [--keep] [--no-colour]
   certmin verify-chain cert-location [cert-location2...]
     [--root=ca-file1 --root=ca-file2...]
     [--inter=inter-file1 --inter=inter-file2...]
-    [--remotes] [--issuer-uris] [--no-remote-roots]
-    [--keep] [--no-colour]
+     [--remotes] [--no-roots] [--follow]
+    [--sort] [--keep] [--no-colour]
   certmin verify-key key-file cert-location1 [cert-location2...]
     [--keep] [--no-colour]
   certmin [-h]
@@ -34,16 +34,17 @@ chain, the OS trust store will be used if no roots certificates are given as
 files or remotely requested. 
 
 Actions:
-  skim         | sc : skim PEM certificates (including bundles).
-  verify-chain | vc : match PEM certificates again its chain(s).
-  verify-key   | vk : match PEM keys against certificate(s).
+  skim         | sc : skim certificates (including bundles).
+  verify-chain | vc : match certificates again its chain(s).
+  verify-key   | vk : match keys against certificate(s).
 
 Global options (optional):
-  --remotes         : retrieve the chain offered by the remote host.
-  --issuer-uris     : retrieve the chain by following Issuer Certificate URIs.
-  --no-remote-roots : don't retrieve root certificates.
-  --root            : root PEM certificates. 
-  --inter           : intermediate PEM certificates.
+  --remotes   | -x  : retrieve the chain offered by the remote host.
+  --no-roots  | -n  : don't retrieve root certificates.
+  --follow    | -f  : follow Issuer Certificate URIs to retrieve chain.
+  --root      | -r  : root certificate file(s).
+  --inter     | -i  : intermediate certificate file(s).
+  --sort      | -s  : sort the certificates and chains from leave to root.
   --keep      | -k  : write the requested certificates and chains to files.
   --no-colour | -c  : don't colourise the output.
   --help      | -h  : this help message.
@@ -62,11 +63,12 @@ func getAction() (actionFunc, string, error) {
 
 	help := flags.BoolP("help", "h", false, "")
 	progVersion := flags.BoolP("version", "v", false, "")
-	roots := flags.StringSlice("root", []string{}, "")
-	inters := flags.StringSlice("inter", []string{}, "")
-	remotes := flags.Bool("remotes", false, "")
-	issuerURIs := flags.Bool("issuer-uris", false, "")
-	noRemoteRoots := flags.Bool("no-remote-roots", false, "")
+	roots := flags.StringSliceP("root", "r", []string{}, "")
+	inters := flags.StringSliceP("inter", "i", []string{}, "")
+	remotes := flags.BoolP("remotes", "x", false, "")
+	follow := flags.BoolP("follow", "f", false, "")
+	noRoots := flags.BoolP("no-roots", "n", false, "")
+	sort := flags.BoolP("sort", "s", false, "")
 	keep := flags.BoolP("keep", "k", false, "")
 	noColour := flags.BoolP("no-colour", "c", false, "")
 
@@ -90,13 +92,13 @@ func getAction() (actionFunc, string, error) {
 		return nil, "", fmt.Errorf("can not find the given file (%s)", strings.Join(notFound, ", "))
 	}
 
-	return verifyAndDispatch(*help, *progVersion, *remotes, *issuerURIs,
-		*noRemoteRoots, *keep, *roots, *inters, flags.Args())
+	return verifyAndDispatch(*help, *progVersion, *remotes, *follow,
+		*noRoots, *sort, *keep, *roots, *inters, flags.Args())
 }
 
 // verifyAndDispatch takes the cli parameters, verifies them
 // and returns an action to be run and an possible exit status.
-func verifyAndDispatch(help, progVersion, remotes, issuerURIs, noRemoteRoots, keep bool,
+func verifyAndDispatch(help, progVersion, remotes, follow, noRoots, sort, keep bool,
 	roots, inters, args []string) (actionFunc, string, error) {
 	cmds := map[string]bool{
 		"sc":           true,
@@ -122,8 +124,8 @@ func verifyAndDispatch(help, progVersion, remotes, issuerURIs, noRemoteRoots, ke
 		return nil, usage, nil
 	case invalidAction:
 		return nil, "", errors.New("invalid action")
-	case remotes && issuerURIs:
-		return nil, "", errors.New("--remotes and --issuerURIs are mutually exclusive")
+	case remotes && follow:
+		return nil, "", errors.New("--remotes and --follow are mutually exclusive")
 	case len(args) < 3:
 		return nil, "", errors.New("no certificate location given")
 
@@ -133,12 +135,12 @@ func verifyAndDispatch(help, progVersion, remotes, issuerURIs, noRemoteRoots, ke
 		locs = append(locs, roots...)
 		locs = append(locs, inters...)
 		return func() (string, error) {
-			return skimCerts(locs, remotes, issuerURIs, noRemoteRoots, keep)
+			return skimCerts(locs, remotes, follow, noRoots, sort, keep)
 		}, "", nil
 
 	case args[1] == "verify-chain" || args[1] == "vc":
 		return func() (string, error) {
-			return verifyChain(args[2:], roots, inters, remotes, issuerURIs, noRemoteRoots, keep)
+			return verifyChain(args[2:], roots, inters, remotes, follow, noRoots, keep)
 		}, "", nil
 
 	case (args[1] == "verify-key" || args[1] == "vk") && len(args) != 4:

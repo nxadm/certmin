@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/fatih/color"
 )
@@ -10,6 +11,7 @@ import (
 const (
 	version = "0.5.0"
 	website = "https://github.com/nxadm/certmin"
+	timeOut = 5 * time.Second
 )
 
 func main() {
