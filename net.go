@@ -73,7 +73,8 @@ func RetrieveChainFromIssuerURLs(cert *x509.Certificate, timeOut time.Duration) 
 	var lastErr error
 
 	for lastCert != nil {
-		for _, url := range lastCert.IssuingCertificateURL {
+		INNER:
+			for _, url := range lastCert.IssuingCertificateURL {
 			resp, err := client.Get(url)
 			if err != nil {
 				lastErr = err
@@ -96,7 +97,7 @@ func RetrieveChainFromIssuerURLs(cert *x509.Certificate, timeOut time.Duration) 
 			tmpCerts = append(tmpCerts, decodedCerts[0])
 			fmt.Println(decodedCerts[0].Subject)
 			lastCert = decodedCerts[0]
-			break
+			break INNER
 		}
 		lastCert = nil
 	}
