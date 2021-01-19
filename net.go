@@ -65,12 +65,13 @@ func RetrieveChainFromIssuerURLs(cert *x509.Certificate, timeOut time.Duration) 
 		return nil, errors.New("no Issuing Certificate URLs")
 	}
 
-	var tmpCerts []*x509.Certificate
+	var retrievedChain []*x509.Certificate
 	client := http.Client{Timeout: timeOut}
 	var lastErr error
 	certToCheck := cert
 
 	for certToCheck != nil {
+		retrievedChain = append(retrievedChain, certToCheck)
 		INNER:
 		for _, url := range certToCheck.IssuingCertificateURL {
 			resp, err := client.Get(url)
@@ -92,7 +93,7 @@ func RetrieveChainFromIssuerURLs(cert *x509.Certificate, timeOut time.Duration) 
 				continue
 			}
 
-			tmpCerts = append(tmpCerts, decodedCerts[0])
+			retrievedChain = append(retrievedChain, decodedCerts[0])
 			certToCheck = decodedCerts[0]
 			lastErr = nil
 			break INNER
@@ -101,5 +102,5 @@ func RetrieveChainFromIssuerURLs(cert *x509.Certificate, timeOut time.Duration) 
 		certToCheck = nil
 	}
 
-	return tmpCerts, lastErr
+	return retrievedChain, lastErr
 }
