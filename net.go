@@ -71,11 +71,7 @@ func RetrieveChainFromIssuerURLs(cert *x509.Certificate, timeOut time.Duration) 
 // recursiveHopCerts follows the URL links recursively
 func recursiveHopCerts(
 	cert *x509.Certificate, chain *[]*x509.Certificate, lastErr *error, timeOut time.Duration) *x509.Certificate {
-	if cert == nil || len(cert.IssuingCertificateURL) == 0 {
-		if cert != nil {
-			fmt.Printf("Checking and appending CERT: %s\n", cert.Subject)
-			fmt.Printf("Recursive URLs: %#v\n", cert.IssuingCertificateURL)
-		}
+	if cert == nil {
 		return nil
 	}
 
