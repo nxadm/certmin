@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -62,7 +61,7 @@ func RetrieveCertsFromAddr(addr string, timeOut time.Duration) ([]*x509.Certific
 // 0 disabling it. The return values are a []*x509.Certificate (with the first element
 // being the supplied certificate) and an error in case of failure.
 func RetrieveChainFromIssuerURLs(cert *x509.Certificate, timeOut time.Duration) ([]*x509.Certificate, error) {
-	var chain  []*x509.Certificate
+	var chain []*x509.Certificate
 	var lastErr error
 	recursiveHopCerts(cert, &chain, &lastErr, timeOut)
 	return chain, lastErr
@@ -75,36 +74,31 @@ func recursiveHopCerts(
 		return nil
 	}
 
-	fmt.Printf("Checking and appending CERT: %s\n", cert.Subject)
-	fmt.Printf("Recursive URLs: %#v\n", cert.IssuingCertificateURL)
-
 	client := http.Client{Timeout: timeOut}
 	*chain = append(*chain, cert)
-
 	for _, url := range cert.IssuingCertificateURL {
-			resp, err := client.Get(url)
-			if err != nil {
-				lastErr = &err
-				continue
-			}
-
-			bodyBytes, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				lastErr = &err
-				continue
-			}
-			defer resp.Body.Close()
-
-			decodedCerts, err := DecodeCertBytes(bodyBytes)
-			if err != nil {
-				lastErr = &err
-				continue
-			}
-
-			fmt.Printf("Next CERT: %s\n", decodedCerts[0].Subject)
-			lastErr = nil
-			return recursiveHopCerts(decodedCerts[0], chain, lastErr, timeOut)
+		resp, err := client.Get(url)
+		if err != nil {
+			lastErr = &err
+			continue
 		}
 
-		return nil
+		bodyBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			lastErr = &err
+			continue
+		}
+		defer resp.Body.Close()
+
+		decodedCerts, err := DecodeCertBytes(bodyBytes)
+		if err != nil {
+			lastErr = &err
+			continue
+		}
+
+		lastErr = nil
+		return recursiveHopCerts(decodedCerts[0], chain, lastErr, timeOut)
+	}
+
+	return nil
 }

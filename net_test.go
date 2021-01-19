@@ -1,6 +1,7 @@
 package certmin
 
 import (
+	"crypto/x509"
 	"os"
 	"testing"
 	"time"
@@ -37,14 +38,27 @@ func TestRetrieveChainFromIssuerURLs(t *testing.T) {
 	assert.NoError(t, err)
 	// No Issuer URL
 	chain, err := RetrieveChainFromIssuerURLs(certs[0], 1*time.Second)
-	assert.Error(t, err)
-	assert.Nil(t, chain)
+	assert.NoError(t, err)
+	assert.Equal(t, []*x509.Certificate{certs[0]}, chain)
 
 	if os.Getenv("AUTHOR_TESTING") != "" {
 		certs, err := DecodeCertFile("t/kuleuven-be.pem")
 		assert.NoError(t, err)
 		chain, err := RetrieveChainFromIssuerURLs(certs[0], 5*time.Second)
 		assert.NoError(t, err)
+		assert.True(t, len(chain) >= 2)
+	}
+}
+
+func TestRecursiveHopCerts(t *testing.T) {
+	if os.Getenv("AUTHOR_TESTING") != "" {
+		certs, err := DecodeCertFile("t/kuleuven-be.pem")
+		assert.NoError(t, err)
+		var chain []*x509.Certificate
+		var lastErr error
+		recursiveHopCerts(certs[0], &chain, &lastErr, 5*time.Second)
+		leftOver := recursiveHopCerts(certs[0], &chain, &lastErr, 5*time.Second)
+		assert.Nil(t, leftOver)
 		assert.True(t, len(chain) >= 2)
 	}
 }
