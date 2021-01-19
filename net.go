@@ -102,7 +102,6 @@ OUTER:
 				break INNER
 			}
 		}
-		break OUTER
 	}
 
 	return tmpCerts, lastErr
