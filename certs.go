@@ -1,5 +1,13 @@
 package certmin
 
+import (
+	"crypto/x509"
+	"encoding/pem"
+	"errors"
+	"fmt"
+	"io/ioutil"
+)
+
 //
 //import (
 //	"crypto/x509"
@@ -66,10 +74,11 @@ package certmin
 //		panic("unexpected combination")
 //	}
 //}
-//
-//func isRootCA(cert *x509.Certificate) bool {
-//	return cert.Subject.String() == cert.Issuer.String()
-//}
+
+func IsRootCA(cert *x509.Certificate) bool {
+	return cert.Subject.String() == cert.Issuer.String()
+}
+
 //
 //// Just try to order the results and return the original array if
 //// something fishy is going on
@@ -116,34 +125,42 @@ package certmin
 //
 //	return ordered
 //}
-//
-//func splitMultiCertFile(certFile string) ([]*x509.Certificate, error) {
-//	var certs []*x509.Certificate
-//	pemData, err := ioutil.ReadFile(certFile)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	for {
-//		block, rest := pem.Decode(pemData)
-//		if block == nil {
-//			break
-//		}
-//
-//		cert, err := x509.ParseCertificate(block.Bytes)
-//		if err != nil {
-//			return nil, err
-//		}
-//		certs = append(certs, cert)
-//		pemData = rest
-//	}
-//
-//	if len(certs) == 0 {
-//		return nil, errors.New("no certificates found")
-//	}
-//
-//	return certs, nil
-//}
+
+func DecodeCertBytes(certBytes []byte) ([]*x509.Certificate, error) {
+	var certs []*x509.Certificate
+	pemBytes := certBytes
+	for {
+		// TODO: Certificate can be in DER x509.ParsePKIXPublicKey
+		block, rest := pem.Decode(pemBytes)
+		if block == nil {
+			break
+		}
+
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			fmt.Println("HERE")
+			return nil, err
+		}
+		certs = append(certs, cert)
+		pemBytes = rest
+	}
+
+	fmt.Printf("%#v\n", certs)
+	if len(certs) == 0 {
+		return nil, errors.New("no certificates found")
+	}
+
+	return certs, nil
+}
+
+func DecodeCertFile(certFile string) ([]*x509.Certificate, error) {
+	certBytes, err := ioutil.ReadFile(certFile)
+	if err != nil {
+		return nil, err
+	}
+	return DecodeCertBytes(certBytes)
+}
+
 //
 //func verifyChainFromX509(roots, inters []*x509.Certificate, cert *x509.Certificate) (bool, string) {
 //	rootPool := x509.NewCertPool()

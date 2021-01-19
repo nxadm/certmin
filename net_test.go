@@ -8,26 +8,42 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRetrieveRemoteCerts(t *testing.T) {
-	certs, warn, err := RetrieveRemoteCerts("faa", 1*time.Second)
+func TestRetrieveCertsFromAddr(t *testing.T) {
+	certs, warn, err := RetrieveCertsFromAddr("faa", 1*time.Second)
 	assert.Nil(t, certs)
 	assert.NoError(t, warn)
 	assert.Error(t, err)
 
-	certs, warn, err = RetrieveRemoteCerts("faa", 0)
+	certs, warn, err = RetrieveCertsFromAddr("faa", 0)
 	assert.Nil(t, certs)
 	assert.NoError(t, warn)
 	assert.Error(t, err)
 
 	if os.Getenv("AUTHOR_TESTING") != "" {
-		certs, warn, err = RetrieveRemoteCerts("github.com:443", 5*time.Second)
+		certs, warn, err = RetrieveCertsFromAddr("github.com:443", 5*time.Second)
 		assert.NoError(t, warn)
 		assert.NoError(t, err)
 		assert.True(t, len(certs) >= 2)
 
-		certs, warn, err = RetrieveRemoteCerts("8.8.8.8:443", 5*time.Second)
+		certs, warn, err = RetrieveCertsFromAddr("8.8.8.8:443", 5*time.Second)
 		assert.NoError(t, warn)
 		assert.NoError(t, err)
 		assert.True(t, len(certs) >= 2)
+	}
+}
+
+func TestRetrieveCertsFromIssuerURLs(t *testing.T) {
+	//certs, err := DecodeCertFile("t/myserver.crt")
+	//assert.NoError(t, err)
+	//chain, err := RetrieveCertsFromIssuerURLs(certs[0], 1*time.Second)
+	//assert.Error(t, err)
+	//assert.Nil(t, chain)
+
+	if os.Getenv("AUTHOR_TESTING") != "" {
+		certs, err := DecodeCertFile("t/kuleuven-be.pem")
+		assert.NoError(t, err)
+		chain, err := RetrieveCertsFromIssuerURLs(certs[0], 5*time.Second)
+		assert.NoError(t, err)
+		assert.True(t, len(chain) > 2)
 	}
 }
