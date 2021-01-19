@@ -1,12 +1,22 @@
 package main
 
+import "github.com/nxadm/certmin"
+
 // actionFunc is a type for actions and their expected output as string and error.
 type actionFunc func() (string, error)
 
 // skimCerts prints relevant information of local or remote certificates,
 // optionally including a remote chain.
 func skimCerts(locations []string, remotes, issuerURIs, noRemoteRoots, keep bool) (string, error) {
+	for _, input := range locations {
+		loc, remote, err := getLocation(input)
+		if err != nil {
+			return "", err
+		}
+		if remote {
 
+		}
+	}
 	return "", nil
 }
 

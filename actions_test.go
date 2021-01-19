@@ -11,18 +11,7 @@ package certmin
 //
 //var testPasswordBytes = []byte("1234")
 //
-//func TestColourise(t *testing.T) {
-//	colourKeeper := make(colourKeeper)
-//	assert.NotEmpty(t, colourKeeper.colourise("0"))
-//	assert.NotEmpty(t, colourKeeper.colourise("1"))
-//	assert.NotEmpty(t, colourKeeper.colourise("2"))
-//	assert.NotEmpty(t, colourKeeper.colourise("3"))
-//	assert.NotEmpty(t, colourKeeper.colourise("4"))
-//	assert.NotEmpty(t, colourKeeper.colourise("5"))
-//	assert.NotEmpty(t, colourKeeper.colourise("6"))
-//	assert.NotEmpty(t, colourKeeper.colourise("7"))
-//	assert.Equal(t, "8", colourKeeper.colourise("8"))
-//}
+
 //
 //func TestSkimCerts(t *testing.T) {
 //	color.NoColor = true

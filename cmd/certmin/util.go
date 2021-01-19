@@ -4,15 +4,16 @@ import (
 	"errors"
 	"fmt"
 	"github.com/fatih/color"
+	"golang.org/x/crypto/ssh/terminal"
 	"net"
 	"net/url"
 	"os"
 	"strconv"
 	"syscall"
-
-	"golang.org/x/crypto/ssh/terminal"
 )
 
+// colourKeeper keeps track of certain output that must have the same color.
+// e.g. the CN as Subject and Issuer.
 type colourKeeper map[string]int
 
 // Only colourise the 8 first subjects

@@ -128,8 +128,12 @@ func verifyAndDispatch(help, progVersion, remotes, issuerURIs, noRemoteRoots, ke
 		return nil, "", errors.New("no certificate location given")
 
 	case args[1] == "skim" || args[1] == "sc":
+		// Add them quietly
+		locs := args[2:]
+		locs = append(locs, roots...)
+		locs = append(locs, inters...)
 		return func() (string, error) {
-			return skimCerts(args[2:], remotes, issuerURIs, noRemoteRoots, keep)
+			return skimCerts(locs, remotes, issuerURIs, noRemoteRoots, keep)
 		}, "", nil
 
 	case args[1] == "verify-chain" || args[1] == "vc":

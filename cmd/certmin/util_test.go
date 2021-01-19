@@ -6,6 +6,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestColorKeeper_Colourise(t *testing.T) {
+	colourKeeper := make(colourKeeper)
+	assert.NotEmpty(t, colourKeeper.colourise("0"))
+	assert.NotEmpty(t, colourKeeper.colourise("1"))
+	assert.NotEmpty(t, colourKeeper.colourise("2"))
+	assert.NotEmpty(t, colourKeeper.colourise("3"))
+	assert.NotEmpty(t, colourKeeper.colourise("4"))
+	assert.NotEmpty(t, colourKeeper.colourise("5"))
+	assert.NotEmpty(t, colourKeeper.colourise("6"))
+	assert.NotEmpty(t, colourKeeper.colourise("7"))
+	assert.Equal(t, "8", colourKeeper.colourise("8"))
+}
+
 func TestGetLocation(t *testing.T) {
 	loc, remote, err := getLocation("util.go")
 	assert.NoError(t, err)
