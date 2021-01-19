@@ -17,7 +17,8 @@ import (
 //)
 //
 var (
-	testSerials = []string{
+	testGeantSerial = "290123421899608141648701916708796095456"
+	testSerials     = []string{
 		"1",
 		"76359301477803385872276235234032301461",
 		"290123421899608141648701916708796095456",
@@ -80,6 +81,15 @@ func TestDecodeCertBytes(t *testing.T) {
 
 	_, err = DecodeCertBytes(nil)
 	assert.Error(t, err)
+
+	// DER
+	certBytes, err = ioutil.ReadFile("t/GEANTOVRSACA4.crt")
+	assert.NoError(t, err)
+	certs, err = DecodeCertBytes(certBytes)
+	assert.NoError(t, err)
+	if assert.NotNil(t, certs) {
+		assert.Equal(t, testGeantSerial, certs[0].SerialNumber.String())
+	}
 }
 
 func TestDecodeCertFile(t *testing.T) {
@@ -87,6 +97,13 @@ func TestDecodeCertFile(t *testing.T) {
 	assert.NoError(t, err)
 	for idx, serial := range testSerials {
 		assert.Equal(t, serial, certs[idx].SerialNumber.String())
+	}
+
+	// DER
+	certs, err = DecodeCertFile("t/GEANTOVRSACA4.crt")
+	assert.NoError(t, err)
+	if assert.True(t, len(certs) == 1) {
+		assert.Equal(t, testGeantSerial, certs[0].SerialNumber.String())
 	}
 
 	_, err = DecodeCertFile("t/chain-invalid-extra-nl.crt")

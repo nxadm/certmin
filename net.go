@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -15,8 +14,8 @@ import (
 // RetrieveCertsFromAddr retrieves all the certificates offered by the remote host. As parameters
 // it takes an address string in the form of hostname:port and a time-out duration for the
 // connection. The time-out is used for both the TCP and the SSL connection, with 0 disabling it.
-// The return values are an array of certificates (with the first element being the certificate
-// of the server), an error with a warning (mismatch between the hostname and the CN or DNS alias
+// The return values are a []*x509.Certificate (with the first element being the certificate
+// of the server), an error with a warning (e.g. mismatch between the hostname and the CN or DNS alias
 // in the certificate) and an error in case of failure.
 func RetrieveCertsFromAddr(addr string, timeOut time.Duration) ([]*x509.Certificate, error, error) {
 	conn, err := net.DialTimeout("tcp", addr, timeOut)
@@ -55,7 +54,13 @@ func RetrieveCertsFromAddr(addr string, timeOut time.Duration) ([]*x509.Certific
 	return tlsConn.ConnectionState().PeerCertificates, warning, nil
 }
 
-func RetrieveCertsFromIssuerURLs(cert *x509.Certificate, timeOut time.Duration) ([]*x509.Certificate, error) {
+// RetrieveChainFromIssuerURLs retrieves the chain for a certificate by following the
+// Issuing Certificate URLs field in the certificate (if present) and consecutively
+// following the Issuing Certificate URLs from issuing certificates. As parameters
+// it takes a *x509.Certificate and a time-out duration for the HTTP connection with
+// 0 disabling it. The return values are a []*x509.Certificate (with the first element
+// being the supplied certificate) and an error in case of failure.
+func RetrieveChainFromIssuerURLs(cert *x509.Certificate, timeOut time.Duration) ([]*x509.Certificate, error) {
 	if cert == nil || len(cert.IssuingCertificateURL) == 0 {
 		return nil, errors.New("no Issuing Certificate URLs")
 	}
@@ -68,7 +73,6 @@ func RetrieveCertsFromIssuerURLs(cert *x509.Certificate, timeOut time.Duration) 
 OUTER:
 	for lastCert != nil {
 		for _, url := range lastCert.IssuingCertificateURL {
-			fmt.Printf("HERE %s\n", url)
 			resp, err := client.Get(url)
 			if err != nil {
 				lastErr = err
@@ -76,13 +80,12 @@ OUTER:
 			}
 
 			bodyBytes, err := ioutil.ReadAll(resp.Body)
-			fmt.Printf("%#v\n", string(bodyBytes))
 			if err != nil {
 				lastErr = err
 				continue
 			}
 			defer resp.Body.Close()
-			// TODO: Certificate can be in DER x509.ParsePKIXPublicKey
+
 			decodedCerts, err := DecodeCertBytes(bodyBytes)
 			if err != nil {
 				lastErr = err
@@ -98,5 +101,5 @@ OUTER:
 		}
 		break OUTER
 	}
-	return tmpCerts[1:], lastErr
+	return tmpCerts, lastErr
 }

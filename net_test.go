@@ -32,18 +32,19 @@ func TestRetrieveCertsFromAddr(t *testing.T) {
 	}
 }
 
-func TestRetrieveCertsFromIssuerURLs(t *testing.T) {
-	//certs, err := DecodeCertFile("t/myserver.crt")
-	//assert.NoError(t, err)
-	//chain, err := RetrieveCertsFromIssuerURLs(certs[0], 1*time.Second)
-	//assert.Error(t, err)
-	//assert.Nil(t, chain)
+func TestRetrieveChainFromIssuerURLs(t *testing.T) {
+	certs, err := DecodeCertFile("t/myserver.crt")
+	assert.NoError(t, err)
+	// No Issuer URL
+	chain, err := RetrieveChainFromIssuerURLs(certs[0], 1*time.Second)
+	assert.Error(t, err)
+	assert.Nil(t, chain)
 
 	if os.Getenv("AUTHOR_TESTING") != "" {
 		certs, err := DecodeCertFile("t/kuleuven-be.pem")
 		assert.NoError(t, err)
-		chain, err := RetrieveCertsFromIssuerURLs(certs[0], 5*time.Second)
+		chain, err := RetrieveChainFromIssuerURLs(certs[0], 5*time.Second)
 		assert.NoError(t, err)
-		assert.True(t, len(chain) > 2)
+		assert.True(t, len(chain) >= 2)
 	}
 }

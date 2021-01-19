@@ -1,10 +1,10 @@
 package certmin
 
 import (
+	"bytes"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"fmt"
 	"io/ioutil"
 )
 
@@ -126,26 +126,34 @@ func IsRootCA(cert *x509.Certificate) bool {
 //	return ordered
 //}
 
+// DecodeCertBytes reads []byte with one DER encoded certificate or one or more
+// PEM encoded certificates (e.g. read from a file of a HTTP response body), and
+// returns the contents as a []*x509.Certificate and an error if encountered.
 func DecodeCertBytes(certBytes []byte) ([]*x509.Certificate, error) {
 	var certs []*x509.Certificate
 	pemBytes := certBytes
 	for {
-		// TODO: Certificate can be in DER x509.ParsePKIXPublicKey
 		block, rest := pem.Decode(pemBytes)
-		if block == nil {
+		if block == nil || bytes.Equal(rest, pemBytes) { // Invalid or DER encoded
 			break
 		}
 
 		cert, err := x509.ParseCertificate(block.Bytes)
 		if err != nil {
-			fmt.Println("HERE")
 			return nil, err
 		}
 		certs = append(certs, cert)
 		pemBytes = rest
 	}
 
-	fmt.Printf("%#v\n", certs)
+	if certs == nil {
+		cert, err := x509.ParseCertificate(pemBytes) // DER encoded
+		if err != nil {
+			return nil, err
+		}
+		certs = append(certs, cert)
+	}
+
 	if len(certs) == 0 {
 		return nil, errors.New("no certificates found")
 	}
@@ -153,6 +161,9 @@ func DecodeCertBytes(certBytes []byte) ([]*x509.Certificate, error) {
 	return certs, nil
 }
 
+// DecodeCertFile reads a files with one DER encoded certificate or one or more
+// PEM encoded certificates and returns the contents as a []*x509.Certificate and
+// an error if encountered.
 func DecodeCertFile(certFile string) ([]*x509.Certificate, error) {
 	certBytes, err := ioutil.ReadFile(certFile)
 	if err != nil {
@@ -161,7 +172,6 @@ func DecodeCertFile(certFile string) ([]*x509.Certificate, error) {
 	return DecodeCertBytes(certBytes)
 }
 
-//
 //func verifyChainFromX509(roots, inters []*x509.Certificate, cert *x509.Certificate) (bool, string) {
 //	rootPool := x509.NewCertPool()
 //	for _, root := range roots {
