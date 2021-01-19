@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -93,6 +94,7 @@ func RetrieveChainFromIssuerURLs(cert *x509.Certificate, timeOut time.Duration) 
 			}
 
 			tmpCerts = append(tmpCerts, decodedCerts[0])
+			fmt.Println(decodedCerts[0].Subject)
 			lastCert = decodedCerts[0]
 			break
 		}
