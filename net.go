@@ -70,8 +70,10 @@ func RetrieveChainFromIssuerURLs(cert *x509.Certificate, timeOut time.Duration) 
 	tmpCerts = append(tmpCerts, cert)
 	client := http.Client{Timeout: timeOut}
 	var lastErr error
+
 OUTER:
 	for lastCert != nil {
+		INNER:
 		for _, url := range lastCert.IssuingCertificateURL {
 			resp, err := client.Get(url)
 			if err != nil {
@@ -96,10 +98,12 @@ OUTER:
 			lastCert = decodedCerts[0]
 			if IsRootCA(decodedCerts[0]) {
 				break OUTER
+			} else {
+				break INNER
 			}
-			continue
 		}
 		break OUTER
 	}
+
 	return tmpCerts, lastErr
 }

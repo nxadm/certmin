@@ -39,7 +39,6 @@ func skimCerts(locations []string, params Params) (string, error) {
 			certs, err = certmin.DecodeCertFile(loc)
 		}
 
-		fmt.Println(len(certs))
 		if err != nil {
 			return "", err
 		}
