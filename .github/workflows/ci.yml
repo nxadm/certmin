@@ -17,7 +17,7 @@ jobs:
       with:
           fetch-depth: 0
     - name: Test
-      run: export AUTHOR_TESTING=1; go test -v ./...
+      run: export AUTHOR_TESTING=1; go test -v ./...; cd cmd/certmin; go test -v
     - name: Build
       run: |
         export GOOS=linux GOARCH=amd64
