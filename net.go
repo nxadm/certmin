@@ -96,6 +96,7 @@ func RetrieveChainFromIssuerURLs(cert *x509.Certificate, timeOut time.Duration) 
 			lastCert = decodedCerts[0]
 			break
 		}
+		lastCert = nil
 	}
 
 	return tmpCerts, lastErr
