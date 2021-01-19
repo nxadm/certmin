@@ -23,12 +23,12 @@ func EncodeCertAsPEMBytes(cert *x509.Certificate) ([]byte, error) {
 	}
 
 	block := &pem.Block{
-		Type: "CERTIFICATE",
+		Type:  "CERTIFICATE",
 		Bytes: cert.Raw,
 	}
 
 	var buf bytes.Buffer
-	err := pem.Encode(&buf, block);
+	err := pem.Encode(&buf, block)
 
 	return buf.Bytes(), err
 }
@@ -84,36 +84,6 @@ func DecodeCertFile(certFile string) ([]*x509.Certificate, error) {
 		return nil, err
 	}
 	return DecodeCertBytes(certBytes)
-}
-
-// VerifyChain verifies the chain of a certificate as part of a CertTree. When the
-// Roots field is nil, the OS trust store is used. The function return a boolean with
-// the verification result and an string with an associated message with the reason
-// of a negative result.
-func VerifyChain(tree *CertTree) (bool, string) {
-	rootPool := x509.NewCertPool()
-	for _, cert := range tree.Roots {
-		rootPool.AddCert(cert)
-	}
-
-	interPool := x509.NewCertPool()
-	for _, cert := range tree.Intermediates {
-		interPool.AddCert(cert)
-	}
-
-	var verifyOptions x509.VerifyOptions
-	if len(rootPool.Subjects()) != 0 {
-		verifyOptions.Roots = rootPool
-	}
-	if len(interPool.Subjects()) != 0 {
-		verifyOptions.Intermediates = interPool
-	}
-
-	if _, err := tree.Certificate.Verify(verifyOptions); err != nil {
-		return false, err.Error()
-	}
-
-	return true, ""
 }
 
 // SortCerts sorts a []*x509.Certificate from leaf to root CA, or the other
@@ -194,3 +164,100 @@ func SplitCertsAsTree(certs []*x509.Certificate) *CertTree {
 
 	return &certTree
 }
+
+// VerifyChain verifies the chain of a certificate as part of a CertTree. When the
+// Roots field is nil, the OS trust store is used. The function return a boolean with
+// the verification result and an string with an associated message with the reason
+// of a negative result.
+func VerifyChain(tree *CertTree) (bool, string) {
+	rootPool := x509.NewCertPool()
+	for _, cert := range tree.Roots {
+		rootPool.AddCert(cert)
+	}
+
+	interPool := x509.NewCertPool()
+	for _, cert := range tree.Intermediates {
+		interPool.AddCert(cert)
+	}
+
+	var verifyOptions x509.VerifyOptions
+	if len(rootPool.Subjects()) != 0 {
+		verifyOptions.Roots = rootPool
+	}
+	if len(interPool.Subjects()) != 0 {
+		verifyOptions.Intermediates = interPool
+	}
+
+	if _, err := tree.Certificate.Verify(verifyOptions); err != nil {
+		return false, err.Error()
+	}
+
+	return true, ""
+}
+
+//
+//func verifyKey(loc, keyFile string, passwordBytes []byte) (string, error) {
+//	msgOK := color.GreenString("the certificate and key match")
+//	msgNOK := color.RedString("the certificate and key do not match")
+//	certs, _, err := getCertificates(loc, false, false)
+//	if err != nil {
+//		return "", err
+//	}
+//
+//	if len(certs) != 1 {
+//		return "", errors.New("only 1 certificate can be verified")
+//	}
+//
+//	pemBytes, err := ioutil.ReadFile(keyFile)
+//	if err != nil {
+//		return "", err
+//	}
+//
+//	keyPEMBlock, _ := pem.Decode(pemBytes)
+//	keyPEM := pem.EncodeToMemory(&pem.Block{
+//		Type:  "PRIVATE KEY",
+//		Bytes: keyPEMBlock.Bytes,
+//	})
+//	certPEM := pem.EncodeToMemory(&pem.Block{
+//		Type:  "CERTIFICATE",
+//		Bytes: certs[0].Raw,
+//	})
+//
+//	if strings.Contains(keyPEMBlock.Type, "ENCRYPTED") {
+//		if passwordBytes == nil {
+//			passwordBytes, err = promptForPassword()
+//			if err != nil {
+//				return "", err
+//			}
+//		}
+//
+//		parsedKey, err := pkcs8.ParsePKCS8PrivateKey(keyPEMBlock.Bytes, passwordBytes)
+//		if err != nil {
+//			return "", err
+//		}
+//
+//		var keyBytes []byte
+//		switch key := parsedKey.(type) {
+//		case *rsa.PrivateKey, *ecdsa.PrivateKey, *ed25519.PrivateKey:
+//			keyBytes, err = x509.MarshalPKCS8PrivateKey(key)
+//		default:
+//			err = errors.New("unknown signature algorithm of private key")
+//		}
+//		if err != nil {
+//			return "", err
+//		}
+//
+//		keyPEM = pem.EncodeToMemory(
+//			&pem.Block{
+//				Type:  "PRIVATE KEY",
+//				Bytes: keyBytes,
+//			},
+//		)
+//	}
+//
+//	_, err = tls.X509KeyPair(certPEM, keyPEM)
+//	if err != nil {
+//		return msgNOK, nil
+//	}
+//	return msgOK, nil
+//}

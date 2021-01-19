@@ -126,17 +126,60 @@ func TestVerifyChain(t *testing.T) {
 	certs, err := DecodeCertFile("t/myserver.crt")
 	assert.NoError(t, err)
 	verified, output := VerifyChain(&CertTree{
-		Certificate:   certs[0],
-		Roots:         ca,
+		Certificate: certs[0],
+		Roots:       ca,
 	})
 	assert.Equal(t, "", output)
 
 	certs, err = DecodeCertFile("t/myserver-fromca2.crt")
 	assert.NoError(t, err)
 	verified, output = VerifyChain(&CertTree{
-		Certificate:   certs[0],
-		Roots:         ca,
+		Certificate: certs[0],
+		Roots:       ca,
 	})
 	assert.False(t, verified)
 	assert.NotEqual(t, "", output)
 }
+
+//func TestVerifyKey(t *testing.T) {
+//	output, err := verifyKey("t/myserver.crt", "t/myserver.key", nil)
+//	assert.Contains(t, output, "the certificate and key match")
+//	assert.Nil(t, err)
+//
+//	output, err = verifyKey("t/myserver.crt", "t/myserver-fromca2.key", nil)
+//	assert.Contains(t, output, "the certificate and key do not match")
+//	assert.Nil(t, err)
+//
+//	// rsa
+//	output, err = verifyKey("t/myserver.crt", "t/myserver_enc.key", testPasswordBytes)
+//	assert.Contains(t, output, "the certificate and key match")
+//	assert.Nil(t, err)
+//
+//	// ec
+//	output, err = verifyKey("t/ecdsa_prime256v1.crt", "t/ecdsa_prime256v1.key", nil)
+//	assert.Contains(t, output, "the certificate and key match")
+//	assert.Nil(t, err)
+//
+//	output, err = verifyKey("t/ecdsa_prime256v1_2.crt", "t/ecdsa_prime256v1_2_enc.key", testPasswordBytes)
+//	assert.Contains(t, output, "the certificate and key match")
+//	assert.Nil(t, err)
+//
+//	//ec with unsupported signature
+//	output, err = verifyKey("t/ecdsa_secp384r1.crt", "t/ecdsa_secp384r1.key", nil)
+//	assert.Contains(t, output, "the certificate and key match")
+//	assert.Nil(t, err)
+//
+//	output, err = verifyKey("t/ecdsa_secp384r1_2.crt", "t/ecdsa_secp384r1_2_enc.key", testPasswordBytes)
+//	assert.Contains(t, output, "the certificate and key match")
+//	assert.Nil(t, err)
+//
+//	// ed22519
+//	output, err = verifyKey("t/ed25519.crt", "t/ed25519.key", nil)
+//	assert.Contains(t, output, "the certificate and key match")
+//	assert.Nil(t, err)
+//
+//	// TODO: encrypted ed22519, better testfiles
+//	//output, err = verifyKey("t/ed25519_2.crt", "t/ed25519_2_enc.key", testPasswordBytes)
+//	//assert.Contains(t, output, "the certificate and key match")
+//	//assert.Nil(t, err)
+//}
