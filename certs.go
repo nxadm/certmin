@@ -44,6 +44,7 @@ func IsRootCA(cert *x509.Certificate) bool {
 // PEM encoded certificates (e.g. read from a file of a HTTP response body), and
 // returns the contents as a []*x509.Certificate and an error if encountered.
 func DecodeCertBytes(certBytes []byte) ([]*x509.Certificate, error) {
+	// TODO: decode pkcs7, e.g. http://apps.identrust.com/roots/dstrootcax3.p7c
 	var certs []*x509.Certificate
 	pemBytes := certBytes
 	for {
