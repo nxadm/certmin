@@ -87,6 +87,7 @@ func skimCerts(locations []string, params Params) (string, error) {
 // verifyChain verifies that local or remote certificates match their chain,
 // supplied as local files, system-trust and/or remotely.
 func verifyChain(locations []string, params Params) (string, error) {
+
 	return "", nil
 }
 

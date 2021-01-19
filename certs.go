@@ -86,31 +86,35 @@ func DecodeCertFile(certFile string) ([]*x509.Certificate, error) {
 	return DecodeCertBytes(certBytes)
 }
 
-//func verifyChainFromX509(roots, inters []*x509.Certificate, cert *x509.Certificate) (bool, string) {
-//	rootPool := x509.NewCertPool()
-//	for _, root := range roots {
-//		rootPool.AddCert(root)
-//	}
-//
-//	interPool := x509.NewCertPool()
-//	for _, inter := range inters {
-//		interPool.AddCert(inter)
-//	}
-//
-//	var verifyOptions x509.VerifyOptions
-//	if len(rootPool.Subjects()) != 0 {
-//		verifyOptions.Roots = rootPool
-//	}
-//	if len(interPool.Subjects()) != 0 {
-//		verifyOptions.Intermediates = interPool
-//	}
-//
-//	if _, err := cert.Verify(verifyOptions); err != nil {
-//		return false, color.RedString(err.Error() + "\n")
-//	}
-//
-//	return true, ""
-//}
+// VerifyChain verifies the chain of a certificate as part of a CertTree. When the
+// Roots field is nil, the OS trust store is used. The function return a boolean with
+// the verification result and an string with an associated message with the reason
+// of a negative result.
+func VerifyChain(tree *CertTree) (bool, string) {
+	rootPool := x509.NewCertPool()
+	for _, cert := range tree.Roots {
+		rootPool.AddCert(cert)
+	}
+
+	interPool := x509.NewCertPool()
+	for _, cert := range tree.Intermediates {
+		interPool.AddCert(cert)
+	}
+
+	var verifyOptions x509.VerifyOptions
+	if len(rootPool.Subjects()) != 0 {
+		verifyOptions.Roots = rootPool
+	}
+	if len(interPool.Subjects()) != 0 {
+		verifyOptions.Intermediates = interPool
+	}
+
+	if _, err := tree.Certificate.Verify(verifyOptions); err != nil {
+		return false, err.Error()
+	}
+
+	return true, ""
+}
 
 // SortCerts sorts a []*x509.Certificate from leaf to root CA, or the other
 // way around if a the supplied boolean is set to true. Double elements are

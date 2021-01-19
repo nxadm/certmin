@@ -120,19 +120,23 @@ func TestDecodeCertFile(t *testing.T) {
 	assert.Error(t, err)
 }
 
-//
-//func TestVerifyChainFromX509(t *testing.T) {
-//	ca, err := splitMultiCertFile("t/ca.crt")
-//	assert.NoError(t, err)
-//	cert, err := splitMultiCertFile("t/myserver.crt")
-//	assert.NoError(t, err)
-//	verified, output := verifyChainFromX509(ca, nil, cert[0])
-//	assert.NoError(t, err)
-//	assert.Equal(t, "", output)
-//
-//	cert, err = splitMultiCertFile("t/myserver-fromca2.crt")
-//	assert.NoError(t, err)
-//	verified, output = verifyChainFromX509(ca, nil, cert[0])
-//	assert.False(t, verified)
-//	assert.NotEqual(t, "", output)
-//}
+func TestVerifyChain(t *testing.T) {
+	ca, err := DecodeCertFile("t/ca.crt")
+	assert.NoError(t, err)
+	certs, err := DecodeCertFile("t/myserver.crt")
+	assert.NoError(t, err)
+	verified, output := VerifyChain(&CertTree{
+		Certificate:   certs[0],
+		Roots:         ca,
+	})
+	assert.Equal(t, "", output)
+
+	certs, err = DecodeCertFile("t/myserver-fromca2.crt")
+	assert.NoError(t, err)
+	verified, output = VerifyChain(&CertTree{
+		Certificate:   certs[0],
+		Roots:         ca,
+	})
+	assert.False(t, verified)
+	assert.NotEqual(t, "", output)
+}
