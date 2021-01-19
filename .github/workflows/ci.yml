@@ -20,11 +20,12 @@ jobs:
       run: export AUTHOR_TESTING=1; go test -v ./...
     - name: Build
       run: |
-        mkdir -p binaries
         export GOOS=linux GOARCH=amd64
-        echo "Building for $GOOS $GOARCH..."; go build 
+        echo "Building for $GOOS $GOARCH..."; go build
         export GOOS=darwin GOARCH=amd64
-        echo "Building for $GOOS $GOARCH..."; go build 
+        echo "Building for $GOOS $GOARCH..."; go build
         export GOOS=windows GOARCH=amd64
-        echo "Building for $GOOS $GOARCH..."; go build 
+        echo "Building for $GOOS $GOARCH..."; go build
+        cd cmd/certmin
+        ./create_binaries.sh
         echo "Done"
