@@ -12,3 +12,5 @@ vendor/
 *.test
 *.out
 cmd/certmin/certmin
+cmd/certmin/certmin_*
+cmd/certmin/binaries/
