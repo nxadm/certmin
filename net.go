@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -71,6 +72,7 @@ func RetrieveChainFromIssuerURLs(cert *x509.Certificate, timeOut time.Duration) 
 	certToCheck := cert
 
 	for certToCheck != nil {
+		fmt.Printf("Checking and appending CERT: %s\n", cert.Subject)
 		retrievedChain = append(retrievedChain, certToCheck)
 		INNER:
 		for _, url := range certToCheck.IssuingCertificateURL {
@@ -93,6 +95,7 @@ func RetrieveChainFromIssuerURLs(cert *x509.Certificate, timeOut time.Duration) 
 				continue
 			}
 
+			fmt.Printf("Next CERT: %s\n", decodedCerts[0].Subject)
 			retrievedChain = append(retrievedChain, decodedCerts[0])
 			certToCheck = decodedCerts[0]
 			lastErr = nil
