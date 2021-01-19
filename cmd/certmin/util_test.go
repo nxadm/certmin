@@ -1,9 +1,11 @@
 package main
 
 import (
-	"testing"
-
+	"github.com/nxadm/certmin"
 	"github.com/stretchr/testify/assert"
+	"strings"
+	"testing"
+	"text/tabwriter"
 )
 
 func TestColorKeeper_Colourise(t *testing.T) {
@@ -66,6 +68,19 @@ func TestParseURL(t *testing.T) {
 	assert.NotNil(t, err)
 	_, err = parseURL("BLAH.BOE")
 	assert.NotNil(t, err)
+}
+
+//func printCert(cert *x509.Certificate, w *tabwriter.Writer, colourKeeper colourKeeper) {
+func TestPrintCert(t *testing.T) {
+	certs, err := certmin.DecodeCertFile("t/myserver.crt")
+	assert.NoError(t, err)
+	assert.NotNil(t, certs)
+	var sb strings.Builder
+	w := tabwriter.NewWriter(&sb, 0, 0, 1, ' ', tabwriter.StripEscape)
+	colourKeeper := make(colourKeeper)
+	printCert(certs[0], w, colourKeeper)
+	w.Flush()
+	assert.Contains(t, sb.String(), "CN=myserver")
 }
 
 func TestPromptForKeyPassword(t *testing.T) {

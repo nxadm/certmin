@@ -10,8 +10,6 @@ func TestGetAction(t *testing.T) {
 	t.SkipNow()
 }
 
-//func verifyAndDispatch(help, progVersion, remotes, issuerURIs, noRemoteRoots, keep bool,
-//	roots, inters, args []string) (actionFunc, string, error) {
 func TestVerifyAndDispatch(t *testing.T) {
 	params := Params{}
 
@@ -50,12 +48,12 @@ func TestVerifyAndDispatch(t *testing.T) {
 	assert.NotNil(t, err)
 
 	// Illegal combination
-	params.remotes = true
+	params.leaf = true
 	params.follow = true
 	action, msg, err = verifyAndDispatch(params, []string{"certmin", "verify-chain", "foo"})
 	assert.Nil(t, action)
 	assert.NotNil(t, err)
-	params.remotes = false
+	params.leaf = false
 	params.follow = false
 
 	params.sort = true
@@ -82,11 +80,11 @@ func TestVerifyAndDispatch(t *testing.T) {
 	assert.Nil(t, err)
 	params.roots = nil
 
-	params.remotes = true
+	params.leaf = true
 	action, msg, err = verifyAndDispatch(params, []string{"certmin", "verify-chain", "foo", "fa"})
 	assert.NotNil(t, action)
 	assert.Nil(t, err)
-	params.remotes = false
+	params.leaf = false
 
 	action, msg, err = verifyAndDispatch(params, []string{"certmin", "verify-key", "foo", "bar"})
 	assert.NotNil(t, action)

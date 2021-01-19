@@ -57,13 +57,25 @@ func TestSortCerts(t *testing.T) {
 
 	ordered := SortCerts(certs, false)
 	assert.NotNil(t, ordered)
-	assert.Equal(t, 6, len(ordered))
+	assert.Equal(t, 7, len(ordered))
 	assert.Equal(t, testGeantSerial, ordered[1].SerialNumber.String())
 
 	ordered = SortCerts(certs, true)
 	assert.NotNil(t, ordered)
-	assert.Equal(t, 6, len(ordered))
+	assert.Equal(t, 7, len(ordered))
 	assert.Equal(t, testGeantSerial, ordered[len(ordered)-2].SerialNumber.String())
+}
+
+func TestSplitCertsAsTree(t *testing.T) {
+	certs, err := DecodeCertFile("t/chain-out-of-order.crt")
+	assert.NotNil(t, certs)
+	assert.NoError(t, err)
+
+	tree := SplitCertsAsTree(certs)
+	assert.NotNil(t, tree)
+	assert.Contains(t, tree.Certificate.Subject.CommonName, "exporl")
+	assert.Equal(t, len(certs) - 2, len(tree.Intermediates))
+	assert.Equal(t, 1, len(tree.Roots))
 }
 
 func TestDecodeCertBytes(t *testing.T) {

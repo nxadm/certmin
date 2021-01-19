@@ -8,7 +8,13 @@ import (
 	"io/ioutil"
 )
 
-//
+// CertTree represents a chain where certificates are
+// assigned as a Certificate, Intermediates and Roots.
+type CertTree struct {
+	Certificate          *x509.Certificate
+	Intermediates, Roots []*x509.Certificate
+}
+
 //import (
 //	"crypto/x509"
 //	"encoding/pem"
@@ -77,56 +83,6 @@ import (
 
 func IsRootCA(cert *x509.Certificate) bool {
 	return cert.Subject.String() == cert.Issuer.String()
-}
-
-// SortCerts sorts a []*x509.Certificate from leaf to root CA, or the other
-// way around if a the supplied boolean is set to true. Double identical
-// elements are removed.
-func SortCerts(certs []*x509.Certificate, reverse bool) []*x509.Certificate {
-	var ordered []*x509.Certificate
-
-	// Get the information needed to follow the chain
-	parentName := make(map[string]string)
-	certByName := make(map[string]*x509.Certificate)
-	for _, cert := range certs {
-		if _, ok := certByName[cert.Subject.String()]; ok {
-			continue
-		}
-		certByName[cert.Subject.String()] = cert
-		parentName[cert.Subject.String()] = cert.Issuer.String()
-	}
-
-	seen := make(map[string]bool)
-	for _, cert := range certs {
-		if _, ok := seen[cert.Subject.String()]; ok {
-			continue
-		}
-		ordered = append(ordered, cert)
-		seen[cert.Subject.String()] = true
-		for { // follow the chain
-			_, ok := certByName[parentName[cert.Subject.String()]] // we have that cert
-			_, ok2 := seen[parentName[cert.Subject.String()]]      // the parent has not been seen
-			if ok && !ok2 {
-				// do we have the next Issuer (e.g. incomplete chain
-				if _, ok := certByName[parentName[cert.Subject.String()]]; ok {
-					ordered = append(ordered, certByName[parentName[cert.Subject.String()]])
-					seen[parentName[cert.Subject.String()]] = true
-					cert = certByName[parentName[cert.Subject.String()]]
-					continue
-				}
-			}
-			break
-		}
-	}
-
-	if reverse {
-		var reversed []*x509.Certificate
-		for idx := len(ordered) - 1; idx >= 0; idx-- {
-			reversed = append(reversed, ordered[idx])
-		}
-		return reversed
-	}
-	return ordered
 }
 
 // DecodeCertBytes reads a []byte with one DER encoded certificate or one or more
@@ -200,3 +156,82 @@ func DecodeCertFile(certFile string) ([]*x509.Certificate, error) {
 //
 //	return true, ""
 //}
+
+// SortCerts sorts a []*x509.Certificate from leaf to root CA, or the other
+// way around if a the supplied boolean is set to true. Double elements are
+// removed. The starting leaf certificate must be the first element of the
+// given []*x509.Certificate.
+func SortCerts(certs []*x509.Certificate, reverse bool) []*x509.Certificate {
+	var ordered []*x509.Certificate
+
+	// Get the information needed to follow the chain
+	parentName := make(map[string]string)
+	certByName := make(map[string]*x509.Certificate)
+	for _, cert := range certs {
+		if _, ok := certByName[cert.Subject.String()]; ok {
+			continue
+		}
+		certByName[cert.Subject.String()] = cert
+		parentName[cert.Subject.String()] = cert.Issuer.String()
+	}
+
+	seen := make(map[string]bool)
+	for _, cert := range certs {
+		if _, ok := seen[cert.Subject.String()]; ok {
+			continue
+		}
+		ordered = append(ordered, cert)
+		seen[cert.Subject.String()] = true
+		for { // follow the chain
+			_, ok := certByName[parentName[cert.Subject.String()]] // we have that cert
+			_, ok2 := seen[parentName[cert.Subject.String()]]      // the parent has not been seen
+			if ok && !ok2 {
+				// do we have the next Issuer (e.g. incomplete chain
+				if _, ok := certByName[parentName[cert.Subject.String()]]; ok {
+					ordered = append(ordered, certByName[parentName[cert.Subject.String()]])
+					seen[parentName[cert.Subject.String()]] = true
+					cert = certByName[parentName[cert.Subject.String()]]
+					continue
+				}
+			}
+			break
+		}
+	}
+
+	if reverse {
+		var reversed []*x509.Certificate
+		for idx := len(ordered) - 1; idx >= 0; idx-- {
+			reversed = append(reversed, ordered[idx])
+		}
+		return reversed
+	}
+	return ordered
+}
+
+// SplitCertsAsTree returns a *CertTree where the given certificates
+// are assigned as Certificate, Intermediates and Roots. The starting
+// leaf certificate must be the first element of the given
+// []*x509.Certificate.
+func SplitCertsAsTree(certs []*x509.Certificate) *CertTree {
+	if len(certs) == 0 {
+		return nil
+	}
+
+	ordered := SortCerts(certs, false)
+	var roots, inters []*x509.Certificate
+	for _, cert := range ordered {
+		if IsRootCA(cert) {
+			roots = append(roots, cert)
+		} else {
+			inters = append(inters, cert)
+		}
+	}
+
+	certTree := CertTree{
+		Certificate:   ordered[0],
+		Intermediates: inters,
+		Roots:         roots,
+	}
+
+	return &certTree
+}

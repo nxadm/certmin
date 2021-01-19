@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"github.com/fatih/color"
@@ -9,7 +10,9 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"syscall"
+	"text/tabwriter"
 )
 
 // colourKeeper keeps track of certain output that must have the same color.
@@ -61,19 +64,6 @@ func getLocation(input string) (string, bool, error) {
 	return "", false, fmt.Errorf("%s is not a file or a remote location", input)
 }
 
-// promptForKeyPassword prompts the user for the password to
-// decrypt a private key. It returns the password as a []byte
-// and an error.
-func promptForKeyPassword() ([]byte, error) {
-	fmt.Print("Enter password of private key: ")
-	bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
-	fmt.Println()
-	if err != nil {
-		return nil, err
-	}
-	return bytePassword, nil
-}
-
 // parseURL parses a given URL and return a string in the form of
 // hostname:port or an error if the parsing fails.
 func parseURL(remote string) (string, error) {
@@ -105,4 +95,108 @@ func parseURL(remote string) (string, error) {
 	}
 
 	return parsedURL.Hostname() + ":" + strconv.Itoa(port), nil
+}
+
+// printCert prints the relevant information of certificate
+func printCert(cert *x509.Certificate, w *tabwriter.Writer, colourKeeper colourKeeper) {
+	fmt.Fprintf(w, "Subject:\t%s\n", colourKeeper.colourise(cert.Subject.String()))
+	fmt.Fprintf(w, "Issuer:\t%s\n", colourKeeper.colourise(cert.Issuer.String()))
+	if len(cert.IssuingCertificateURL) > 0 {
+		fmt.Fprintf(w, "Issuer Certificate URLs:\t%s\n",
+			strings.Join(cert.IssuingCertificateURL, ", "))
+	}
+	if len(cert.DNSNames) > 0 {
+		fmt.Fprintf(w, "DNS names:\t%s\n", strings.Join(cert.DNSNames, ", "))
+	}
+	if len(cert.EmailAddresses) > 0 {
+		fmt.Fprintf(w, "Email addresses:\t%s\n", strings.Join(cert.EmailAddresses, ", "))
+	}
+	if len(cert.IPAddresses) > 0 {
+		var ips []string
+		for _, ip := range cert.IPAddresses {
+			ips = append(ips, ip.String())
+		}
+		fmt.Fprintf(w, "IP addresses:\t%s\n", strings.Join(ips, ", "))
+	}
+	if len(cert.URIs) > 0 {
+		var uris []string
+		for _, uri := range cert.URIs {
+			uris = append(uris, uri.String())
+		}
+		fmt.Fprintf(w, "URIs:\t%s\n", strings.Join(uris, ", "))
+	}
+	fmt.Fprintf(w, "Serial number:\t%s\n", cert.SerialNumber)
+	fmt.Fprintf(w, "Version:\t%d\n", cert.Version)
+	if cert.IsCA {
+		fmt.Fprintf(w, "Is CA:\t%t\n", true)
+	}
+	if cert.MaxPathLen > 0 {
+		fmt.Fprintf(w, "MaxPathLen:\t%d\n", cert.MaxPathLen)
+	}
+	if cert.MaxPathLenZero {
+		fmt.Fprintf(w, "MaxPathLen is 0:\t%t\n", cert.MaxPathLenZero)
+	}
+	fmt.Fprintf(w, "Public key algorithm:\t%s\n", cert.PublicKeyAlgorithm.String())
+	fmt.Fprintf(w, "Signature algorithm:\t%s\n", cert.SignatureAlgorithm.String())
+	if cert.PermittedDNSDomainsCritical {
+		fmt.Fprintf(w, "Permitted DNS domains critical:\t%t\n", true)
+	}
+	if len(cert.PermittedDNSDomains) > 0 {
+		fmt.Fprintf(w, "Permitted DNS domains:\t%s\n", strings.Join(cert.PermittedDNSDomains, ", "))
+	}
+	if len(cert.ExcludedDNSDomains) > 0 {
+		fmt.Fprintf(w, "Excluded DNS domains:\t%s\n", strings.Join(cert.ExcludedDNSDomains, ", "))
+	}
+	if len(cert.PermittedURIDomains) > 0 {
+		fmt.Fprintf(w, "Permitted URI domains:\t%s\n", strings.Join(cert.PermittedURIDomains, ", "))
+	}
+	if len(cert.ExcludedURIDomains) > 0 {
+		fmt.Fprintf(w, "Excluded URI domains:\t%s\n", strings.Join(cert.ExcludedURIDomains, ", "))
+	}
+	if len(cert.PermittedEmailAddresses) > 0 {
+		fmt.Fprintf(w, "Permitted email addresses:\t%s\n", strings.Join(cert.PermittedEmailAddresses, ", "))
+	}
+	if len(cert.ExcludedEmailAddresses) > 0 {
+		fmt.Fprintf(w, "Excluded email addresses:\t%s\n", strings.Join(cert.ExcludedEmailAddresses, ", "))
+	}
+	if len(cert.PermittedIPRanges) > 0 {
+		var iprs []string
+		for _, ipr := range cert.PermittedIPRanges {
+			iprs = append(iprs, ipr.String())
+		}
+		fmt.Fprintf(w, "Permitted IP ranges:\t%s\n", strings.Join(iprs, ", "))
+	}
+	if len(cert.ExcludedIPRanges) > 0 {
+		var iprs []string
+		for _, ipr := range cert.ExcludedIPRanges {
+			iprs = append(iprs, ipr.String())
+		}
+		fmt.Fprintf(w, "Excluded IP ranges:\t%s\n", strings.Join(iprs, ", "))
+	}
+	if len(cert.OCSPServer) > 0 {
+		fmt.Fprintf(w, "OCSP servers:\t%s\n", strings.Join(cert.OCSPServer, ", "))
+	}
+	if len(cert.CRLDistributionPoints) > 0 {
+		fmt.Fprintf(w, "CRL locations:\t%s\n", strings.Join(cert.CRLDistributionPoints, ", "))
+	}
+	fmt.Fprintf(w, "Not before:\t%s\n", cert.NotBefore)
+	fmt.Fprintf(w, "Not after:\t%s\n", cert.NotAfter)
+}
+
+// promptForKeyPassword prompts the user for the password to
+// decrypt a private key. It returns the password as a []byte
+// and an error.
+func promptForKeyPassword() ([]byte, error) {
+	fmt.Print("Enter password of private key: ")
+	bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
+	fmt.Println()
+	if err != nil {
+		return nil, err
+	}
+	return bytePassword, nil
+}
+
+func writeCertFiles(certs *[]x509.Certificate) error {
+
+	return nil
 }
