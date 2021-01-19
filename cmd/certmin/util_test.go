@@ -91,5 +91,6 @@ func TestWriteCertFiles(t *testing.T) {
 	certs, err := certmin.DecodeCertFile("t/cert-and-chain.crt")
 	assert.NoError(t, err)
 	assert.NotNil(t, certs)
-	writeCertFiles(certs)
+	err = writeCertFiles(certs, false)
+	assert.NoError(t, err)
 }

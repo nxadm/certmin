@@ -7,10 +7,10 @@ import (
 	"github.com/fatih/color"
 	"github.com/nxadm/certmin"
 	"golang.org/x/crypto/ssh/terminal"
-	"io/ioutil"
 	"net"
 	"net/url"
 	"os"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
@@ -201,22 +201,60 @@ func promptForKeyPassword() ([]byte, error) {
 }
 
 // writeCertFiles writes certificates to disk
-func writeCertFiles(certs []*x509.Certificate) error {
+func writeCertFiles(certs []*x509.Certificate, cleanup bool) error {
 	tree := certmin.SplitCertsAsTree(certs)
 	if tree.Certificate == nil {
 		return errors.New("no certificate found")
 	}
+	fmt.Printf("inters: %d\n", len(tree.Intermediates))
+	fmt.Printf("roots: %d\n", len(tree.Roots))
 
 	rx := regexp.MustCompile("[^a-zA-Z0-9_-]")
 	baseName := "certmin_" + rx.ReplaceAllString(tree.Certificate.Subject.CommonName, "_") + "_" +
 		time.Now().Format("20060102150405")
-	fmt.Println(baseName)
 
-	err := ioutil.WriteFile(baseName + ".crt", tree.Certificate.Raw, 0644)
-	if err != nil {
-		return err
+	ext := make(map[int]string)
+	ext[0] = ".crt"
+	ext[1] = "_chain.crt"
+	ext[2] = "_chain_with_root.crt"
+
+	for idx, certArray := range [][]*x509.Certificate{{tree.Certificate}, tree.Intermediates, tree.Roots} {
+		var file *os.File
+		var err error
+		if len(certArray) > 0 {
+			file, err = os.Create(baseName + ".crt")
+			if err != nil {
+				fmt.Println("1")
+				file, err = os.Create(path.Join(os.TempDir(), baseName+ext[idx]))
+				if err != nil {
+					fmt.Println("2")
+					return err
+				}
+			}
+		}
+		for _, cert := range certArray {
+			fmt.Printf("Working on index %d\n", idx)
+			fmt.Printf("Working on %s\n", cert.Subject.CommonName)
+			pemBytes, err := certmin.EncodeCertAsPEMBytes(cert)
+			if err != nil {
+				fmt.Println("3")
+				return err
+			}
+
+			_, err = file.Write(pemBytes)
+			if err != nil {
+				fmt.Println("4")
+				return err
+			}
+		}
+
+		if file != nil {
+			file.Close()
+		}
+		if cleanup {
+			defer os.Remove(file.Name())
+		}
 	}
-
 
 	return nil
 }
