@@ -43,7 +43,7 @@ func skimCerts(locations []string, remotes, issuerURIs, noRemoteRoots, sort, kee
 		}
 
 		if sort {
-
+			certs = certmin.SortCert(certs, false)
 		}
 
 		for idx, cert := range certs {
