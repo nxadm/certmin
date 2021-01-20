@@ -5,7 +5,10 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"go.mozilla.org/pkcs7"
 	"io/ioutil"
+	"software.sslmate.com/src/go-pkcs12"
+	"strings"
 )
 
 // CertTree represents a chain where certificates are
@@ -45,56 +48,70 @@ func IsRootCA(cert *x509.Certificate) bool {
 // []*x509.Certificate and an error if encountered. PKCS1, PCKS7 and PKCS12
 // containers are supported. A password is only needed for PKCS12
 func DecodeCertBytes(certBytes []byte, password string) ([]*x509.Certificate, error) {
-	//var certs []*x509.Certificate
-	//var err error
-	//var errStrs []string
-	//
-	//// PKCS1, PKCS8
-	//certs, err := x509.ParseCertificates(certBytes) // DER bytes
-	//if err != nil {                                    // PEM encoded
-	//	pemBytes := certBytes
-	//	for {
-	//		block, rest := pem.Decode(pemBytes)
-	//		if block == nil || bytes.Equal(rest, pemBytes) { // Invalid or PKCS7
-	//			break
-	//		}
-	//
-	//		var retrieved []*x509.Certificate
-	//		retrieved, err = x509.ParseCertificates(block.Bytes)
-	//		if err != nil {
-	//			return nil, err
-	//		}
-	//		certs = append(certs, retrieved...)
-	//		err = nil
-	//		pemBytes = rest
-	//	}
-	//}
-	//
-	//if err != nil { // PKCS7
-	//	p7, err := pkcs7.Parse(certBytes)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	certs = p7.Certificates
-	//	err = nil
-	//}
-	//
-	//if password != "" { // PKCS12
-	//	_, cert, caCerts, err2 := pkcs12.DecodeChain(certBytes, password)
-	//	if err2 == nil {
-	//		certs = append(certs, cert)
-	//		certs = append(certs, caCerts...)
-	//	} else {
-	//		err = err2
-	//	}
-	//}
-	//
-	//if len(certs) == 0 {
-	//	return nil, errors.New("no certificates found")
-	//}
-	//
-	//return certs, nil
-	return nil, nil
+	var certs []*x509.Certificate
+	var err error
+	var errStrs []string
+
+	// PKCS1
+	certs, err = x509.ParseCertificates(certBytes) // Assumes the bytes are DER
+	if err != nil {                                // Assume the bytes are PEM
+		errStrs = append(errStrs, err.Error())
+		pemBytes := certBytes
+		for {
+			block, rest := pem.Decode(pemBytes)
+			if bytes.Equal(rest, pemBytes) { // Invalid: try PKCS7 or 12
+				err = errors.New("not valid PKCS1 dats")
+				errStrs = append(errStrs, err.Error())
+				break
+			}
+			if block == nil { // no more date left
+				break
+			}
+
+			var retrieved []*x509.Certificate
+			retrieved, err = x509.ParseCertificates(block.Bytes)
+			if err != nil {
+				errStrs = append(errStrs, err.Error())
+				break
+			}
+			certs = append(certs, retrieved...)
+			err = nil
+			pemBytes = rest
+		}
+	}
+
+	// PKCS7
+	if err != nil {
+		p7, err := pkcs7.Parse(certBytes)
+		if err != nil {
+			errStrs = append(errStrs, err.Error())
+		} else {
+			certs = p7.Certificates
+			err = nil
+		}
+	}
+
+	// PKCS12
+	if err != nil {
+		_, cert, caCerts, err2 := pkcs12.DecodeChain(certBytes, password)
+		if err2 == nil {
+			certs = append(certs, cert)
+			certs = append(certs, caCerts...)
+		} else {
+			err = err2
+			errStrs = append(errStrs, err.Error())
+		}
+	}
+
+	if len(certs) == 0 {
+		return nil, errors.New("no certificates found")
+	}
+
+	if err != nil {
+		return nil, errors.New(strings.Join(errStrs, ", "))
+	}
+
+	return certs, nil
 }
 
 // DecodeCertFile reads a file with DER or PEM encoded certificates and returns
