@@ -2,13 +2,20 @@ package certmin
 
 import (
 	"bytes"
+	"crypto/ecdsa"
+	"crypto/ed25519"
+	"crypto/rsa"
+	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"go.mozilla.org/pkcs7"
+	"fmt"
 	"io/ioutil"
-	"software.sslmate.com/src/go-pkcs12"
 	"strings"
+
+	"github.com/youmark/pkcs8"
+	"go.mozilla.org/pkcs7"
+	"software.sslmate.com/src/go-pkcs12"
 )
 
 // CertTree represents a chain where certificates are
@@ -94,10 +101,6 @@ func DecodeCertBytes(certBytes []byte, password string) ([]*x509.Certificate, er
 		return nil, errors.New(strings.Join(errStrs, "   >>   "))
 	}
 
-	if err != nil {
-		return nil, errors.New(strings.Join(errStrs, "   >>   "))
-	}
-
 	if len(certs) == 0 {
 		return nil, errors.New("no certificates found")
 	}
@@ -124,7 +127,7 @@ func DecodeCertBytesPKCS1DER(certBytes []byte) ([]*x509.Certificate, error) {
 
 // DecodeCertBytesPKCS1PEM reads a []byte with PKCS1 PEM encoded certificates (e.g. read
 // from a file of a HTTP response body), and returns the contents as a []*x509.Certificate
-// and an error if encountered.  If you don't know in what format the data is encoded, use
+// and an error if encountered. If you don't know in what format the data is encoded, use
 // DecodeCertBytes.
 func DecodeCertBytesPKCS1PEM(certBytes []byte) ([]*x509.Certificate, error) {
 	var certs []*x509.Certificate
@@ -157,7 +160,7 @@ func DecodeCertBytesPKCS1PEM(certBytes []byte) ([]*x509.Certificate, error) {
 
 // DecodeCertBytesPKCS7DER reads a []byte with PKCS7 DER encoded certificates (e.g. read
 // from a file of a HTTP response body), and returns the contents as a []*x509.Certificate
-// and an error if encountered.  If you don't know in what format the data is encoded,
+// and an error if encountered. If you don't know in what format the data is encoded,
 // use DecodeCertBytes.
 func DecodeCertBytesPKCS7DER(certBytes []byte) ([]*x509.Certificate, error) {
 	p7, err := pkcs7.Parse(certBytes)
@@ -175,7 +178,7 @@ func DecodeCertBytesPKCS7DER(certBytes []byte) ([]*x509.Certificate, error) {
 
 // DecodeCertBytesPKCS7PEM reads a []byte with PKCS7 PEM encoded certificates (e.g. read
 // from a file of a HTTP response body), and returns the contents as a []*x509.Certificate
-// and an error if encountered.  If you don't know in what format the data is encoded, use
+// and an error if encountered. If you don't know in what format the data is encoded, use
 // DecodeCertBytes.
 func DecodeCertBytesPKCS7PEM(certBytes []byte) ([]*x509.Certificate, error) {
 	var certs []*x509.Certificate
@@ -210,7 +213,7 @@ func DecodeCertBytesPKCS7PEM(certBytes []byte) ([]*x509.Certificate, error) {
 
 // DecodeCertBytesPKCS12 reads a []byte with PKCS12 encoded certificates (e.g. read
 // from a file of a HTTP response body) and a password. It returns the contents as
-// a []*x509.Certificate  and an error if encountered.  If you don't know in what
+// a []*x509.Certificate  and an error if encountered. If you don't know in what
 // format the data is encoded, use DecodeCertBytes.
 func DecodeCertBytesPKCS12(certBytes []byte, password string) ([]*x509.Certificate, error) {
 	var certs []*x509.Certificate
@@ -237,6 +240,121 @@ func DecodeCertFile(certFile, password string) ([]*x509.Certificate, error) {
 		return nil, err
 	}
 	return DecodeCertBytes(certBytes, password)
+}
+
+// DecodeKeyBytes reads a []byte with a key and returns a *pem.Block and
+// an error if encountered.
+func DecodeKeyBytes(keyBytes []byte, password string) (*pem.Block, error) {
+	var block *pem.Block
+	var err error
+	var errStrs []string
+
+	for {
+		block, err = DecodeKeyBytesPKCS1(keyBytes)
+		if err != nil {
+			errStrs = append(errStrs, err.Error())
+		} else {
+			break
+		}
+
+		block, err = DecodeKeyBytesPKCS8(keyBytes, password)
+		if err != nil {
+			errStrs = append(errStrs, err.Error())
+		} else {
+			break
+		}
+
+		break
+	}
+
+	if err != nil {
+		return nil, errors.New(strings.Join(errStrs, "   >>   "))
+	}
+
+	return block, nil
+}
+
+// DecodeKeyBytesPKCS1 reads a []byte with a PKCS1 PEM encoded key and returns
+// a *pem.Block and an error if encountered. If you don't know in what format
+// the data is encoded, use DecodeKeyBytes.
+func DecodeKeyBytesPKCS1(keyBytes []byte) (*pem.Block, error) {
+	if !strings.Contains(string(keyBytes), "-----BEGIN") {
+		return nil, errors.New("not a PEM key")
+	}
+	if strings.Contains(string(keyBytes), "-----BEGIN ENCRYPTED") {
+		return nil, errors.New("encrypted key")
+	}
+
+	block, _ := pem.Decode(keyBytes)
+	if block == nil || !strings.Contains(block.Type, "PRIVATE KEY") {
+		return nil, errors.New("failed to decode private key")
+	}
+
+	return block, nil
+}
+
+// DecodeKeyBytesPKCS8 reads a []byte with an encrypted PKCS8 PEM encoded key and returns
+// a *pem.Block and an error if encountered. If you don't know in what format the data
+// is encoded, use DecodeKeyBytes.
+func DecodeKeyBytesPKCS8(keyBytes []byte, password string) (*pem.Block, error) {
+	if !strings.Contains(string(keyBytes), "-----BEGIN") {
+		return nil, errors.New("not a PEM key")
+	}
+	if !strings.Contains(string(keyBytes), "ENCRYPTED") {
+		return nil, errors.New("unencrypted key")
+	}
+
+	block, _ := pem.Decode(keyBytes)
+	parsedKey, err := pkcs8.ParsePKCS8PrivateKey(block.Bytes, []byte(password))
+	if err != nil {
+		fmt.Println("HERE")
+		return nil, err
+	}
+
+	var parsedBytes []byte
+	switch key := parsedKey.(type) {
+	case *rsa.PrivateKey, *ecdsa.PrivateKey, ed25519.PrivateKey:
+		parsedBytes, err = x509.MarshalPKCS8PrivateKey(key)
+	default:
+		err = errors.New("unknown signature algorithm of private key")
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	pemBlock := pem.Block{
+		Type:  "PRIVATE KEY",
+		Bytes: parsedBytes,
+	}
+	return &pemBlock, nil
+}
+
+// DecodeKeyBytesPKCS12 reads a []byte with an encrypted PKCS12 encoded key and returns
+// a *pem.Block and an error if encountered. If you don't know in what format the data
+// is encoded, use DecodeKeyBytes.
+func DecodeKeyBytesPKCS12(keyBytes []byte, password string) ([]byte, error) {
+	key, _, err := pkcs12.Decode(keyBytes, password)
+	if err != nil {
+		return nil, err
+	}
+
+	keyPEM := pem.EncodeToMemory(
+		&pem.Block{
+			Type:  "PRIVATE KEY",
+			Bytes: key.([]byte),
+		},
+	)
+	return keyPEM, nil
+}
+
+// DecodeKeyFile reads a file with PEM encoded key and returns the contents as a *pem.Block
+// and an error if encountered.
+func DecodeKeyFile(keyFile string, password string) (*pem.Block, error) {
+	keyBytes, err := ioutil.ReadFile(keyFile)
+	if err != nil {
+		return nil, err
+	}
+	return DecodeKeyBytes(keyBytes, password)
 }
 
 // SortCerts sorts a []*x509.Certificate from leaf to root CA, or the other
@@ -346,6 +464,20 @@ func VerifyChain(tree *CertTree) (bool, string) {
 	}
 
 	return true, ""
+}
+
+func VerifyCertAndKey(cert *x509.Certificate, key *pem.Block) bool {
+	certPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: cert.Raw,
+	})
+	keyPEM := pem.EncodeToMemory(key)
+
+	_, err := tls.X509KeyPair(certPEM, keyPEM)
+	if err == nil {
+		return true
+	}
+	return false
 }
 
 //func verifyKey(loc, keyFile string, passwordBytes []byte) (string, error) {

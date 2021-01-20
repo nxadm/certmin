@@ -176,6 +176,45 @@ func TestDecodeCertFile(t *testing.T) {
 	assert.Contains(t, certs[0].Subject.CommonName, "myserver")
 }
 
+func TestDecodeKeyBytes(t *testing.T) {}
+
+func TestDecodeKeyBytesPKCS1(t *testing.T) {
+	keyBytes, err := ioutil.ReadFile("t/myserver.key")
+	assert.NoError(t, err)
+	assert.NotNil(t, keyBytes)
+	key, err := DecodeKeyBytesPKCS1(keyBytes)
+	assert.NoError(t, err)
+	if assert.NotNil(t, key) {
+		assert.Equal(t, "RSA PRIVATE KEY", key.Type)
+	}
+}
+
+func TestDecodeKeyBytesPKCS8(t *testing.T) {
+	keyBytes, err := ioutil.ReadFile("t/myserver_enc.key")
+	assert.NoError(t, err)
+	assert.NotNil(t, keyBytes)
+	key, err := DecodeKeyBytesPKCS8(keyBytes, testPassword)
+	assert.NoError(t, err)
+	if assert.NotNil(t, key) {
+		assert.Contains(t, key.Type, "PRIVATE KEY")
+	}
+}
+
+func TestDecodeKeyBytesPKCS12(t *testing.T) {}
+
+func TestDecodeKeyFile(t *testing.T) {
+	key, err := DecodeKeyFile("t/myserver.key", "")
+	assert.NoError(t, err)
+	assert.NotNil(t, key)
+	assert.Contains(t, key.Type, "PRIVATE KEY")
+
+	key, err = DecodeKeyFile("t/myserver_enc.key", testPassword)
+	assert.NoError(t, err)
+	assert.NotNil(t, key)
+	assert.Contains(t, key.Type, "PRIVATE KEY")
+
+}
+
 func TestVerifyChain(t *testing.T) {
 	ca, err := DecodeCertFile("t/ca.crt", "")
 	assert.NoError(t, err)
@@ -197,7 +236,22 @@ func TestVerifyChain(t *testing.T) {
 	assert.NotEqual(t, "", output)
 }
 
-//func TestVerifyKey(t *testing.T) {
+func TestVerifyCertAndKey(t *testing.T) {
+	certBytes, err := ioutil.ReadFile("t/myserver.crt")
+	assert.NoError(t, err)
+	certs, err := DecodeCertBytesPKCS1PEM(certBytes)
+
+	key, err := DecodeKeyFile("t/myserver.key", "")
+	assert.NoError(t, err)
+	assert.NotNil(t, key)
+	assert.True(t, VerifyCertAndKey(certs[0], key))
+
+	key, err = DecodeKeyFile("t/myserver_enc.key", testPassword)
+	assert.NoError(t, err)
+	assert.NotNil(t, key)
+	assert.True(t, VerifyCertAndKey(certs[0], key))
+}
+
 //	output, err := verifyKey("t/myserver.crt", "t/myserver.key", nil)
 //	assert.Contains(t, output, "the certificate and key match")
 //	assert.Nil(t, err)
