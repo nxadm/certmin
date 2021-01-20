@@ -73,7 +73,7 @@ func TestParseURL(t *testing.T) {
 
 //func printCert(cert *x509.Certificate, w *tabwriter.Writer, colourKeeper colourKeeper) {
 func TestPrintCert(t *testing.T) {
-	certs, err := certmin.DecodeCertFile("t/myserver.crt")
+	certs, err := certmin.DecodeCertFile("t/myserver.crt", "")
 	assert.NoError(t, err)
 	assert.NotNil(t, certs)
 	var sb strings.Builder
@@ -89,7 +89,7 @@ func TestPromptForKeyPassword(t *testing.T) {
 }
 
 func TestWriteCertFiles(t *testing.T) {
-	certs, err := certmin.DecodeCertFile("t/cert-and-chain.crt")
+	certs, err := certmin.DecodeCertFile("t/cert-and-chain.crt", "")
 	assert.NoError(t, err)
 	assert.NotNil(t, certs)
 	output, err := writeCertFiles(certs, true)

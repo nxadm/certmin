@@ -36,7 +36,7 @@ func skimCerts(locations []string, params Params) (string, error) {
 				sb.WriteString(color.YellowString(warn.Error()))
 			}
 		} else {
-			certs, err = certmin.DecodeCertFile(loc)
+			certs, err = certmin.DecodeCertFile(loc, "")
 		}
 
 		if err != nil {
