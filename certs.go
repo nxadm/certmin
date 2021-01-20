@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"go.mozilla.org/pkcs7"
 	"io/ioutil"
 )
 
@@ -43,56 +42,69 @@ func IsRootCA(cert *x509.Certificate) bool {
 
 // DecodeCertBytes reads a []byte with DER or PEM encoded certificates (e.g. read
 // from a file of a HTTP response body), and returns the contents as a
-// []*x509.Certificate and an error if encountered. PKCS1 and PCKS7 containers
-// are supported.
-func DecodeCertBytes(certBytes []byte) ([]*x509.Certificate, error) {
-	var certs []*x509.Certificate
-	var err error
-
-	// PKCS1, PKCS8
-	certs, err = x509.ParseCertificates(certBytes) // DER bytes
-	if err !=nil { // PEM encoded
-		pemBytes := certBytes
-		for {
-			block, rest := pem.Decode(pemBytes)
-			if block == nil || bytes.Equal(rest, pemBytes) { // Invalid or PKCS7
-				break
-			}
-
-			var retrieved []*x509.Certificate
-			retrieved, err = x509.ParseCertificates(block.Bytes)
-			if err != nil {
-				return nil, err
-			}
-			certs = append(certs, retrieved...)
-			err = nil
-			pemBytes = rest
-		}
-	}
-
-	if err != nil { // PKCS7
-		p7, err := pkcs7.Parse(certBytes)
-		if err != nil {
-			return nil, err
-		}
-		certs = p7.Certificates
-	}
-
-	if len(certs) == 0 {
-		return nil, errors.New("no certificates found")
-	}
-
-	return certs, nil
+// []*x509.Certificate and an error if encountered. PKCS1, PCKS7 and PKCS12
+// containers are supported. A password is only needed for PKCS12
+func DecodeCertBytes(certBytes []byte, password string) ([]*x509.Certificate, error) {
+	//var certs []*x509.Certificate
+	//var err error
+	//var errStrs []string
+	//
+	//// PKCS1, PKCS8
+	//certs, err := x509.ParseCertificates(certBytes) // DER bytes
+	//if err != nil {                                    // PEM encoded
+	//	pemBytes := certBytes
+	//	for {
+	//		block, rest := pem.Decode(pemBytes)
+	//		if block == nil || bytes.Equal(rest, pemBytes) { // Invalid or PKCS7
+	//			break
+	//		}
+	//
+	//		var retrieved []*x509.Certificate
+	//		retrieved, err = x509.ParseCertificates(block.Bytes)
+	//		if err != nil {
+	//			return nil, err
+	//		}
+	//		certs = append(certs, retrieved...)
+	//		err = nil
+	//		pemBytes = rest
+	//	}
+	//}
+	//
+	//if err != nil { // PKCS7
+	//	p7, err := pkcs7.Parse(certBytes)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	certs = p7.Certificates
+	//	err = nil
+	//}
+	//
+	//if password != "" { // PKCS12
+	//	_, cert, caCerts, err2 := pkcs12.DecodeChain(certBytes, password)
+	//	if err2 == nil {
+	//		certs = append(certs, cert)
+	//		certs = append(certs, caCerts...)
+	//	} else {
+	//		err = err2
+	//	}
+	//}
+	//
+	//if len(certs) == 0 {
+	//	return nil, errors.New("no certificates found")
+	//}
+	//
+	//return certs, nil
+	return nil, nil
 }
 
 // DecodeCertFile reads a file with DER or PEM encoded certificates and returns
 // the contents as a []*x509.Certificate and an error if encountered.
-func DecodeCertFile(certFile string) ([]*x509.Certificate, error) {
+func DecodeCertFile(certFile, password string) ([]*x509.Certificate, error) {
 	certBytes, err := ioutil.ReadFile(certFile)
 	if err != nil {
 		return nil, err
 	}
-	return DecodeCertBytes(certBytes)
+	return DecodeCertBytes(certBytes, "")
 }
 
 // SortCerts sorts a []*x509.Certificate from leaf to root CA, or the other

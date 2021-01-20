@@ -90,7 +90,7 @@ func recursiveHopCerts(
 		}
 		defer resp.Body.Close()
 
-		decodedCerts, err := DecodeCertBytes(bodyBytes)
+		decodedCerts, err := DecodeCertBytes(bodyBytes, "")
 		if err != nil {
 			lastErr = &err
 			continue

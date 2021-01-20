@@ -18,7 +18,7 @@ var (
 )
 
 func TestEncodeCertAsPEMBytes(t *testing.T) {
-	certs, err := DecodeCertFile("t/myserver.crt")
+	certs, err := DecodeCertFile("t/myserver.crt", "")
 	assert.NoError(t, err)
 	assert.True(t, len(certs) > 0)
 	bytes, err := EncodeCertAsPEMBytes(certs[0])
@@ -26,17 +26,17 @@ func TestEncodeCertAsPEMBytes(t *testing.T) {
 }
 
 func TestIsRootCA(t *testing.T) {
-	certs, err := DecodeCertFile("t/myserver.crt")
+	certs, err := DecodeCertFile("t/myserver.crt", "")
 	assert.NoError(t, err)
 	assert.False(t, IsRootCA(certs[0]))
 
-	certs, err = DecodeCertFile("t/ca.crt")
+	certs, err = DecodeCertFile("t/ca.crt", "")
 	assert.Nil(t, err)
 	assert.True(t, IsRootCA(certs[0]))
 }
 
 func TestSortCerts(t *testing.T) {
-	certs, err := DecodeCertFile("t/chain-out-of-order.crt")
+	certs, err := DecodeCertFile("t/chain-out-of-order.crt", "")
 	assert.NotNil(t, certs)
 	assert.NoError(t, err)
 
@@ -52,7 +52,7 @@ func TestSortCerts(t *testing.T) {
 }
 
 func TestSplitCertsAsTree(t *testing.T) {
-	certs, err := DecodeCertFile("t/chain-out-of-order.crt")
+	certs, err := DecodeCertFile("t/chain-out-of-order.crt", "")
 	assert.NotNil(t, certs)
 	assert.NoError(t, err)
 
@@ -66,7 +66,7 @@ func TestSplitCertsAsTree(t *testing.T) {
 func TestDecodeCertBytes(t *testing.T) {
 	certBytes, err := ioutil.ReadFile("t/chain.crt")
 	assert.NoError(t, err)
-	certs, err := DecodeCertBytes(certBytes)
+	certs, err := DecodeCertBytes(certBytes, "")
 	assert.NoError(t, err)
 	assert.NotNil(t, certs)
 	for idx, serial := range testSerials {
@@ -75,21 +75,21 @@ func TestDecodeCertBytes(t *testing.T) {
 
 	certBytes, err = ioutil.ReadFile("t/chain-invalid-extra-nl.crt")
 	assert.NoError(t, err)
-	_, err = DecodeCertBytes(certBytes)
+	_, err = DecodeCertBytes(certBytes, "")
 	assert.NoError(t, err)
 
 	certBytes, err = ioutil.ReadFile("t/empty.crt")
 	assert.NoError(t, err)
-	_, err = DecodeCertBytes(certBytes)
+	_, err = DecodeCertBytes(certBytes, "")
 	assert.Error(t, err)
 
-	_, err = DecodeCertBytes(nil)
+	_, err = DecodeCertBytes(nil, "")
 	assert.Error(t, err)
 
 	// DER
 	certBytes, err = ioutil.ReadFile("t/GEANTOVRSACA4.crt")
 	assert.NoError(t, err)
-	certs, err = DecodeCertBytes(certBytes)
+	certs, err = DecodeCertBytes(certBytes, "")
 	assert.NoError(t, err)
 	if assert.NotNil(t, certs) {
 		assert.Equal(t, testGeantSerial, certs[0].SerialNumber.String())
@@ -97,17 +97,16 @@ func TestDecodeCertBytes(t *testing.T) {
 
 	certBytes, err = ioutil.ReadFile("t/myserver.der")
 	assert.NoError(t, err)
-	certs, err = DecodeCertBytes(certBytes)
+	certs, err = DecodeCertBytes(certBytes, "")
 	assert.NoError(t, err)
 	if assert.NotNil(t, certs) {
 		assert.Equal(t, "myserver", certs[0].Subject.CommonName)
 	}
 
-
 	// PKCS7
 	certBytes, err = ioutil.ReadFile("t/dstrootcax3.p7c")
 	assert.NoError(t, err)
-	certs, err = DecodeCertBytes(certBytes)
+	certs, err = DecodeCertBytes(certBytes, "")
 	assert.NoError(t, err)
 	assert.NotNil(t, certs)
 	//if assert.NotNil(t, certs) {
@@ -122,34 +121,34 @@ func TestDecodeCertBytes(t *testing.T) {
 }
 
 func TestDecodeCertFile(t *testing.T) {
-	certs, err := DecodeCertFile("t/chain.crt")
+	certs, err := DecodeCertFile("t/chain.crt", "")
 	assert.NoError(t, err)
 	for idx, serial := range testSerials {
 		assert.Equal(t, serial, certs[idx].SerialNumber.String())
 	}
 
 	// DER
-	certs, err = DecodeCertFile("t/GEANTOVRSACA4.crt")
+	certs, err = DecodeCertFile("t/GEANTOVRSACA4.crt", "")
 	assert.NoError(t, err)
 	if assert.True(t, len(certs) == 1) {
 		assert.Equal(t, testGeantSerial, certs[0].SerialNumber.String())
 	}
 
-	_, err = DecodeCertFile("t/chain-invalid-extra-nl.crt")
+	_, err = DecodeCertFile("t/chain-invalid-extra-nl.crt", "")
 	assert.NoError(t, err)
 
-	_, err = DecodeCertFile("t/empty.crt")
+	_, err = DecodeCertFile("t/empty.crt", "")
 	assert.Error(t, err)
-	_, err = DecodeCertFile("/dev/null")
+	_, err = DecodeCertFile("/dev/null", "")
 	assert.Error(t, err)
-	_, err = DecodeCertFile(strings.Join(testSerials, ""))
+	_, err = DecodeCertFile(strings.Join(testSerials, ""), "")
 	assert.Error(t, err)
 }
 
 func TestVerifyChain(t *testing.T) {
-	ca, err := DecodeCertFile("t/ca.crt")
+	ca, err := DecodeCertFile("t/ca.crt", "")
 	assert.NoError(t, err)
-	certs, err := DecodeCertFile("t/myserver.crt")
+	certs, err := DecodeCertFile("t/myserver.crt", "")
 	assert.NoError(t, err)
 	verified, output := VerifyChain(&CertTree{
 		Certificate: certs[0],
@@ -157,7 +156,7 @@ func TestVerifyChain(t *testing.T) {
 	})
 	assert.Equal(t, "", output)
 
-	certs, err = DecodeCertFile("t/myserver-fromca2.crt")
+	certs, err = DecodeCertFile("t/myserver-fromca2.crt", "")
 	assert.NoError(t, err)
 	verified, output = VerifyChain(&CertTree{
 		Certificate: certs[0],

@@ -34,7 +34,7 @@ func TestRetrieveCertsFromAddr(t *testing.T) {
 }
 
 func TestRetrieveChainFromIssuerURLs(t *testing.T) {
-	certs, err := DecodeCertFile("t/myserver.crt")
+	certs, err := DecodeCertFile("t/myserver.crt", "")
 	assert.NoError(t, err)
 	// No Issuer URL
 	chain, err := RetrieveChainFromIssuerURLs(certs[0], 1*time.Second)
@@ -42,7 +42,7 @@ func TestRetrieveChainFromIssuerURLs(t *testing.T) {
 	assert.Equal(t, []*x509.Certificate{certs[0]}, chain)
 
 	if os.Getenv("AUTHOR_TESTING") != "" {
-		certs, err := DecodeCertFile("t/kuleuven-be.pem")
+		certs, err := DecodeCertFile("t/kuleuven-be.pem", "")
 		assert.NoError(t, err)
 		chain, err := RetrieveChainFromIssuerURLs(certs[0], 5*time.Second)
 		assert.NoError(t, err)
@@ -52,7 +52,7 @@ func TestRetrieveChainFromIssuerURLs(t *testing.T) {
 
 func TestRecursiveHopCerts(t *testing.T) {
 	if os.Getenv("AUTHOR_TESTING") != "" {
-		certs, err := DecodeCertFile("t/kuleuven-be.pem")
+		certs, err := DecodeCertFile("t/kuleuven-be.pem", "")
 		assert.NoError(t, err)
 		var chain []*x509.Certificate
 		var lastErr error
