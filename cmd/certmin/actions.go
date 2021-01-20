@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/x509"
 	"fmt"
+	"github.com/fatih/color"
 	"strings"
 	"text/tabwriter"
 
@@ -132,11 +133,56 @@ func skimCerts(locations []string, params Params) (string, error) {
 // verifyChain verifies that local or remote certificates match their chain,
 // supplied as local files, system-trust and/or remotely.
 func verifyChain(locations []string, params Params) (string, error) {
-	//func VerifyChain(tree *CertTree) (bool, string) {
-	//for _, input := range locations {
-	//
-	//}
-	return "", nil
+	var sb strings.Builder
+	for _, input := range locations {
+		var certs []*x509.Certificate
+		sb.WriteString("\nCertificate location " + input + ":\n\n")
+		certs, err := getCerts(input, &sb)
+		if err != nil {
+			return sb.String(), err
+		}
+
+		cert := certs[0]
+		if params.follow {
+			certs, err = certmin.RetrieveChainFromIssuerURLs(cert, timeOut)
+			if err != nil {
+				return sb.String(), err
+			}
+		}
+
+		tree := certmin.SplitCertsAsTree(certs)
+		result, err := appendToCertTree(tree.Roots, params.roots)
+		if err != nil {
+			return sb.String(), err
+		}
+		tree.Roots = result
+		result, err = appendToCertTree(tree.Intermediates, params.inters)
+		if err != nil {
+			return sb.String(), err
+		}
+		tree.Intermediates = result
+
+		verified, _ := certmin.VerifyChain(tree)
+		if verified {
+			msg := "certificate " + cert.Subject.CommonName + " and its chain match\n"
+			sb.WriteString(color.GreenString((msg)))
+		} else {
+			msg := "certificate " + cert.Subject.CommonName + " and its chain do not match\n"
+			sb.WriteString(color.RedString((msg)))
+		}
+		sb.WriteString("---\n")
+
+		if params.keep {
+			output, err := writeCertFiles(certs, false)
+			if err != nil {
+				return sb.String(), err
+			}
+			sb.WriteString("\n" + output)
+		}
+
+	}
+
+	return sb.String(), nil
 }
 
 // verifyKey verifies a local or remote certificate and a key match

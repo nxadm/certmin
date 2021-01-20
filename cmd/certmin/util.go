@@ -46,6 +46,22 @@ func (colourKeeper *colourKeeper) colourise(msg string) string {
 	return msg
 }
 
+// appendToCertTree adds roots and intermediates from file to a CertTree
+func appendToCertTree(inTree []*x509.Certificate, toAdd []string) ([]*x509.Certificate, error) {
+	if toAdd != nil {
+		var certs []*x509.Certificate
+		for _, file := range toAdd {
+			tmpCerts, err := certmin.DecodeCertFile(file, "")
+			if err != nil {
+				return nil, err
+			}
+			certs = append(certs, tmpCerts...)
+		}
+		inTree = append(inTree, certs...)
+	}
+	return certmin.SortCerts(inTree, false), nil
+}
+
 // getCerts does the optional downloading and parsing of certificates
 func getCerts(input string, sb *strings.Builder) ([]*x509.Certificate, error) {
 	var certs []*x509.Certificate
