@@ -73,63 +73,6 @@ func skimCerts(locations []string, params Params) (string, error) {
 	return sb.String(), nil
 }
 
-//func verifyChain(rootFiles, interFiles, locs []string, remoteChain, remoteInters bool) (string, error) {
-//	var roots, inters []*x509.Certificate
-//	var sb strings.Builder
-//
-//	for _, file := range rootFiles {
-//		tmpRoots, err := splitMultiCertFile(file)
-//		if err != nil {
-//			return "", err
-//		}
-//		roots = append(roots, tmpRoots...)
-//	}
-//
-//	for _, file := range interFiles {
-//		tmpInter, err := splitMultiCertFile(file)
-//		if err != nil {
-//			return "", err
-//		}
-//		inters = append(inters, tmpInter...)
-//	}
-//
-//	for _, loc := range locs {
-//		locRoots := roots
-//		locInters := inters
-//		certs, remote, err := getCertificates(loc, remoteChain, remoteInters)
-//		if err != nil {
-//			return "", err
-//		}
-//		if !remote && len(certs) > 1 {
-//			return "", errors.New("the certificate file contains more than 1 certificate")
-//		}
-//
-//		cert := certs[0]
-//		for _, chainElem := range certs[1:] {
-//			if isRootCA(chainElem) {
-//				locRoots = append(locRoots, chainElem)
-//			} else {
-//				locInters = append(locInters, chainElem)
-//			}
-//		}
-//
-//		verified, msg := verifyChainFromX509(locRoots, locInters, cert)
-//		if msg != "" {
-//			sb.WriteString(msg)
-//		}
-//
-//		if verified {
-//			msg := "certificate " + cert.Subject.String() + " and its chain match"
-//			sb.WriteString(color.GreenString((msg)))
-//		} else {
-//			msg := "certificate " + cert.Subject.String() + " and its chain do not match"
-//			sb.WriteString(color.RedString((msg)))
-//		}
-//	}
-//
-//	return sb.String(), nil
-//}
-
 // verifyChain verifies that local or remote certificates match their chain,
 // supplied as local files, system-trust and/or remotely.
 func verifyChain(locations []string, params Params) (string, error) {

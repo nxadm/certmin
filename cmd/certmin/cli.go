@@ -47,7 +47,8 @@ Global options (optional):
   --inter     | -i  : intermediate certificate file(s).
   --sort      | -s  : sort the certificates and chains from leaf to root.
   --rsort     | -z  : sort the certificates and chains from root to leaf.
-  --keep      | -k  : write the requested certificates and chains to files.
+  --keep      | -k  : write the requested certificates and chains to files
+                      as PKCS1 PEM files (converting if necessary). 
   --no-colour | -c  : don't colourise the output.
   --help      | -h  : this help message.
   --version   | -v  : version message.
