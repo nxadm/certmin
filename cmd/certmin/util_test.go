@@ -23,6 +23,19 @@ func TestColorKeeper_Colourise(t *testing.T) {
 	assert.Equal(t, "8", colourKeeper.colourise("8"))
 }
 
+//func appendToCertTree(inTree []*x509.Certificate, toAdd []string) ([]*x509.Certificate, error) {
+func TestAppendToCertTree(t *testing.T) {
+	certs, err := certmin.DecodeCertFile("t/cert-and-chain.crt", "")
+	assert.NoError(t, err)
+	assert.NotNil(t, certs)
+	assert.Equal(t, 4, len(certs))
+
+	certs2, err := appendToCertTree(certs, []string{"t/myserver.crt", "t/myserver.crt"})
+	assert.NoError(t, err)
+	assert.NotNil(t, certs2)
+	assert.Equal(t, 5, len(certs2))
+}
+
 func TestGetCerts(t *testing.T) {
 	var sb strings.Builder
 	certs, err := getCerts("", &sb)
