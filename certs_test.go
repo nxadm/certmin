@@ -200,7 +200,16 @@ func TestDecodeKeyBytesPKCS8(t *testing.T) {
 	}
 }
 
-func TestDecodeKeyBytesPKCS12(t *testing.T) {}
+func TestDecodeKeyBytesPKCS12(t *testing.T) {
+	keyBytes, err := ioutil.ReadFile("t/myserver.pfx")
+	assert.NoError(t, err)
+	assert.NotNil(t, keyBytes)
+	key, err := DecodeKeyBytesPKCS12(keyBytes, testPassword)
+	assert.NoError(t, err)
+	if assert.NotNil(t, key) {
+		assert.Contains(t, key.Type, "PRIVATE KEY")
+	}
+}
 
 func TestDecodeKeyFile(t *testing.T) {
 	key, err := DecodeKeyFile("t/myserver.key", "")
@@ -213,6 +222,10 @@ func TestDecodeKeyFile(t *testing.T) {
 	assert.NotNil(t, key)
 	assert.Contains(t, key.Type, "PRIVATE KEY")
 
+	key, err = DecodeKeyFile("t/myserver.pfx", testPassword)
+	assert.NoError(t, err)
+	assert.NotNil(t, key)
+	assert.Contains(t, key.Type, "PRIVATE KEY")
 }
 
 func TestVerifyChain(t *testing.T) {

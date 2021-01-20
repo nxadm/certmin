@@ -264,6 +264,13 @@ func DecodeKeyBytes(keyBytes []byte, password string) (*pem.Block, error) {
 			break
 		}
 
+		block, err = DecodeKeyBytesPKCS12(keyBytes, password)
+		if err != nil {
+			errStrs = append(errStrs, err.Error())
+		} else {
+			break
+		}
+
 		break
 	}
 
@@ -332,19 +339,28 @@ func DecodeKeyBytesPKCS8(keyBytes []byte, password string) (*pem.Block, error) {
 // DecodeKeyBytesPKCS12 reads a []byte with an encrypted PKCS12 encoded key and returns
 // a *pem.Block and an error if encountered. If you don't know in what format the data
 // is encoded, use DecodeKeyBytes.
-func DecodeKeyBytesPKCS12(keyBytes []byte, password string) ([]byte, error) {
-	key, _, err := pkcs12.Decode(keyBytes, password)
+func DecodeKeyBytesPKCS12(keyBytes []byte, password string) (*pem.Block, error) {
+	parsedKey, _, _, err := pkcs12.DecodeChain(keyBytes, password)
 	if err != nil {
 		return nil, err
 	}
 
-	keyPEM := pem.EncodeToMemory(
-		&pem.Block{
-			Type:  "PRIVATE KEY",
-			Bytes: key.([]byte),
-		},
-	)
-	return keyPEM, nil
+	var parsedBytes []byte
+	switch key := parsedKey.(type) {
+	case *rsa.PrivateKey, *ecdsa.PrivateKey, ed25519.PrivateKey:
+		parsedBytes, err = x509.MarshalPKCS8PrivateKey(key)
+	default:
+		err = errors.New("unknown signature algorithm of private key")
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	pemBlock := pem.Block{
+		Type:  "PRIVATE KEY",
+		Bytes: parsedBytes,
+	}
+	return &pemBlock, nil
 }
 
 // DecodeKeyFile reads a file with PEM encoded key and returns the contents as a *pem.Block
