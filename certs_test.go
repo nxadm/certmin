@@ -263,6 +263,7 @@ func TestVerifyCertAndKey(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, key)
 	assert.True(t, VerifyCertAndKey(certs[0], key))
+
 }
 
 //	output, err := verifyKey("t/myserver.crt", "t/myserver.key", nil)
