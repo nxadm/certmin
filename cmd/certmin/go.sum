@@ -48,6 +48,8 @@ github.com/nxadm/certmin v0.4.4-0.20210119233342-af0f26bd7098 h1:dRmWdDPH7TFQjJ1
 github.com/nxadm/certmin v0.4.4-0.20210119233342-af0f26bd7098/go.mod h1:2LUilEfOy0CyiTrwSGetV0RzCqs7Qtac1fJhlui1tew=
 github.com/nxadm/certmin v0.4.4-0.20210120163508-c24bb7d8d4a9 h1:EPpe97C9wQbUTIMN9fB6EyJVgNGaX7UsqJHeCvHzMTw=
 github.com/nxadm/certmin v0.4.4-0.20210120163508-c24bb7d8d4a9/go.mod h1:FfpUJy2JWNUZtoHEQTmVZQgTP2O4TS6SmjE42mvQ+Jk=
+github.com/nxadm/certmin v0.4.4-0.20210120185955-6c8108a43193 h1:sgNXNa3S4pQXAV+EE37lDurI5OFng0n7YdefyxcszPk=
+github.com/nxadm/certmin v0.4.4-0.20210120185955-6c8108a43193/go.mod h1:FfpUJy2JWNUZtoHEQTmVZQgTP2O4TS6SmjE42mvQ+Jk=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=

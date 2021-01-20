@@ -169,6 +169,11 @@ func TestDecodeCertFile(t *testing.T) {
 	assert.Error(t, err)
 	_, err = DecodeCertFile(strings.Join(testSerials, ""), "")
 	assert.Error(t, err)
+
+	// PCKS12 with passsword
+	certs, err = DecodeCertFile("t/myserver.pfx", testPassword)
+	assert.NoError(t, err)
+	assert.Contains(t, certs[0].Subject.CommonName, "myserver")
 }
 
 func TestVerifyChain(t *testing.T) {

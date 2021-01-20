@@ -35,12 +35,28 @@ func skimCerts(locations []string, params Params) (string, error) {
 			if warn != nil {
 				sb.WriteString(color.YellowString(warn.Error()))
 			}
+			if err != nil {
+				return "", err
+			}
 		} else {
 			certs, err = certmin.DecodeCertFile(loc, "")
-		}
-
-		if err != nil {
-			return "", err
+			if err != nil {
+				if strings.Contains(err.Error(), "pkcs12: decryption password incorrect") {
+					passwordBytes, err := promptForKeyPassword()
+					if err != nil {
+						fmt.Println("here")
+						return "", err
+					}
+					fmt.Println("["+string(passwordBytes)+"]")
+					certs, err = certmin.DecodeCertFile(loc, string(passwordBytes))
+					if err != nil {
+						fmt.Println("there")
+						return "", err
+					}
+				} else {
+					return "", err
+				}
+			}
 		}
 
 		if params.leaf || params.follow { // We only want the leaf

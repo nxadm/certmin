@@ -189,16 +189,16 @@ func printCert(cert *x509.Certificate, w *tabwriter.Writer, colourKeeper colourK
 }
 
 // promptForKeyPassword prompts the user for the password to
-// decrypt a private key. It returns the password as a []byte
-// and an error.
-func promptForKeyPassword() ([]byte, error) {
-	fmt.Print("Enter password of private key: ")
+// decrypt a private key. It returns the password string and
+// an error.
+func promptForKeyPassword() (string, error) {
+	fmt.Print("Enter the decryption password: ")
 	bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
 	fmt.Println()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return bytePassword, nil
+	return string(bytePassword), nil
 }
 
 // writeCertFiles writes certificates to disk

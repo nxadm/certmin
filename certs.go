@@ -236,7 +236,7 @@ func DecodeCertFile(certFile, password string) ([]*x509.Certificate, error) {
 	if err != nil {
 		return nil, err
 	}
-	return DecodeCertBytes(certBytes, "")
+	return DecodeCertBytes(certBytes, password)
 }
 
 // SortCerts sorts a []*x509.Certificate from leaf to root CA, or the other
