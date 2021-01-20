@@ -107,7 +107,8 @@ func DecodeCertBytes(certBytes []byte, password string) ([]*x509.Certificate, er
 
 // DecodeCertBytesPKCS1DER reads a []byte with PKCS1 DER encoded certificates (e.g. read
 // from a file of a HTTP response body), and returns the contents as a  []*x509.Certificate
-// and an error if encountered.
+// and an error if encountered. If you don't know in what format the data is encoded, use
+// DecodeCertBytes.
 func DecodeCertBytesPKCS1DER(certBytes []byte) ([]*x509.Certificate, error) {
 	certs, err := x509.ParseCertificates(certBytes)
 	if err != nil {
@@ -123,7 +124,8 @@ func DecodeCertBytesPKCS1DER(certBytes []byte) ([]*x509.Certificate, error) {
 
 // DecodeCertBytesPKCS1PEM reads a []byte with PKCS1 PEM encoded certificates (e.g. read
 // from a file of a HTTP response body), and returns the contents as a []*x509.Certificate
-// and an error if encountered.
+// and an error if encountered.  If you don't know in what format the data is encoded, use
+// DecodeCertBytes.
 func DecodeCertBytesPKCS1PEM(certBytes []byte) ([]*x509.Certificate, error) {
 	var certs []*x509.Certificate
 	pemBytes := certBytes
@@ -155,7 +157,8 @@ func DecodeCertBytesPKCS1PEM(certBytes []byte) ([]*x509.Certificate, error) {
 
 // DecodeCertBytesPKCS7DER reads a []byte with PKCS7 DER encoded certificates (e.g. read
 // from a file of a HTTP response body), and returns the contents as a []*x509.Certificate
-// and an error if encountered.
+// and an error if encountered.  If you don't know in what format the data is encoded,
+// use DecodeCertBytes.
 func DecodeCertBytesPKCS7DER(certBytes []byte) ([]*x509.Certificate, error) {
 	p7, err := pkcs7.Parse(certBytes)
 	if err != nil {
@@ -172,7 +175,8 @@ func DecodeCertBytesPKCS7DER(certBytes []byte) ([]*x509.Certificate, error) {
 
 // DecodeCertBytesPKCS7PEM reads a []byte with PKCS7 PEM encoded certificates (e.g. read
 // from a file of a HTTP response body), and returns the contents as a []*x509.Certificate
-// and an error if encountered.
+// and an error if encountered.  If you don't know in what format the data is encoded, use
+// DecodeCertBytes.
 func DecodeCertBytesPKCS7PEM(certBytes []byte) ([]*x509.Certificate, error) {
 	var certs []*x509.Certificate
 
@@ -206,7 +210,8 @@ func DecodeCertBytesPKCS7PEM(certBytes []byte) ([]*x509.Certificate, error) {
 
 // DecodeCertBytesPKCS12 reads a []byte with PKCS12 encoded certificates (e.g. read
 // from a file of a HTTP response body) and a password. It returns the contents as
-// a []*x509.Certificate  and an error if encountered.
+// a []*x509.Certificate  and an error if encountered.  If you don't know in what
+// format the data is encoded, use DecodeCertBytes.
 func DecodeCertBytesPKCS12(certBytes []byte, password string) ([]*x509.Certificate, error) {
 	var certs []*x509.Certificate
 	_, cert, caCerts, err := pkcs12.DecodeChain(certBytes, password)
