@@ -348,7 +348,6 @@ func VerifyChain(tree *CertTree) (bool, string) {
 	return true, ""
 }
 
-//
 //func verifyKey(loc, keyFile string, passwordBytes []byte) (string, error) {
 //	msgOK := color.GreenString("the certificate and key match")
 //	msgNOK := color.RedString("the certificate and key do not match")

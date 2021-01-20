@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"strings"
 	"testing"
 	"text/tabwriter"
@@ -20,6 +21,27 @@ func TestColorKeeper_Colourise(t *testing.T) {
 	assert.NotEmpty(t, colourKeeper.colourise("6"))
 	assert.NotEmpty(t, colourKeeper.colourise("7"))
 	assert.Equal(t, "8", colourKeeper.colourise("8"))
+}
+
+func TestGetCerts(t *testing.T) {
+	var sb strings.Builder
+	certs, err := getCerts("", &sb)
+	assert.Error(t, err)
+	assert.Nil(t, certs)
+
+	certs, err = getCerts("t/myserver.crt", &sb)
+	assert.NoError(t, err)
+	if assert.NotNil(t, certs) {
+		assert.Contains(t, certs[0].Subject.CommonName, "myserver")
+	}
+
+	if os.Getenv("AUTHOR_TESTING") != "" {
+		certs, err = getCerts("github.com:443", &sb)
+		assert.NoError(t, err)
+		if assert.NotNil(t, certs) {
+			assert.Contains(t, certs[0].Subject.CommonName, "github")
+		}
+	}
 }
 
 func TestGetLocation(t *testing.T) {

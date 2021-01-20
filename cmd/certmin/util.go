@@ -46,6 +46,45 @@ func (colourKeeper *colourKeeper) colourise(msg string) string {
 	return msg
 }
 
+// getCerts does the optional downloading and parsing of certificates
+func getCerts(input string, sb *strings.Builder) ([]*x509.Certificate, error) {
+	var certs []*x509.Certificate
+	var err, warn error
+
+	loc, remote, err := getLocation(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if remote {
+		certs, warn, err = certmin.RetrieveCertsFromAddr(loc, timeOut)
+		if warn != nil {
+			sb.WriteString(color.YellowString(warn.Error()))
+		}
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		certs, err = certmin.DecodeCertFile(loc, "")
+		if err != nil {
+			if strings.Contains(err.Error(), "pkcs12: decryption password incorrect") {
+				passwordBytes, err := promptForKeyPassword()
+				if err != nil {
+					return nil, err
+				}
+
+				certs, err = certmin.DecodeCertFile(loc, string(passwordBytes))
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				return nil, err
+			}
+		}
+	}
+	return certs, nil
+}
+
 // getLocation parses an input string and it return a string with a file
 // name or a rewritten hostname:port location, a boolean stating if the
 // location is remote and an error.
