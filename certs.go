@@ -5,10 +5,8 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"fmt"
-	"io/ioutil"
-
 	"go.mozilla.org/pkcs7"
+	"io/ioutil"
 )
 
 // CertTree represents a chain where certificates are
@@ -43,37 +41,41 @@ func IsRootCA(cert *x509.Certificate) bool {
 	return cert.IsCA && cert.Subject.String() == cert.Issuer.String()
 }
 
-// DecodeCertBytes reads a []byte with one DER encoded certificate or one or more
-// PEM encoded certificates (e.g. read from a file of a HTTP response body), and
-// returns the contents as a []*x509.Certificate and an error if encountered.
+// DecodeCertBytes reads a []byte with DER or PEM encoded certificates (e.g. read
+// from a file of a HTTP response body), and returns the contents as a
+// []*x509.Certificate and an error if encountered. PKCS1 and PCKS7 containers
+// are supported.
 func DecodeCertBytes(certBytes []byte) ([]*x509.Certificate, error) {
-	// TODO: decode pkcs7, e.g. http://apps.identrust.com/roots/dstrootcax3.p7c
-	// https://godoc.org/go.mozilla.org/pkcs7
 	var certs []*x509.Certificate
-	pemBytes := certBytes
-	for {
-		block, rest := pem.Decode(pemBytes)
-		if block == nil || bytes.Equal(rest, pemBytes) { // Invalid or DER encoded
-			break
-		}
+	var err error
 
-		retrieved, err := x509.ParseCertificates(block.Bytes)
-		if err != nil {
-			return nil, err
+	// PKCS1, PKCS8
+	certs, err = x509.ParseCertificates(certBytes) // DER bytes
+	if err !=nil { // PEM encoded
+		pemBytes := certBytes
+		for {
+			block, rest := pem.Decode(pemBytes)
+			if block == nil || bytes.Equal(rest, pemBytes) { // Invalid or PKCS7
+				break
+			}
+
+			var retrieved []*x509.Certificate
+			retrieved, err = x509.ParseCertificates(block.Bytes)
+			if err != nil {
+				return nil, err
+			}
+			certs = append(certs, retrieved...)
+			err = nil
+			pemBytes = rest
 		}
-		certs = append(certs, retrieved...)
-		pemBytes = rest
 	}
 
-	if certs == nil {
-		retrieved, err := x509.ParseCertificates(pemBytes) // DER encoded
-		p7, err := pkcs7.Parse(pemBytes)
-		fmt.Println(err)
-		fmt.Printf("%#v\n", p7.Certificates[0].Subject.CommonName)
+	if err != nil { // PKCS7
+		p7, err := pkcs7.Parse(certBytes)
 		if err != nil {
 			return nil, err
 		}
-		certs = append(certs, retrieved...)
+		certs = p7.Certificates
 	}
 
 	if len(certs) == 0 {
@@ -83,9 +85,8 @@ func DecodeCertBytes(certBytes []byte) ([]*x509.Certificate, error) {
 	return certs, nil
 }
 
-// DecodeCertFile reads a file with one DER encoded certificate or one or more
-// PEM encoded certificates and returns the contents as a []*x509.Certificate and
-// an error if encountered.
+// DecodeCertFile reads a file with DER or PEM encoded certificates and returns
+// the contents as a []*x509.Certificate and an error if encountered.
 func DecodeCertFile(certFile string) ([]*x509.Certificate, error) {
 	certBytes, err := ioutil.ReadFile(certFile)
 	if err != nil {
