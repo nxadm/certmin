@@ -1,6 +1,7 @@
 package certmin
 
 import (
+	"io/ioutil"
 	"strings"
 	"testing"
 
@@ -14,6 +15,7 @@ var (
 		"76359301477803385872276235234032301461",
 		"290123421899608141648701916708796095456",
 	}
+	testPassword = "1234"
 )
 
 func TestEncodeCertAsPEMBytes(t *testing.T) {
@@ -63,60 +65,85 @@ func TestSplitCertsAsTree(t *testing.T) {
 }
 
 func TestDecodeCertBytes(t *testing.T) {
-	//certBytes, err := ioutil.ReadFile("t/chain.crt")
-	//assert.NoError(t, err)
-	//certs, err := DecodeCertBytes(certBytes, "")
-	//assert.NoError(t, err)
-	//assert.NotNil(t, certs)
-	//for idx, serial := range testSerials {
-	//	assert.Equal(t, serial, certs[idx].SerialNumber.String())
-	//}
-	//
-	//certBytes, err = ioutil.ReadFile("t/chain-invalid-extra-nl.crt")
-	//assert.NoError(t, err)
-	//_, err = DecodeCertBytes(certBytes, "")
-	//assert.NoError(t, err)
-	//
-	//certBytes, err = ioutil.ReadFile("t/empty.crt")
-	//assert.NoError(t, err)
-	//_, err = DecodeCertBytes(certBytes, "")
-	//assert.Error(t, err)
-	//
-	//_, err = DecodeCertBytes(nil, "")
-	//assert.Error(t, err)
-	//
-	//// DER
-	//certBytes, err = ioutil.ReadFile("t/GEANTOVRSACA4.crt")
-	//assert.NoError(t, err)
-	//certs, err = DecodeCertBytes(certBytes, "")
-	//assert.NoError(t, err)
-	//if assert.NotNil(t, certs) {
-	//	assert.Equal(t, testGeantSerial, certs[0].SerialNumber.String())
-	//}
-	//
-	//certBytes, err = ioutil.ReadFile("t/myserver.der")
-	//assert.NoError(t, err)
-	//certs, err = DecodeCertBytes(certBytes, "")
-	//assert.NoError(t, err)
-	//if assert.NotNil(t, certs) {
-	//	assert.Equal(t, "myserver", certs[0].Subject.CommonName)
-	//}
-	//
-	//// PKCS7
-	//certBytes, err = ioutil.ReadFile("t/dstrootcax3.p7c")
-	//assert.NoError(t, err)
-	//certs, err = DecodeCertBytes(certBytes, "")
-	//assert.NoError(t, err)
-	//assert.NotNil(t, certs)
-	////if assert.NotNil(t, certs) {
-	////	assert.Equal(t, testGeantSerial, certs[0].SerialNumber.String())
-	////}	certBytes, err = ioutil.ReadFile("t/dstrootcax3.p7c")
-	////	assert.NoError(t, err)
-	////	_, err = DecodeCertBytes(certBytes)
-	////	assert.NoError(t, err)
-	////	//if assert.NotNil(t, certs) {
-	////	//	assert.Equal(t, testGeantSerial, certs[0].SerialNumber.String())
-	////	//}
+	certBytes, err := ioutil.ReadFile("t/myserver.der")
+	assert.NoError(t, err)
+	certs, err := DecodeCertBytes(certBytes, "")
+	assert.NoError(t, err)
+	assert.NotNil(t, certs)
+	assert.Contains(t, certs[0].Subject.CommonName, "myserver")
+
+	certBytes, err = ioutil.ReadFile("t/myserver.crt")
+	assert.NoError(t, err)
+	certs, err = DecodeCertBytes(certBytes, "")
+	assert.NoError(t, err)
+	assert.NotNil(t, certs)
+	assert.Contains(t, certs[0].Subject.CommonName, "myserver")
+
+	certBytes, err = ioutil.ReadFile("t/myserver.p7c")
+	assert.NoError(t, err)
+	certs, err = DecodeCertBytes(certBytes, "")
+	assert.NoError(t, err)
+	assert.NotNil(t, certs)
+	assert.Contains(t, certs[0].Subject.CommonName, "myserver")
+
+	certBytes, err = ioutil.ReadFile("t/myserver.p7b")
+	assert.NoError(t, err)
+	certs, err = DecodeCertBytes(certBytes, "")
+	assert.NoError(t, err)
+	assert.NotNil(t, certs)
+	assert.Contains(t, certs[0].Subject.CommonName, "myserver")
+
+	certBytes, err = ioutil.ReadFile("t/myserver.pfx")
+	assert.NoError(t, err)
+	certs, err = DecodeCertBytes(certBytes, testPassword)
+	assert.NoError(t, err)
+	assert.NotNil(t, certs)
+	assert.Contains(t, certs[0].Subject.CommonName, "myserver")
+}
+
+func TestDecodeCertBytesPKCS1DER(t *testing.T) {
+	certBytes, err := ioutil.ReadFile("t/myserver.der")
+	assert.NoError(t, err)
+	certs, err := DecodeCertBytesPKCS1DER(certBytes)
+	assert.NoError(t, err)
+	assert.NotNil(t, certs)
+	assert.Contains(t, certs[0].Subject.CommonName, "myserver")
+}
+
+func TestDecodeCertBytesPKCS1PEM(t *testing.T) {
+	certBytes, err := ioutil.ReadFile("t/myserver.crt")
+	assert.NoError(t, err)
+	certs, err := DecodeCertBytesPKCS1PEM(certBytes)
+	assert.NoError(t, err)
+	assert.NotNil(t, certs)
+	assert.Contains(t, certs[0].Subject.CommonName, "myserver")
+}
+
+func TestDecodeCertBytesPKCS7DER(t *testing.T) {
+	certBytes, err := ioutil.ReadFile("t/myserver.p7c")
+	assert.NoError(t, err)
+	certs, err := DecodeCertBytesPKCS7DER(certBytes)
+	assert.NoError(t, err)
+	assert.NotNil(t, certs)
+	assert.Contains(t, certs[0].Subject.CommonName, "myserver")
+}
+
+func TestDecodeCertBytesPKCS7PEM(t *testing.T) {
+	certBytes, err := ioutil.ReadFile("t/myserver.p7b")
+	assert.NoError(t, err)
+	certs, err := DecodeCertBytesPKCS7PEM(certBytes)
+	assert.NoError(t, err)
+	assert.NotNil(t, certs)
+	assert.Contains(t, certs[0].Subject.CommonName, "myserver")
+}
+
+func TestDecodeCertBytesPKCS12(t *testing.T) {
+	certBytes, err := ioutil.ReadFile("t/myserver.pfx")
+	assert.NoError(t, err)
+	certs, err := DecodeCertBytesPKCS12(certBytes, testPassword)
+	assert.NoError(t, err)
+	assert.NotNil(t, certs)
+	assert.Contains(t, certs[0].Subject.CommonName, "myserver")
 }
 
 func TestDecodeCertFile(t *testing.T) {

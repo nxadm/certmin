@@ -43,75 +43,185 @@ func IsRootCA(cert *x509.Certificate) bool {
 	return cert.IsCA && cert.Subject.String() == cert.Issuer.String()
 }
 
-// DecodeCertBytes reads a []byte with DER or PEM encoded certificates (e.g. read
-// from a file of a HTTP response body), and returns the contents as a
-// []*x509.Certificate and an error if encountered. PKCS1, PCKS7 and PKCS12
-// containers are supported. A password is only needed for PKCS12
+// DecodeCertBytes reads a []byte with DER or PEM PKCS1, PKCS7 and PKCS12 encoded certificates,
+// and returns the contents as a []*x509.Certificate and an error if encountered. A password is
+// only needed for PKCS12.
 func DecodeCertBytes(certBytes []byte, password string) ([]*x509.Certificate, error) {
 	var certs []*x509.Certificate
 	var err error
 	var errStrs []string
 
-	// PKCS1
-	certs, err = x509.ParseCertificates(certBytes) // Assumes the bytes are DER
-	if err != nil {                                // Assume the bytes are PEM
-		errStrs = append(errStrs, err.Error())
-		pemBytes := certBytes
-		for {
-			block, rest := pem.Decode(pemBytes)
-			if bytes.Equal(rest, pemBytes) { // Invalid: try PKCS7 or 12
-				err = errors.New("not valid PKCS1 dats")
-				errStrs = append(errStrs, err.Error())
-				break
-			}
-			if block == nil { // no more date left
-				break
-			}
-
-			var retrieved []*x509.Certificate
-			retrieved, err = x509.ParseCertificates(block.Bytes)
-			if err != nil {
-				errStrs = append(errStrs, err.Error())
-				break
-			}
-			certs = append(certs, retrieved...)
-			err = nil
-			pemBytes = rest
-		}
-	}
-
-	// PKCS7
-	if err != nil {
-		p7, err := pkcs7.Parse(certBytes)
+	for {
+		certs, err = DecodeCertBytesPKCS1PEM(certBytes)
 		if err != nil {
 			errStrs = append(errStrs, err.Error())
 		} else {
-			certs = p7.Certificates
-			err = nil
+			break
 		}
+
+		certs, err = DecodeCertBytesPKCS1DER(certBytes)
+		if err != nil {
+			errStrs = append(errStrs, err.Error())
+		} else {
+			break
+		}
+
+		certs, err = DecodeCertBytesPKCS7PEM(certBytes)
+		if err != nil {
+			errStrs = append(errStrs, err.Error())
+		} else {
+			break
+		}
+
+		certs, err = DecodeCertBytesPKCS7DER(certBytes)
+		if err != nil {
+			errStrs = append(errStrs, err.Error())
+		} else {
+			break
+		}
+
+		certs, err = DecodeCertBytesPKCS12(certBytes, password)
+		if err != nil {
+			errStrs = append(errStrs, err.Error())
+		} else {
+			break
+		}
+
+		break
 	}
 
-	// PKCS12
 	if err != nil {
-		_, cert, caCerts, err2 := pkcs12.DecodeChain(certBytes, password)
-		if err2 == nil {
-			certs = append(certs, cert)
-			certs = append(certs, caCerts...)
-		} else {
-			err = err2
-			errStrs = append(errStrs, err.Error())
-		}
+		return nil, errors.New(strings.Join(errStrs, "   >>   "))
+	}
+
+	if err != nil {
+		return nil, errors.New(strings.Join(errStrs, "   >>   "))
 	}
 
 	if len(certs) == 0 {
 		return nil, errors.New("no certificates found")
 	}
 
+	return certs, nil
+}
+
+// DecodeCertBytesPKCS1DER reads a []byte with PKCS1 DER encoded certificates (e.g. read
+// from a file of a HTTP response body), and returns the contents as a  []*x509.Certificate
+// and an error if encountered.
+func DecodeCertBytesPKCS1DER(certBytes []byte) ([]*x509.Certificate, error) {
+	certs, err := x509.ParseCertificates(certBytes)
 	if err != nil {
-		return nil, errors.New(strings.Join(errStrs, ", "))
+		return nil, err
 	}
 
-	return certs, nil
+	if len(certs) == 0 {
+		err = errors.New("no certificates found")
+	}
+
+	return certs, err
+}
+
+// DecodeCertBytesPKCS1PEM reads a []byte with PKCS1 PEM encoded certificates (e.g. read
+// from a file of a HTTP response body), and returns the contents as a []*x509.Certificate
+// and an error if encountered.
+func DecodeCertBytesPKCS1PEM(certBytes []byte) ([]*x509.Certificate, error) {
+	var certs []*x509.Certificate
+	pemBytes := certBytes
+	for {
+		block, rest := pem.Decode(pemBytes)
+		if block == nil {
+			break
+		}
+
+		if bytes.Equal(rest, pemBytes) {
+			return nil, errors.New("not valid PKCS1 PEM data")
+		}
+
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			return nil, err
+		}
+		certs = append(certs, cert)
+		pemBytes = rest
+	}
+
+	var err error
+	if len(certs) == 0 {
+		err = errors.New("no certificates found")
+	}
+
+	return certs, err
+}
+
+// DecodeCertBytesPKCS7DER reads a []byte with PKCS7 DER encoded certificates (e.g. read
+// from a file of a HTTP response body), and returns the contents as a []*x509.Certificate
+// and an error if encountered.
+func DecodeCertBytesPKCS7DER(certBytes []byte) ([]*x509.Certificate, error) {
+	p7, err := pkcs7.Parse(certBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	certs := p7.Certificates
+	if len(certs) == 0 {
+		err = errors.New("no certificates found")
+	}
+
+	return certs, err
+}
+
+// DecodeCertBytesPKCS7PEM reads a []byte with PKCS7 PEM encoded certificates (e.g. read
+// from a file of a HTTP response body), and returns the contents as a []*x509.Certificate
+// and an error if encountered.
+func DecodeCertBytesPKCS7PEM(certBytes []byte) ([]*x509.Certificate, error) {
+	var certs []*x509.Certificate
+
+	pemBytes := certBytes
+	for {
+		block, rest := pem.Decode(pemBytes)
+		if block == nil {
+			break
+		}
+
+		if bytes.Equal(rest, pemBytes) {
+			return nil, errors.New("not valid PKCS7 PEM data")
+		}
+
+		p7, err := pkcs7.Parse(block.Bytes)
+		if err != nil {
+			return nil, err
+		}
+
+		certs = append(certs, p7.Certificates...)
+		pemBytes = rest
+	}
+
+	var err error
+	if len(certs) == 0 {
+		err = errors.New("no certificates found")
+	}
+
+	return certs, err
+}
+
+// DecodeCertBytesPKCS12 reads a []byte with PKCS12 encoded certificates (e.g. read
+// from a file of a HTTP response body) and a password. It returns the contents as
+// a []*x509.Certificate  and an error if encountered.
+func DecodeCertBytesPKCS12(certBytes []byte, password string) ([]*x509.Certificate, error) {
+	var certs []*x509.Certificate
+	_, cert, caCerts, err := pkcs12.DecodeChain(certBytes, password)
+	if err != nil {
+		return nil, err
+	} else {
+		certs = append(certs, cert)
+		certs = append(certs, caCerts...)
+	}
+
+	if len(certs) == 0 {
+		err = errors.New("no certificates found")
+	}
+
+	return certs, err
 }
 
 // DecodeCertFile reads a file with DER or PEM encoded certificates and returns
