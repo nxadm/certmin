@@ -44,13 +44,11 @@ func skimCerts(locations []string, params Params) (string, error) {
 				if strings.Contains(err.Error(), "pkcs12: decryption password incorrect") {
 					passwordBytes, err := promptForKeyPassword()
 					if err != nil {
-						fmt.Println("here")
 						return "", err
 					}
-					fmt.Println("["+string(passwordBytes)+"]")
+
 					certs, err = certmin.DecodeCertFile(loc, string(passwordBytes))
 					if err != nil {
-						fmt.Println("there")
 						return "", err
 					}
 				} else {
@@ -156,7 +154,6 @@ func skimCerts(locations []string, params Params) (string, error) {
 //
 //	return sb.String(), nil
 //}
-
 
 // verifyChain verifies that local or remote certificates match their chain,
 // supplied as local files, system-trust and/or remotely.
