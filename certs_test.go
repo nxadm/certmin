@@ -264,46 +264,58 @@ func TestVerifyCertAndKey(t *testing.T) {
 	assert.NotNil(t, key)
 	assert.True(t, VerifyCertAndKey(certs[0], key))
 
+	key, err = DecodeKeyFile("t/myserver-fromca2.key", "")
+	assert.NoError(t, err)
+	assert.NotNil(t, key)
+	assert.False(t, VerifyCertAndKey(certs[0], key))
+
+	certBytes, err = ioutil.ReadFile("t/ecdsa_prime256v1.crt")
+	assert.NoError(t, err)
+	certs, err = DecodeCertBytesPKCS1PEM(certBytes)
+	key, err = DecodeKeyFile("t/ecdsa_prime256v1.key", "")
+	assert.NoError(t, err)
+	assert.NotNil(t, key)
+	assert.True(t, VerifyCertAndKey(certs[0], key))
+
+	certBytes, err = ioutil.ReadFile("t/ecdsa_prime256v1_2.crt")
+	assert.NoError(t, err)
+	certs, err = DecodeCertBytesPKCS1PEM(certBytes)
+	key, err = DecodeKeyFile("t/ecdsa_prime256v1_2_enc.key", testPassword)
+	assert.NoError(t, err)
+	assert.NotNil(t, key)
+	assert.True(t, VerifyCertAndKey(certs[0], key))
+
+	certBytes, err = ioutil.ReadFile("t/ecdsa_secp384r1.crt")
+	assert.NoError(t, err)
+	certs, err = DecodeCertBytesPKCS1PEM(certBytes)
+	key, err = DecodeKeyFile("t/ecdsa_secp384r1.key", "")
+	assert.NoError(t, err)
+	assert.NotNil(t, key)
+	assert.True(t, VerifyCertAndKey(certs[0], key))
+
+	certBytes, err = ioutil.ReadFile("t/ecdsa_secp384r1_2.crt")
+	assert.NoError(t, err)
+	certs, err = DecodeCertBytesPKCS1PEM(certBytes)
+	key, err = DecodeKeyFile("t/ecdsa_secp384r1_2_enc.key", testPassword)
+	assert.NoError(t, err)
+	assert.NotNil(t, key)
+	assert.True(t, VerifyCertAndKey(certs[0], key))
+
+	certBytes, err = ioutil.ReadFile("t/ed25519.crt")
+	assert.NoError(t, err)
+	certs, err = DecodeCertBytesPKCS1PEM(certBytes)
+	key, err = DecodeKeyFile("t/ed25519.key", "")
+	assert.NoError(t, err)
+	assert.NotNil(t, key)
+	assert.True(t, VerifyCertAndKey(certs[0], key))
+
+	certBytes, err = ioutil.ReadFile("t/ed25519_2.crt")
+	assert.NoError(t, err)
+	certs, err = DecodeCertBytesPKCS1PEM(certBytes)
+	key, err = DecodeKeyFile("t/ed25519_2_enc.key", testPassword)
+	assert.NoError(t, err)
+	assert.NotNil(t, key)
+	assert.True(t, VerifyCertAndKey(certs[0], key))
 }
 
-//	output, err := verifyKey("t/myserver.crt", "t/myserver.key", nil)
-//	assert.Contains(t, output, "the certificate and key match")
-//	assert.Nil(t, err)
-//
-//	output, err = verifyKey("t/myserver.crt", "t/myserver-fromca2.key", nil)
-//	assert.Contains(t, output, "the certificate and key do not match")
-//	assert.Nil(t, err)
-//
-//	// rsa
-//	output, err = verifyKey("t/myserver.crt", "t/myserver_enc.key", testPasswordBytes)
-//	assert.Contains(t, output, "the certificate and key match")
-//	assert.Nil(t, err)
-//
-//	// ec
-//	output, err = verifyKey("t/ecdsa_prime256v1.crt", "t/ecdsa_prime256v1.key", nil)
-//	assert.Contains(t, output, "the certificate and key match")
-//	assert.Nil(t, err)
-//
-//	output, err = verifyKey("t/ecdsa_prime256v1_2.crt", "t/ecdsa_prime256v1_2_enc.key", testPasswordBytes)
-//	assert.Contains(t, output, "the certificate and key match")
-//	assert.Nil(t, err)
-//
-//	//ec with unsupported signature
-//	output, err = verifyKey("t/ecdsa_secp384r1.crt", "t/ecdsa_secp384r1.key", nil)
-//	assert.Contains(t, output, "the certificate and key match")
-//	assert.Nil(t, err)
-//
-//	output, err = verifyKey("t/ecdsa_secp384r1_2.crt", "t/ecdsa_secp384r1_2_enc.key", testPasswordBytes)
-//	assert.Contains(t, output, "the certificate and key match")
-//	assert.Nil(t, err)
-//
-//	// ed22519
-//	output, err = verifyKey("t/ed25519.crt", "t/ed25519.key", nil)
-//	assert.Contains(t, output, "the certificate and key match")
-//	assert.Nil(t, err)
-//
-//	// TODO: encrypted ed22519, better testfiles
-//	//output, err = verifyKey("t/ed25519_2.crt", "t/ed25519_2_enc.key", testPasswordBytes)
-//	//assert.Contains(t, output, "the certificate and key match")
-//	//assert.Nil(t, err)
-//}
+
