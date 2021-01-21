@@ -288,7 +288,7 @@ func writeCertFiles(certs []*x509.Certificate, cleanup bool) (string, error) {
 			}
 		}
 		for _, cert := range certArray {
-			pemBytes, err := certmin.EncodeCertAsPEMBytes(cert)
+			pemBytes, err := certmin.EncodeCertAsPKCS1PEM(cert)
 			if err != nil {
 				return "", err
 			}
