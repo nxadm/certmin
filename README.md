@@ -9,8 +9,9 @@ PEM and DER encoding in PKCS1, PKCS5, PKCS7, PKCS8 and PKCS12
 containers. Available functions include decoding and encoding of
 certificates and keys, verify certificates against chains and
 verify a certificate against a key. Utilities include checking 
-if a cert is a root CA, split certs in intermediates and roots and
-retrieving of certificates and chains.
+if a cert is a root CA, finding the leaf certificate,  split certs,
+sort chains in intermediates and roots and retrieving of certificates
+and chains. See: [API documentation at pkg.go.dev](https://pkg.go.dev/github.com/nxadm/certmin).
 
 There is also a companion [certmin CLI application](https://github.com/nxadm/certmin/cmd/certmin)
 that consumes many of the functionalities of the library:
