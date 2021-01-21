@@ -23,7 +23,7 @@ function build {
 }
 
 mkdir -p $BIN_DIR
-for i in ${PLATFORMS[@]}; do
+for i in "${PLATFORMS[@]}"; do
     PLATFORMS_SPLIT=(${i//\// })
     GOOS=${PLATFORMS_SPLIT[0]}
     GOARCH=${PLATFORMS_SPLIT[1]}
