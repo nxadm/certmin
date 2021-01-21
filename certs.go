@@ -24,31 +24,6 @@ type CertTree struct {
 	Intermediates, Roots []*x509.Certificate
 }
 
-// EncodeCertAsPEMBytes converts *x509.Certificate to a []byte with
-// data encoded as PEM and an error.
-func EncodeCertAsPEMBytes(cert *x509.Certificate) ([]byte, error) {
-	if cert == nil {
-		return nil, errors.New("no certificate found")
-	}
-
-	block := &pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: cert.Raw,
-	}
-
-	var buf bytes.Buffer
-	err := pem.Encode(&buf, block)
-
-	return buf.Bytes(), err
-}
-
-// IsRootCA returns for a given *x509.Certificate true if
-// the CA is marked as IsCA and the Subject and the Issuer
-// are the same.
-func IsRootCA(cert *x509.Certificate) bool {
-	return cert.IsCA && cert.Subject.String() == cert.Issuer.String()
-}
-
 // DecodeCertBytes reads a []byte with DER or PEM PKCS1, PKCS7 and PKCS12 encoded certificates,
 // and returns the contents as a []*x509.Certificate and an error if encountered. A password is
 // only needed for PKCS12.
@@ -369,6 +344,31 @@ func DecodeKeyFile(keyFile string, password string) (*pem.Block, error) {
 		return nil, err
 	}
 	return DecodeKeyBytes(keyBytes, password)
+}
+
+// EncodeCertAsPKCS1PEM converts *x509.Certificate to a []byte with
+// data encoded as PKCS1 PEM and an error.
+func EncodeCertAsPKCS1PEM(cert *x509.Certificate) ([]byte, error) {
+	if cert == nil {
+		return nil, errors.New("no certificate found")
+	}
+
+	block := &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: cert.Raw,
+	}
+
+	var buf bytes.Buffer
+	err := pem.Encode(&buf, block)
+
+	return buf.Bytes(), err
+}
+
+// IsRootCA returns for a given *x509.Certificate true if
+// the CA is marked as IsCA and the Subject and the Issuer
+// are the same.
+func IsRootCA(cert *x509.Certificate) bool {
+	return cert.IsCA && cert.Subject.String() == cert.Issuer.String()
 }
 
 // SortCerts sorts a []*x509.Certificate from leaf to root CA, or the other

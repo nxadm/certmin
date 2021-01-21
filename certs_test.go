@@ -18,24 +18,6 @@ var (
 	testPassword = "1234"
 )
 
-func TestEncodeCertAsPEMBytes(t *testing.T) {
-	certs, err := DecodeCertFile("t/myserver.crt", "")
-	assert.NoError(t, err)
-	assert.True(t, len(certs) > 0)
-	bytes, err := EncodeCertAsPEMBytes(certs[0])
-	assert.Contains(t, string(bytes), "-BEGIN CERTIFICATE-")
-}
-
-func TestIsRootCA(t *testing.T) {
-	certs, err := DecodeCertFile("t/myserver.crt", "")
-	assert.NoError(t, err)
-	assert.False(t, IsRootCA(certs[0]))
-
-	certs, err = DecodeCertFile("t/ca.crt", "")
-	assert.Nil(t, err)
-	assert.True(t, IsRootCA(certs[0]))
-}
-
 func TestSortCerts(t *testing.T) {
 	certs, err := DecodeCertFile("t/chain-out-of-order.crt", "")
 	assert.NotNil(t, certs)
@@ -176,7 +158,34 @@ func TestDecodeCertFile(t *testing.T) {
 	assert.Contains(t, certs[0].Subject.CommonName, "myserver")
 }
 
-func TestDecodeKeyBytes(t *testing.T) {}
+func TestDecodeKeyBytes(t *testing.T) {
+	keyBytes, err := ioutil.ReadFile("t/myserver.key")
+	assert.NoError(t, err)
+	assert.NotNil(t, keyBytes)
+	key, err := DecodeKeyBytes(keyBytes, "")
+	assert.NoError(t, err)
+	if assert.NotNil(t, key) {
+		assert.Equal(t, "RSA PRIVATE KEY", key.Type)
+	}
+
+	keyBytes, err = ioutil.ReadFile("t/myserver_enc.key")
+	assert.NoError(t, err)
+	assert.NotNil(t, keyBytes)
+	key, err = DecodeKeyBytes(keyBytes, testPassword)
+	assert.NoError(t, err)
+	if assert.NotNil(t, key) {
+		assert.Contains(t, key.Type, "PRIVATE KEY")
+	}
+
+	keyBytes, err = ioutil.ReadFile("t/myserver.pfx")
+	assert.NoError(t, err)
+	assert.NotNil(t, keyBytes)
+	key, err = DecodeKeyBytes(keyBytes, testPassword)
+	assert.NoError(t, err)
+	if assert.NotNil(t, key) {
+		assert.Contains(t, key.Type, "PRIVATE KEY")
+	}
+}
 
 func TestDecodeKeyBytesPKCS1(t *testing.T) {
 	keyBytes, err := ioutil.ReadFile("t/myserver.key")
@@ -226,6 +235,24 @@ func TestDecodeKeyFile(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, key)
 	assert.Contains(t, key.Type, "PRIVATE KEY")
+}
+
+func TestEncodeCertAsPEMBytes(t *testing.T) {
+	certs, err := DecodeCertFile("t/myserver.crt", "")
+	assert.NoError(t, err)
+	assert.True(t, len(certs) > 0)
+	bytes, err := EncodeCertAsPKCS1PEM(certs[0])
+	assert.Contains(t, string(bytes), "-BEGIN CERTIFICATE-")
+}
+
+func TestIsRootCA(t *testing.T) {
+	certs, err := DecodeCertFile("t/myserver.crt", "")
+	assert.NoError(t, err)
+	assert.False(t, IsRootCA(certs[0]))
+
+	certs, err = DecodeCertFile("t/ca.crt", "")
+	assert.Nil(t, err)
+	assert.True(t, IsRootCA(certs[0]))
 }
 
 func TestVerifyChain(t *testing.T) {
