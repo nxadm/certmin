@@ -31,8 +31,13 @@ func skimCerts(locations []string, params Params) (string, error) {
 		}
 
 		if params.leaf || params.follow { // We only want the leaf
-			certs = certmin.SortCerts(certs, false)
-			certs = []*x509.Certificate{certs[0]}
+			leaf, err := certmin.FindLeaf(certs)
+			if err == nil {
+				certs = []*x509.Certificate{leaf}
+			} else {
+				certs = certmin.SortCerts(certs, false)
+				certs = []*x509.Certificate{certs[0]}
+			}
 		}
 
 		if params.follow {
