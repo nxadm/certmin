@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/fatih/color v1.10.0
-	github.com/nxadm/certmin v0.4.4-0.20210120193036-644adf0798d0
+	github.com/nxadm/certmin v0.4.4-0.20210121000331-21e193f5e81d
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect

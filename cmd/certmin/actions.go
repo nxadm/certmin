@@ -131,6 +131,18 @@ func verifyChain(locations []string, params Params) (string, error) {
 // verifyKey verifies a local or remote certificate and a key match
 func verifyKey(keyFile string, locations []string, params Params) (string, error) {
 	var sb strings.Builder
+	key, err := certmin.DecodeKeyFile(keyFile, "")
+	if err != nil {
+			passwordBytes, err := promptForKeyPassword()
+			if err != nil {
+				return "", err
+			}
+
+			key, err = certmin.DecodeKeyFile(keyFile, string(passwordBytes))
+			if err != nil {
+				return "", err
+			}
+	}
 
 	for _, input := range locations {
 		var certs []*x509.Certificate
@@ -141,18 +153,18 @@ func verifyKey(keyFile string, locations []string, params Params) (string, error
 		}
 		cert := certs[0]
 
-		verified, _ := certmin.VerifyChain(tree)
+		verified := certmin.VerifyCertAndKey(cert, key)
 		if verified {
-			msg := "certificate " + cert.Subject.CommonName + " and its chain match\n"
+			msg := "certificate " + cert.Subject.CommonName + " and its key match\n"
 			sb.WriteString(color.GreenString((msg)))
 		} else {
-			msg := "certificate " + cert.Subject.CommonName + " and its chain do not match\n"
+			msg := "certificate " + cert.Subject.CommonName + " and its key do not match\n"
 			sb.WriteString(color.RedString((msg)))
 		}
 		sb.WriteString("---\n")
 
 		if params.keep {
-			output, err := writeCertFiles(certs, false)
+			output, err := writeCertFiles([]*x509.Certificate{cert}, false)
 			if err != nil {
 				return sb.String(), err
 			}

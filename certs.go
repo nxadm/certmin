@@ -9,7 +9,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"strings"
 
@@ -314,7 +313,6 @@ func DecodeKeyBytesPKCS8(keyBytes []byte, password string) (*pem.Block, error) {
 	block, _ := pem.Decode(keyBytes)
 	parsedKey, err := pkcs8.ParsePKCS8PrivateKey(block.Bytes, []byte(password))
 	if err != nil {
-		fmt.Println("HERE")
 		return nil, err
 	}
 
