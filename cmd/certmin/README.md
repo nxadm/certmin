@@ -13,7 +13,7 @@ even if a remote server does not offer intermediate certificates.
 - support for PEM and DER encoding in PKCS1, PKCS5, PKCS7, PKCS8 and PKCS12 containers.
 - prompt for key passwords.
 - colourise the output on systems that support ANSI escapes like Linux, BSDs or
-MAC, and on better terminals on MS windows like Windows Terminal (instead
+MacOS, and on better terminals on MS windows like Windows Terminal (instead
 of cmd.exe).
 
 The certmin uses the [certmin library](https://github.com/nxadm/certmin).
