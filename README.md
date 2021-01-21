@@ -12,6 +12,55 @@ verify a certificate against a key. Utilities include checking
 if a cert is a root CA, split certs in intermediates and roots and
 retrieving of certificates and chains.
 
+There is also a companion [certmin CLI application](https://github.com/nxadm/certmin/cmd/certmin)
+that consumes many of the functionalities of the library:
+
+```
+$ ./certmin
+certmin, 0.5.0. A minimalist certificate utility.
+See https://github.com/nxadm/certmin for more information.
+
+Usage:
+  certmin skim cert-location1 [cert-location2...] 
+    [--leaf|--follow] [--no-roots]
+    [--sort|--rsort] [--keep] [--no-colour]
+  certmin verify-chain cert-location [cert-location2...]
+    [--root=ca-file1 --root=ca-file2...]
+    [--inter=inter-file1 --inter=inter-file2...]
+    [--leaf|--follow] [--no-roots]
+    [--sort|--rsort] [--keep] [--no-colour]
+  certmin verify-key key-file cert-location1 [cert-location2...]
+    [--keep] [--no-colour]
+  certmin [-h]
+  certmin [-v]
+
+Certificate locations can be local files or remote addresses. Remote locations
+can be a hostname with optionally a port attached by ":" (defaults to port
+443) or an URL (scheme://hostname for known schemes like https, ldaps, smtps,
+etc. or scheme://hostname:port for non-standard ports). When verifying a
+chain, the OS trust store will be used if no roots certificates are given as
+files or remotely requested. 
+
+Actions:
+  skim         | sc : skim certificates (including bundles).
+  verify-chain | vc : match certificates again its chain(s).
+  verify-key   | vk : match keys against certificate(s).
+
+Global options (optional):
+  --leaf      | -l  : show only the local or remote leaf, not the chain.
+  --no-roots  | -n  : don't retrieve root certificates.
+  --follow    | -f  : follow Issuer Certificate URIs to retrieve chain.
+  --root      | -r  : root certificate file(s).
+  --inter     | -i  : intermediate certificate file(s).
+  --sort      | -s  : sort the certificates and chains from leaf to root.
+  --rsort     | -z  : sort the certificates and chains from root to leaf.
+  --keep      | -k  : write the requested certificates and chains to files
+                      as PKCS1 PEM files (converting if necessary). 
+  --no-colour | -c  : don't colourise the output.
+  --help      | -h  : this help message.
+  --version   | -v  : version message.
+```
+
 ## Installation
 
 certmin is available using the standard `go get` command.

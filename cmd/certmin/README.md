@@ -25,6 +25,7 @@ go get github.com/nxadm/certmin/cmd/certmin
 
 
 ## Help page
+
 ```
 $ ./certmin
 certmin, 0.5.0. A minimalist certificate utility.
