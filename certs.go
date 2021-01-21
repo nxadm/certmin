@@ -9,7 +9,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"strings"
 
@@ -428,7 +427,6 @@ func SortCerts(certs []*x509.Certificate, reverse bool) []*x509.Certificate {
 	parentName := make(map[string]string)
 	certByName := make(map[string]*x509.Certificate)
 	for _, cert := range certs {
-		fmt.Println(cert.Subject.CommonName)
 		if _, ok := certByName[cert.Subject.String()]; ok {
 			continue
 		}
