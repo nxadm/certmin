@@ -1,6 +1,8 @@
 package certmin
 
 import (
+	"encoding/pem"
+	"github.com/youmark/pkcs8"
 	"io/ioutil"
 	"strings"
 	"testing"
@@ -386,4 +388,18 @@ func TestVerifyCertAndKey(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, key)
 	assert.True(t, VerifyCertAndKey(certs[0], key))
+}
+
+func TestGetPKCS8PEMBlock(t *testing.T) {
+	keyBytes, err := ioutil.ReadFile("t/myserver_enc.key")
+	assert.NoError(t, err)
+	assert.NotNil(t, keyBytes)
+	block, _ := pem.Decode(keyBytes)
+	parsedKey, err := pkcs8.ParsePKCS8PrivateKey(block.Bytes, []byte(testPassword))
+	assert.NoError(t, err)
+	assert.NotNil(t, parsedKey)
+	pemBlock, err := getPKCS8PEMBlock(parsedKey)
+	assert.NoError(t, err)
+	assert.NotNil(t, pemBlock)
+	assert.Equal(t, "RSA PRIVATE KEY", pemBlock.Type)
 }

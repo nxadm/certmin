@@ -291,22 +291,7 @@ func DecodeKeyBytesPKCS8(keyBytes []byte, password string) (*pem.Block, error) {
 		return nil, err
 	}
 
-	var parsedBytes []byte
-	switch key := parsedKey.(type) {
-	case *rsa.PrivateKey, *ecdsa.PrivateKey, ed25519.PrivateKey:
-		parsedBytes, err = x509.MarshalPKCS8PrivateKey(key)
-	default:
-		err = errors.New("unknown signature algorithm of private key")
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	pemBlock := pem.Block{
-		Type:  "PRIVATE KEY",
-		Bytes: parsedBytes,
-	}
-	return &pemBlock, nil
+	return getPKCS8PEMBlock(parsedKey)
 }
 
 // DecodeKeyBytesPKCS12 reads a []byte with an encrypted PKCS12 encoded key and returns
@@ -318,22 +303,7 @@ func DecodeKeyBytesPKCS12(keyBytes []byte, password string) (*pem.Block, error) 
 		return nil, err
 	}
 
-	var parsedBytes []byte
-	switch key := parsedKey.(type) {
-	case *rsa.PrivateKey, *ecdsa.PrivateKey, ed25519.PrivateKey:
-		parsedBytes, err = x509.MarshalPKCS8PrivateKey(key)
-	default:
-		err = errors.New("unknown signature algorithm of private key")
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	pemBlock := pem.Block{
-		Type:  "PRIVATE KEY",
-		Bytes: parsedBytes,
-	}
-	return &pemBlock, nil
+	return getPKCS8PEMBlock(parsedKey)
 }
 
 // DecodeKeyFile reads a file with PEM encoded key and returns the contents as a *pem.Block
@@ -539,4 +509,34 @@ func VerifyCertAndKey(cert *x509.Certificate, key *pem.Block) bool {
 		return true
 	}
 	return false
+}
+
+// getPKCS8PEMBlock is used to return a *pem.Block with the correct type
+// (so it can be used as reliable metadata).
+func getPKCS8PEMBlock(parsedKey interface{}) (*pem.Block, error) {
+	var parsedBytes []byte
+	var err error
+	var blockType string
+	switch key := parsedKey.(type) {
+	case *rsa.PrivateKey:
+		parsedBytes, err = x509.MarshalPKCS8PrivateKey(key)
+		blockType = "RSA PRIVATE KEY"
+	case *ecdsa.PrivateKey:
+		parsedBytes, err = x509.MarshalPKCS8PrivateKey(key)
+		blockType = "EC PRIVATE KEY"
+	case ed25519.PrivateKey:
+		parsedBytes, err = x509.MarshalPKCS8PrivateKey(key)
+		blockType = "EC PRIVATE KEY"
+	default:
+		err = errors.New("unknown signature algorithm of private key")
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	pemBlock := pem.Block{
+		Type:  blockType,
+		Bytes: parsedBytes,
+	}
+	return &pemBlock, nil
 }
