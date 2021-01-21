@@ -270,7 +270,6 @@ func TestIsRootCA(t *testing.T) {
 	assert.True(t, IsRootCA(certs[0]))
 }
 
-
 func TestSortCerts(t *testing.T) {
 	certs, err := DecodeCertFile("t/chain-out-of-order.crt", "")
 	assert.NotNil(t, certs)
@@ -388,5 +387,3 @@ func TestVerifyCertAndKey(t *testing.T) {
 	assert.NotNil(t, key)
 	assert.True(t, VerifyCertAndKey(certs[0], key))
 }
-
-
