@@ -525,6 +525,8 @@ func VerifyChain(tree *CertTree) (bool, string) {
 	return true, ""
 }
 
+// VerifyCertAndKey verifies that a certificate (*x509.Certificate) and a key (*pem.Block)
+// match, returning the result as a bool.
 func VerifyCertAndKey(cert *x509.Certificate, key *pem.Block) bool {
 	certPEM := pem.EncodeToMemory(&pem.Block{
 		Type:  "CERTIFICATE",
