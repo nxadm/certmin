@@ -10,8 +10,7 @@ even if a remote server does not offer intermediate certificates.
 - verify local or remote certificates against their key.
 - order chains (from leaf to root or root to leaf).  
 - download and/or convert certificates to PEM PKCS1 files.
-- support for PEM and DER encoding in PKCS1, PKCS5, PKCS7, PKCS8 and PKCS12
-containers.
+- support for PEM and DER encoding in PKCS1, PKCS5, PKCS7, PKCS8 and PKCS12 containers.
 - prompt for key passwords.  
 - colourise the output.
 
