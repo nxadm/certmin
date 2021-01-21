@@ -133,15 +133,15 @@ func verifyKey(keyFile string, locations []string, params Params) (string, error
 	var sb strings.Builder
 	key, err := certmin.DecodeKeyFile(keyFile, "")
 	if err != nil {
-			passwordBytes, err := promptForKeyPassword()
-			if err != nil {
-				return "", err
-			}
+		passwordBytes, err := promptForKeyPassword()
+		if err != nil {
+			return "", err
+		}
 
-			key, err = certmin.DecodeKeyFile(keyFile, string(passwordBytes))
-			if err != nil {
-				return "", err
-			}
+		key, err = certmin.DecodeKeyFile(keyFile, string(passwordBytes))
+		if err != nil {
+			return "", err
+		}
 	}
 
 	for _, input := range locations {
