@@ -364,6 +364,18 @@ func EncodeCertAsPKCS1PEM(cert *x509.Certificate) ([]byte, error) {
 	return buf.Bytes(), err
 }
 
+// EncodeKeyAsPKCS1PEM converts *pem.Block private key to a []byte with
+// data encoded as PKCS1 PEM and an error.
+func EncodeKeyAsPKCS1PEM(key *pem.Block) ([]byte, error) {
+	if key == nil {
+		return nil, errors.New("no key found")
+	}
+
+	var buf bytes.Buffer
+	err := pem.Encode(&buf, key)
+	return buf.Bytes(), err
+}
+
 // IsRootCA returns for a given *x509.Certificate true if
 // the CA is marked as IsCA and the Subject and the Issuer
 // are the same.

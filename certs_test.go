@@ -237,12 +237,32 @@ func TestDecodeKeyFile(t *testing.T) {
 	assert.Contains(t, key.Type, "PRIVATE KEY")
 }
 
-func TestEncodeCertAsPEMBytes(t *testing.T) {
+func TestEncodeCertAsPKCS1PEM(t *testing.T) {
 	certs, err := DecodeCertFile("t/myserver.crt", "")
 	assert.NoError(t, err)
 	assert.True(t, len(certs) > 0)
 	bytes, err := EncodeCertAsPKCS1PEM(certs[0])
 	assert.Contains(t, string(bytes), "-BEGIN CERTIFICATE-")
+}
+
+func TestEncodeKeyAsPKCS1PEM(t *testing.T) {
+	key, err := DecodeKeyFile("t/myserver.key", testPassword)
+	assert.NoError(t, err)
+	assert.NotNil(t, key)
+	bytes, err := EncodeKeyAsPKCS1PEM(key)
+	assert.Contains(t, string(bytes), "PRIVATE KEY")
+
+	key, err = DecodeKeyFile("t/myserver_enc.key", testPassword)
+	assert.NoError(t, err)
+	assert.NotNil(t, key)
+	bytes, err = EncodeKeyAsPKCS1PEM(key)
+	assert.Contains(t, string(bytes), "PRIVATE KEY")
+
+	key, err = DecodeKeyFile("t/myserver.pfx", testPassword)
+	assert.NoError(t, err)
+	assert.NotNil(t, key)
+	bytes, err = EncodeKeyAsPKCS1PEM(key)
+	assert.Contains(t, string(bytes), "PRIVATE KEY")
 }
 
 func TestIsRootCA(t *testing.T) {
