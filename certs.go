@@ -9,6 +9,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"strings"
 
@@ -376,6 +377,32 @@ func EncodeKeyAsPKCS1PEM(key *pem.Block) ([]byte, error) {
 	return buf.Bytes(), err
 }
 
+// FindLeaf looks for the leaf certificate in a chain, this being the
+// farthest certificate from the Root CA (usually the certificate of
+// a server). It takes a []*x509.Certificate as chain with cert and
+// it returns a *x509.Certificate as leaf and an error if zero or
+// more than one leaf could be found.
+func FindLeaf(certs []*x509.Certificate) (*x509.Certificate, error) {
+	candidates := make(map[string]bool)
+	var found *x509.Certificate
+	for _, cert := range certs {
+		if cert.IsCA {
+			continue
+		}
+		found = cert
+		candidates[cert.Subject.String()+cert.Subject.SerialNumber] = true
+	}
+
+	switch len(candidates) {
+	case 0:
+		return nil, errors.New("no leaf found")
+	case 1:
+		return found, nil
+	default:
+		return nil, errors.New("more than one leaf found")
+	}
+}
+
 // IsRootCA returns for a given *x509.Certificate true if
 // the CA is marked as IsCA and the Subject and the Issuer
 // are the same.
@@ -385,15 +412,23 @@ func IsRootCA(cert *x509.Certificate) bool {
 
 // SortCerts sorts a []*x509.Certificate from leaf to root CA, or the other
 // way around if a the supplied boolean is set to true. Double elements are
-// removed. The starting leaf certificate must be the first element of the
-// given []*x509.Certificate.
+// removed. Sort will look for a single leaf in the []*x509.Certificate and
+// a chain from there. If no single leaf can be found, the chain will start
+// with the first element of the given []*x509.Certificate.
 func SortCerts(certs []*x509.Certificate, reverse bool) []*x509.Certificate {
 	var ordered []*x509.Certificate
+
+	// Find leaf
+	leaf, err := FindLeaf(certs)
+	if err == nil {
+		certs = append([]*x509.Certificate{leaf}, certs...)
+	}
 
 	// Get the information needed to follow the chain
 	parentName := make(map[string]string)
 	certByName := make(map[string]*x509.Certificate)
 	for _, cert := range certs {
+		fmt.Println(cert.Subject.CommonName)
 		if _, ok := certByName[cert.Subject.String()]; ok {
 			continue
 		}

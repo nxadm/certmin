@@ -18,34 +18,6 @@ var (
 	testPassword = "1234"
 )
 
-func TestSortCerts(t *testing.T) {
-	certs, err := DecodeCertFile("t/chain-out-of-order.crt", "")
-	assert.NotNil(t, certs)
-	assert.NoError(t, err)
-
-	ordered := SortCerts(certs, false)
-	assert.NotNil(t, ordered)
-	assert.Equal(t, 7, len(ordered))
-	assert.Equal(t, testGeantSerial, ordered[1].SerialNumber.String())
-
-	ordered = SortCerts(certs, true)
-	assert.NotNil(t, ordered)
-	assert.Equal(t, 7, len(ordered))
-	assert.Equal(t, testGeantSerial, ordered[len(ordered)-2].SerialNumber.String())
-}
-
-func TestSplitCertsAsTree(t *testing.T) {
-	certs, err := DecodeCertFile("t/chain-out-of-order.crt", "")
-	assert.NotNil(t, certs)
-	assert.NoError(t, err)
-
-	tree := SplitCertsAsTree(certs)
-	assert.NotNil(t, tree)
-	assert.Contains(t, tree.Certificate.Subject.CommonName, "exporl")
-	assert.Equal(t, 5, len(tree.Intermediates))
-	assert.Equal(t, 1, len(tree.Roots))
-}
-
 func TestDecodeCertBytes(t *testing.T) {
 	certBytes, err := ioutil.ReadFile("t/myserver.der")
 	assert.NoError(t, err)
@@ -265,6 +237,29 @@ func TestEncodeKeyAsPKCS1PEM(t *testing.T) {
 	assert.Contains(t, string(bytes), "PRIVATE KEY")
 }
 
+func TestFindLeaf(t *testing.T) {
+	certs, err := DecodeCertFile("t/chain-out-of-order.crt", "")
+	assert.NotNil(t, certs)
+	assert.NoError(t, err)
+	leaf, err := FindLeaf(certs)
+	assert.NoError(t, err)
+	if assert.NotNil(t, leaf) {
+		assert.Contains(t, leaf.Subject.CommonName, "exporl")
+	}
+
+	certs, err = DecodeCertFile("t/chain-no-leaf.crt", "")
+	assert.NotNil(t, certs)
+	assert.NoError(t, err)
+	leaf, err = FindLeaf(certs)
+	assert.Error(t, err)
+
+	certs, err = DecodeCertFile("t/chain-2-leaf.crt", "")
+	assert.NotNil(t, certs)
+	assert.NoError(t, err)
+	leaf, err = FindLeaf(certs)
+	assert.Error(t, err)
+}
+
 func TestIsRootCA(t *testing.T) {
 	certs, err := DecodeCertFile("t/myserver.crt", "")
 	assert.NoError(t, err)
@@ -273,6 +268,35 @@ func TestIsRootCA(t *testing.T) {
 	certs, err = DecodeCertFile("t/ca.crt", "")
 	assert.Nil(t, err)
 	assert.True(t, IsRootCA(certs[0]))
+}
+
+
+func TestSortCerts(t *testing.T) {
+	certs, err := DecodeCertFile("t/chain-out-of-order.crt", "")
+	assert.NotNil(t, certs)
+	assert.NoError(t, err)
+
+	ordered := SortCerts(certs, false)
+	assert.NotNil(t, ordered)
+	assert.Equal(t, 7, len(ordered))
+	assert.Equal(t, testGeantSerial, ordered[1].SerialNumber.String())
+
+	ordered = SortCerts(certs, true)
+	assert.NotNil(t, ordered)
+	assert.Equal(t, 7, len(ordered))
+	assert.Equal(t, testGeantSerial, ordered[len(ordered)-2].SerialNumber.String())
+}
+
+func TestSplitCertsAsTree(t *testing.T) {
+	certs, err := DecodeCertFile("t/chain-out-of-order.crt", "")
+	assert.NotNil(t, certs)
+	assert.NoError(t, err)
+
+	tree := SplitCertsAsTree(certs)
+	assert.NotNil(t, tree)
+	assert.Contains(t, tree.Certificate.Subject.CommonName, "exporl")
+	assert.Equal(t, 5, len(tree.Intermediates))
+	assert.Equal(t, 1, len(tree.Roots))
 }
 
 func TestVerifyChain(t *testing.T) {
