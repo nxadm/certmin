@@ -8,11 +8,13 @@ locally or remotely.
 the chain can be generated automatically by following Issuer Certificate URLs,
 even if a remote server does not offer intermediate certificates.
 - verify local or remote certificates against their key.
-- order chains (from leaf to root or root to leaf).  
+- order chains (from leaf to root or root to leaf).
 - download and/or convert certificates to PEM PKCS1 files.
 - support for PEM and DER encoding in PKCS1, PKCS5, PKCS7, PKCS8 and PKCS12 containers.
-- prompt for key passwords.  
-- colourise the output.
+- prompt for key passwords.
+- colourise the output on systems that support ANSI escapes like Linux, BSDs or
+MAC, and on better terminals on MS windows like Windows Terminal (instead
+of cmd.exe).
 
 The certmin uses the [certmin library](https://github.com/nxadm/certmin).
 
@@ -32,7 +34,7 @@ certmin, 0.5.3. A minimalist certificate utility.
 See https://github.com/nxadm/certmin for more information.
 
 Usage:
-  certmin skim cert-location1 [cert-location2...] 
+  certmin skim cert-location1 [cert-location2...]
     [--leaf|--follow] [--no-roots]
     [--sort|--rsort] [--keep] [--no-colour]
   certmin verify-chain cert-location [cert-location2...]
@@ -50,7 +52,7 @@ can be a hostname with optionally a port attached by ":" (defaults to port
 443) or an URL (scheme://hostname for known schemes like https, ldaps, smtps,
 etc. or scheme://hostname:port for non-standard ports). When verifying a
 chain, the OS trust store will be used if no roots certificates are given as
-files or remotely requested. 
+files or remotely requested.
 
 Actions:
   skim         | sc : skim certificates (including bundles).
@@ -66,7 +68,7 @@ Global options (optional):
   --sort      | -s  : sort the certificates and chains from leaf to root.
   --rsort     | -z  : sort the certificates and chains from root to leaf.
   --keep      | -k  : write the requested certificates and chains to files
-                      as PKCS1 PEM files (converting if necessary). 
+                      as PKCS1 PEM files (converting if necessary).
   --no-colour | -c  : don't colourise the output.
   --help      | -h  : this help message.
   --version   | -v  : version message.
@@ -93,7 +95,7 @@ OCSP servers:            http://ocsp.pki.goog/gts1o1core
 CRL locations:           http://crl.pki.goog/GTS1O1core.crl
 Not before:              2020-12-15 14:49:26 +0000 UTC
 Not after:               2021-03-09 14:49:25 +0000 UTC
-                         
+
 Subject:                 CN=GTS CA 1O1,O=Google Trust Services,C=US
 Issuer:                  CN=GlobalSign,OU=GlobalSign Root CA - R2,O=GlobalSign
 Serial number:           149699596615803609916394524856
@@ -117,7 +119,7 @@ certmin_www_google_com_20210121112659_intermediates.crt
 ### Verify that a certificate and a key match
 
 ```
-$ certmin verify-chain myserver.der --root ca.crt 
+$ certmin verify-chain myserver.der --root ca.crt
 
 Certificate location myserver.der:
 
@@ -136,7 +138,7 @@ certificate CN=myserver and its chain match
 ### Verify the chain of a remote certificate
 
 ```
-$ ./certmin verify-chain sectigo.com --inter chain.crt 
+$ ./certmin verify-chain sectigo.com --inter chain.crt
 
 Certificate location sectigo.com:
 
