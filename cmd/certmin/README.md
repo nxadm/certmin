@@ -14,7 +14,7 @@ even if a remote server does not offer intermediate certificates.
 - prompt for key passwords.
 - colourise the output on systems that support ANSI escapes like Linux, BSDs or
 MacOS, and on better terminals on MS windows like Windows Terminal (instead
-of cmd.exe).
+of cmd.exe). Colour can be disabled with "-c".
 
 The certmin uses the [certmin library](https://github.com/nxadm/certmin).
 
