@@ -79,24 +79,24 @@ func recursiveHopCerts(
 	for _, url := range cert.IssuingCertificateURL {
 		resp, err := client.Get(url)
 		if err != nil {
-			lastErr = &err
+			*lastErr = err
 			continue
 		}
 
 		bodyBytes, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			lastErr = &err
+			*lastErr = err
 			continue
 		}
 		defer resp.Body.Close()
 
 		decodedCerts, err := DecodeCertBytes(bodyBytes, "")
 		if err != nil {
-			lastErr = &err
+			*lastErr = err
 			continue
 		}
 
-		lastErr = nil
+		*lastErr = nil
 		return recursiveHopCerts(decodedCerts[0], chain, lastErr, timeOut)
 	}
 
