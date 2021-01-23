@@ -381,60 +381,118 @@ func IsRootCA(cert *x509.Certificate) bool {
 
 // SortCerts sorts a []*x509.Certificate from leaf to root CA, or the other
 // way around if a the supplied boolean is set to true. Double elements are
-// removed. Sort will look for a single leaf in the []*x509.Certificate and
-// a chain from there. If no single leaf can be found, the chain will start
-// with the first element of the given []*x509.Certificate.
+// removed.
 func SortCerts(certs []*x509.Certificate, reverse bool) []*x509.Certificate {
-	var ordered []*x509.Certificate
+	chainAsCerts, certByName, order := SortCertsAsChains(certs, reverse)
 
-	// Find leaf
-	leaf, err := FindLeaf(certs)
-	if err == nil {
-		certs = append([]*x509.Certificate{leaf}, certs...)
-	}
-
-	// Get the information needed to follow the chain
-	parentName := make(map[string]string)
-	certByName := make(map[string]*x509.Certificate)
-	for _, cert := range certs {
-		if _, ok := certByName[cert.Subject.String()]; ok {
-			continue
+	var orderedFromLeaves []*x509.Certificate
+	var orderedNoLeaves []*x509.Certificate
+	for _, subj := range order {
+		if ! certByName[subj].IsCA {
+			orderedFromLeaves = append(orderedFromLeaves, chainAsCerts[subj]...)
+		} else {
+			orderedNoLeaves = append(orderedNoLeaves, chainAsCerts[subj]...)
 		}
-		certByName[cert.Subject.String()] = cert
-		parentName[cert.Subject.String()] = cert.Issuer.String()
 	}
 
+	var ordered []*x509.Certificate
+	tmpOrdered := append(orderedFromLeaves, orderedNoLeaves...)
 	seen := make(map[string]bool)
-	for _, cert := range certs {
+	for _, cert := range tmpOrdered {
 		if _, ok := seen[cert.Subject.String()]; ok {
 			continue
 		}
 		ordered = append(ordered, cert)
 		seen[cert.Subject.String()] = true
-		for { // follow the chain
-			_, ok := certByName[parentName[cert.Subject.String()]] // we have that cert
-			_, ok2 := seen[parentName[cert.Subject.String()]]      // the parent has not been seen
-			if ok && !ok2 {
-				// do we have the next Issuer (e.g. incomplete chain
-				if _, ok := certByName[parentName[cert.Subject.String()]]; ok {
-					ordered = append(ordered, certByName[parentName[cert.Subject.String()]])
-					seen[parentName[cert.Subject.String()]] = true
-					cert = certByName[parentName[cert.Subject.String()]]
-					continue
+	}
+
+	return ordered
+}
+
+// SortCertsAsChains sorts a []*x509.Certificate from leaf to root CA, or the other
+// way around if a the boolean parameter is set to true. The function returns three
+// elements: a map[string][]*x509.Certificate with the subject as key and the chain as
+// value, a map[string]*x509.Certificate with the the subject as key and the
+// corresponding as value *x509.Certificate and a []string with Subjects that start the
+// chain in the order the certificates where given.
+// TODO: write test
+func SortCertsAsChains(
+	certs []*x509.Certificate, reverse bool) (map[string][]*x509.Certificate, map[string]*x509.Certificate, []string) {
+	// Get the information needed to follow the chain
+	var certByNameOrder []string
+	issuerName := make(map[string]string)
+	certByName := make(map[string]*x509.Certificate)
+	isLeaf := make(map[string]bool)
+	for _, cert := range certs {
+		subj := cert.Subject.String()
+		issuer := cert.Issuer.String()
+		if _, ok := certByName[subj]; ok {
+			continue
+		}
+		if !cert.IsCA {
+			isLeaf[subj] = true
+		}
+		certByName[subj] = cert
+		issuerName[subj] = issuer
+		certByNameOrder = append(certByNameOrder, subj)
+	}
+
+	// Create chains
+	var order []string
+	chain := make(map[string][]string)
+	skip := make(map[string]bool)
+	for subj, issuer := range issuerName {
+		if _, ok := skip[subj]; ok {
+			continue
+		}
+
+		skip[issuer] = true // we follow the issuers below
+		chain[subj] = []string{subj}
+		order = append(order, subj)
+		presentIssuer := issuer
+		for {
+			if _, ok := certByName[subj]; !ok {
+				continue
+			}
+
+			tmpChain := []string{}
+			tmpChain = append(tmpChain, chain[subj]...)
+			tmpChain = append(tmpChain, presentIssuer)
+			skip[presentIssuer] = true
+			chain[subj] = tmpChain
+			delete(chain, presentIssuer)
+
+			if nextIssuer, ok := issuerName[presentIssuer]; ok {
+				if nextIssuer == presentIssuer { // end of this chain
+					break
 				}
+
+				presentIssuer = nextIssuer
+				continue
 			}
 			break
 		}
 	}
 
-	if reverse {
-		var reversed []*x509.Certificate
-		for idx := len(ordered) - 1; idx >= 0; idx-- {
-			reversed = append(reversed, ordered[idx])
+	chainAsCerts := make(map[string][]*x509.Certificate)
+	for subj, chainElems := range chain {
+		var ordered []*x509.Certificate
+		for _, chainElem := range chainElems {
+			if cert, ok := certByName[chainElem]; ok {
+				ordered = append(ordered, cert)
+			}
 		}
-		return reversed
+		if reverse {
+			var reversed []*x509.Certificate
+			for idx := len(ordered) - 1; idx >= 0; idx-- {
+				reversed = append(reversed, ordered[idx])
+			}
+			ordered = reversed
+		}
+		chainAsCerts[subj] = ordered
 	}
-	return ordered
+
+	return chainAsCerts, certByName, order
 }
 
 // SplitCertsAsTree returns a *CertTree where the given certificates

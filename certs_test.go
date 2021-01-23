@@ -278,14 +278,16 @@ func TestSortCerts(t *testing.T) {
 	assert.NoError(t, err)
 
 	ordered := SortCerts(certs, false)
-	assert.NotNil(t, ordered)
-	assert.Equal(t, 7, len(ordered))
-	assert.Equal(t, testGeantSerial, ordered[1].SerialNumber.String())
+	if assert.NotNil(t, ordered) {
+		assert.Equal(t, 7, len(ordered))
+		assert.Contains(t, ordered[0].Subject.CommonName, "exporl.med.kuleuven.be")
+	}
 
 	ordered = SortCerts(certs, true)
-	assert.NotNil(t, ordered)
-	assert.Equal(t, 7, len(ordered))
-	assert.Equal(t, testGeantSerial, ordered[len(ordered)-2].SerialNumber.String())
+	if assert.NotNil(t, ordered) {
+		assert.Equal(t, 7, len(ordered))
+		assert.Contains(t, ordered[0].Subject.CommonName, "AAA Certificate Services")
+	}
 }
 
 func TestSplitCertsAsTree(t *testing.T) {

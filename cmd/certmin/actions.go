@@ -48,11 +48,30 @@ func skimCerts(locations []string, params Params) (string, error) {
 			}
 		}
 
-		switch {
-		case params.sort:
-			certs = certmin.SortCerts(certs, false)
-		case params.rsort:
-			certs = certmin.SortCerts(certs, true)
+		if params.sort || params.rsort {
+			if params.once {
+				switch {
+				case params.sort:
+					certs = certmin.SortCerts(certs, false)
+				case params.rsort:
+					certs = certmin.SortCerts(certs, true)
+				}
+			} else {
+				var chainAsCerts map[string][]*x509.Certificate
+				var order []string
+				switch {
+				case params.sort:
+					chainAsCerts, _, order = certmin.SortCertsAsChains(certs, false)
+				case params.rsort:
+					chainAsCerts, _, order = certmin.SortCertsAsChains(certs, true)
+				}
+
+				var tmpCerts []*x509.Certificate
+				for _, subj := range order {
+					tmpCerts = append(tmpCerts, chainAsCerts[subj]...)
+				}
+				certs = tmpCerts
+			}
 		}
 
 		for idx, cert := range certs {
