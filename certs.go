@@ -413,8 +413,9 @@ func SortCerts(certs []*x509.Certificate, reverse bool) []*x509.Certificate {
 // way around if a the boolean parameter is set to true. The function returns three
 // elements: a map[string][]*x509.Certificate with the subject as key and the chain as
 // value, a map[string]*x509.Certificate with the the subject as key and the
-// corresponding as value *x509.Certificate and a []string with Subjects that start the
-// chain in the order the certificates where given.
+// corresponding *x509.Certificate as value and a []string with Subjects that are used
+// as keys in the first map, in the order the where found in the given []*x509.Certificate
+// parameter.
 func SortCertsAsChains(
 	certs []*x509.Certificate, reverse bool) (map[string][]*x509.Certificate, map[string]*x509.Certificate, []string) {
 	// Get the information needed to follow the chain
