@@ -30,13 +30,13 @@ go get github.com/nxadm/certmin/cmd/certmin
 
 ```
 $ ./certmin
-certmin, 0.5.4. A minimalist certificate utility.
+certmin, 0.5.5. A minimalist certificate utility.
 See https://github.com/nxadm/certmin for more information.
 
 Usage:
   certmin skim cert-location1 [cert-location2...]
     [--leaf|--follow] [--no-roots]
-    [--sort|--rsort] [--keep] [--no-colour]
+    [--sort|--rsort] [--once] [--keep] [--no-colour]
   certmin verify-chain cert-location [cert-location2...]
     [--root=ca-file1 --root=ca-file2...]
     [--inter=inter-file1 --inter=inter-file2...]
@@ -67,6 +67,10 @@ Global options (optional):
   --inter     | -i  : intermediate certificate file(s).
   --sort      | -s  : sort the certificates and chains from leaf to root.
   --rsort     | -z  : sort the certificates and chains from root to leaf.
+  --once      | -o  : if within a location several certificates share an
+                      intermediate/root, don't show certificates more than
+                      once to visually complete the chain. If "rsort" not
+                      given it enables "sort".  
   --keep      | -k  : write the requested certificates and chains to files
                       as PKCS1 PEM files (converting if necessary).
   --no-colour | -c  : don't colourise the output.

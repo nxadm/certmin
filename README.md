@@ -18,7 +18,7 @@ that consumes many of the functionalities of the library:
 
 ```
 $ ./certmin
-certmin, 0.5.4. A minimalist certificate utility.
+certmin, 0.5.5. A minimalist certificate utility.
 See https://github.com/nxadm/certmin for more information.
 
 Usage:
