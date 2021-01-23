@@ -290,6 +290,26 @@ func TestSortCerts(t *testing.T) {
 	}
 }
 
+func TestSortCertsAsChains(t *testing.T) {
+	certs, err := DecodeCertFile("t/chain-out-of-order.crt", "")
+	assert.NotNil(t, certs)
+	assert.NoError(t, err)
+	ordered := SortCerts(certs, false)
+	assert.NotNil(t, ordered)
+
+	chainAsCerts, certsByName, order := SortCertsAsChains(certs, false)
+	assert.NotNil(t, chainAsCerts)
+	assert.NotNil(t, certsByName)
+	assert.NotNil(t, order)
+	assert.Contains(t, chainAsCerts[ordered[0].Subject.String()][0].Subject.String(), "exporl.med.kuleuven.be")
+
+	chainAsCerts, certsByName, order = SortCertsAsChains(certs, true)
+	assert.NotNil(t, chainAsCerts)
+	assert.NotNil(t, certsByName)
+	assert.NotNil(t, order)
+	assert.Contains(t, chainAsCerts[ordered[0].Subject.String()][0].Subject.CommonName, "AAA Certificate Services")
+}
+
 func TestSplitCertsAsTree(t *testing.T) {
 	certs, err := DecodeCertFile("t/chain-out-of-order.crt", "")
 	assert.NotNil(t, certs)
