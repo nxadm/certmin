@@ -20,11 +20,8 @@ jobs:
       uses: actions/checkout@v2
       with:
           fetch-depth: 0
-    - name: Test lib
+    - name: Tests
       run: go test -v ./...
-    - name: Test cmd
-      run: go test -v ./...
-      working-directory: ./cmd/certmin
     - name: Build lib
       run: go build
     - name: Build cmd
