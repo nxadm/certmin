@@ -9,6 +9,8 @@ jobs:
         goos: ["linux", "darwin", "windows"]
         goarch: ["amd64"]
     runs-on: ${{ matrix.os }}
+    emv:
+      AUTHOR_TESTING: 1
     steps:
     - name: Install Go
       uses: actions/setup-go@v2
@@ -20,13 +22,9 @@ jobs:
           fetch-depth: 0
     - name: Test lib
       run: go test -v ./...
-	    env:
-		    AUTHOR_TESTING: 1
     - name: Test cmd
       run: go test -v ./...
 			working_directory: cmd/certming
-	    env:
-		    AUTHOR_TESTING: 1
     - name: Build lib
       run: go build
     - name: Build cmd
