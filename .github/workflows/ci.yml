@@ -19,16 +19,16 @@ jobs:
       with:
           fetch-depth: 0
     - name: Test lib
+      run: go test -v ./...
 	    env:
 		    AUTHOR_TESTING: 1
-      run: go test -v ./...
     - name: Test cmd
+      run: go test -v ./...
 			working_directory: cmd/certming
 	    env:
 		    AUTHOR_TESTING: 1
-      run: go test -v ./...
     - name: Build lib
       run: go build
     - name: Build cmd
-			working_directory: cmd/certming
       run: go build
+			working_directory: cmd/certming
