@@ -72,14 +72,14 @@ certmin is available using the standard `go get` command.
 
 Install by running:
 
-    go get github.com/nxadm/certmin
+    go get github.com/nxadm/certmin/cmd/certmin
 
 ## Usage
 
-certmin van be loaded by a regular import:
+certmin can be loaded by a regular import:
 
 ``` go
-import flag "github.com/nxadm/certmin"
+import "github.com/nxadm/certmin"
 ```
 
 ## API
