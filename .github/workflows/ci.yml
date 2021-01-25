@@ -23,11 +23,10 @@ jobs:
     - name: Test lib
       run: go test -v ./...
     - name: Test cmd
-      working_directory: ./cmd/certmin
       run: go test -v ./...
+      working_directory: ./cmd/certmin
     - name: Build lib
       run: go build
     - name: Build cmd
-      working_directory: ./cmd/certmin
       run: go build
-
+      working_directory: ./cmd/certmin
