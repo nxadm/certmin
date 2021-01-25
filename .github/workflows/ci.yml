@@ -9,7 +9,7 @@ jobs:
         goos: ["linux", "darwin", "windows"]
         goarch: ["amd64"]
     runs-on: ${{ matrix.os }}
-    emv:
+    env:
       AUTHOR_TESTING: 1
     steps:
     - name: Install Go
