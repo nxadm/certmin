@@ -72,6 +72,10 @@ certmin is available using the standard `go get` command.
 
 Install by running:
 
+    go get github.com/nxadm/certmin
+   
+The CLI tool can be installed by running:
+
     go get github.com/nxadm/certmin/cmd/certmin
 
 ## Usage
