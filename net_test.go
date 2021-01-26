@@ -50,6 +50,17 @@ func TestRetrieveChainFromIssuerURLs(t *testing.T) {
 	}
 }
 
+
+func TestConnectAndRetrieve(t *testing.T) {
+	if os.Getenv("AUTHOR_TESTING") != "" {
+		if os.Getenv("AUTHOR_TESTING") != "" {
+			certs, err := connectAndRetrieve("github.com:443", 5*time.Second, false)
+			assert.NoError(t, err)
+			assert.True(t, len(certs) >= 2)
+		}
+	}
+}
+
 func TestRecursiveHopCerts(t *testing.T) {
 	if os.Getenv("AUTHOR_TESTING") != "" {
 		certs, err := DecodeCertFile("t/kuleuven-be.pem", "")

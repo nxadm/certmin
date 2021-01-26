@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -18,40 +19,17 @@ import (
 // of the server), an error with a warning (e.g. mismatch between the hostname and the CN or DNS alias
 // in the certificate) and an error in case of failure.
 func RetrieveCertsFromAddr(addr string, timeOut time.Duration) ([]*x509.Certificate, error, error) {
-	conn, err := net.DialTimeout("tcp", addr, timeOut)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var warning error
-	rx := regexp.MustCompile(":\\d+$")
-	tlsConn := tls.Client(conn, &tls.Config{ServerName: rx.ReplaceAllString(addr, "")})
-	err = tlsConn.SetDeadline(time.Now().Add(timeOut))
-	if err != nil {
-		return nil, nil, err
-	}
-	err = tlsConn.Handshake()
-	if err != nil {
-		tlsConn = tls.Client(conn, &tls.Config{InsecureSkipVerify: true})
-		err2 := tlsConn.SetDeadline(time.Now().Add(timeOut))
-		if err2 != nil {
-			return nil, nil, err2
+	var certs []*x509.Certificate
+	var err, warn error
+	certs, warn = connectAndRetrieve(addr, timeOut, false)
+	if warn != nil {
+		certs, err = connectAndRetrieve(addr, timeOut, true)
+		if err != nil {
+			warn = nil
 		}
-		err2 = tlsConn.Handshake()
-		if err2 != nil {
-			return nil, nil, err2
-		}
-		warning = err
-	}
-	defer tlsConn.Close()
-	defer conn.Close()
-
-	if len(tlsConn.ConnectionState().PeerCertificates) == 0 {
-		err := errors.New("no certificates found")
-		return nil, warning, err
 	}
 
-	return tlsConn.ConnectionState().PeerCertificates, warning, nil
+	return certs, warn, err
 }
 
 // RetrieveChainFromIssuerURLs retrieves the chain for a certificate by following the
@@ -65,6 +43,30 @@ func RetrieveChainFromIssuerURLs(cert *x509.Certificate, timeOut time.Duration) 
 	var lastErr error
 	recursiveHopCerts(cert, &chain, &lastErr, timeOut)
 	return chain, lastErr
+}
+
+// connectAndRetrieve does the actual TLS calls
+func connectAndRetrieve(addr string, timeOut time.Duration, skipVerify bool) ([]*x509.Certificate, error) {
+	serverName := regexp.MustCompile(":\\d+$").ReplaceAllString(addr, "")
+	var tlsConfig tls.Config
+	if skipVerify {
+		tlsConfig.InsecureSkipVerify = true
+	} else {
+		tlsConfig.ServerName = serverName
+	}
+
+	dialer := &net.Dialer{Timeout: timeOut}
+	conn, err := tls.DialWithDialer(dialer, "tcp", addr, &tlsConfig)
+	if err != nil {
+		return nil, fmt.Errorf("[%s] %s", serverName, err)
+	}
+	defer conn.Close()
+
+	if len(conn.ConnectionState().PeerCertificates) == 0 {
+		return nil, errors.New("no certificates found")
+	}
+
+	return conn.ConnectionState().PeerCertificates, nil
 }
 
 // recursiveHopCerts follows the URL links recursively
@@ -102,3 +104,4 @@ func recursiveHopCerts(
 
 	return nil
 }
+
