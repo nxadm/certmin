@@ -50,7 +50,6 @@ func TestRetrieveChainFromIssuerURLs(t *testing.T) {
 	}
 }
 
-
 func TestConnectAndRetrieve(t *testing.T) {
 	if os.Getenv("AUTHOR_TESTING") != "" {
 		if os.Getenv("AUTHOR_TESTING") != "" {

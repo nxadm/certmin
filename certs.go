@@ -388,7 +388,7 @@ func SortCerts(certs []*x509.Certificate, reverse bool) []*x509.Certificate {
 	var orderedFromLeaves []*x509.Certificate
 	var orderedNoLeaves []*x509.Certificate
 	for _, subj := range order {
-		if ! certByName[subj].IsCA {
+		if !certByName[subj].IsCA {
 			orderedFromLeaves = append(orderedFromLeaves, chainAsCerts[subj]...)
 		} else {
 			orderedNoLeaves = append(orderedNoLeaves, chainAsCerts[subj]...)

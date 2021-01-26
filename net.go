@@ -104,4 +104,3 @@ func recursiveHopCerts(
 
 	return nil
 }
-
