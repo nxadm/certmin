@@ -11,11 +11,16 @@ func TestGetAction(t *testing.T) {
 }
 
 func TestVerifyAndDispatch(t *testing.T) {
-	params := Params{}
+	var (
+		action actionFunc
+		err    error
+		msg    string
+		params Params
+	)
 
 	// help
 	params.help = true
-	action, msg, err := verifyAndDispatch(params, nil)
+	action, msg, err = verifyAndDispatch(params, nil)
 	assert.Nil(t, action)
 	assert.NotEmpty(t, msg)
 	assert.Nil(t, err)

@@ -1,6 +1,7 @@
 package certmin
 
 import (
+	"crypto/x509"
 	"encoding/pem"
 	"github.com/youmark/pkcs8"
 	"io/ioutil"
@@ -212,10 +213,13 @@ func TestDecodeKeyFile(t *testing.T) {
 }
 
 func TestEncodeCertAsPKCS1PEM(t *testing.T) {
-	certs, err := DecodeCertFile("t/myserver.crt", "")
+	var certs []*x509.Certificate
+	var bytes []byte
+	var err error
+	certs, err = DecodeCertFile("t/myserver.crt", "")
 	assert.NoError(t, err)
 	assert.True(t, len(certs) > 0)
-	bytes, err := EncodeCertAsPKCS1PEM(certs[0])
+	bytes, err = EncodeCertAsPKCS1PEM(certs[0])
 	assert.Contains(t, string(bytes), "-BEGIN CERTIFICATE-")
 }
 
@@ -252,13 +256,13 @@ func TestFindLeaf(t *testing.T) {
 	certs, err = DecodeCertFile("t/chain-no-leaf.crt", "")
 	assert.NotNil(t, certs)
 	assert.NoError(t, err)
-	leaf, err = FindLeaf(certs)
+	_, err = FindLeaf(certs)
 	assert.Error(t, err)
 
 	certs, err = DecodeCertFile("t/chain-2-leaf.crt", "")
 	assert.NotNil(t, certs)
 	assert.NoError(t, err)
-	leaf, err = FindLeaf(certs)
+	_, err = FindLeaf(certs)
 	assert.Error(t, err)
 }
 

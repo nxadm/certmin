@@ -47,7 +47,7 @@ func RetrieveChainFromIssuerURLs(cert *x509.Certificate, timeOut time.Duration) 
 
 // connectAndRetrieve does the actual TLS calls
 func connectAndRetrieve(addr string, timeOut time.Duration, skipVerify bool) ([]*x509.Certificate, error) {
-	serverName := regexp.MustCompile(":\\d+$").ReplaceAllString(addr, "")
+	serverName := regexp.MustCompile(`:\d+$`).ReplaceAllString(addr, "")
 	var tlsConfig tls.Config
 	if skipVerify {
 		tlsConfig.InsecureSkipVerify = true

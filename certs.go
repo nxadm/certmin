@@ -563,10 +563,7 @@ func VerifyCertAndKey(cert *x509.Certificate, key *pem.Block) bool {
 	keyPEM := pem.EncodeToMemory(key)
 
 	_, err := tls.X509KeyPair(certPEM, keyPEM)
-	if err == nil {
-		return true
-	}
-	return false
+	return err == nil
 }
 
 // getPKCS8PEMBlock is used to return a *pem.Block with the correct type

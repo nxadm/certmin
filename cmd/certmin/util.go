@@ -2,8 +2,10 @@ package main
 
 import (
 	"crypto/x509"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"math/big"
 	"net"
 	"net/url"
 	"os"
@@ -19,6 +21,9 @@ import (
 	"github.com/nxadm/certmin"
 	"golang.org/x/crypto/ssh/terminal"
 )
+
+// Compile the regex once
+var rxNormalize = regexp.MustCompile("[^a-zA-Z0-9_-]")
 
 // colourKeeper keeps track of certain output that must have the same color.
 // e.g. the CN as Subject and Issuer.
@@ -185,8 +190,10 @@ func printCert(cert *x509.Certificate, w *tabwriter.Writer, colourKeeper colourK
 		}
 		fmt.Fprintf(w, "URIs:\t%s\n", strings.Join(uris, ", "))
 	}
-	fmt.Fprintf(w, "Serial number:\t%s\n", cert.SerialNumber)
+
+	fmt.Fprintf(w, "Serial number:\t%s\n", serialAsHex(cert.SerialNumber))
 	fmt.Fprintf(w, "Version:\t%d\n", cert.Version)
+
 	if cert.IsCA {
 		fmt.Fprintf(w, "Is CA:\t%t\n", true)
 	}
@@ -256,6 +263,18 @@ func promptForKeyPassword() (string, error) {
 	return string(bytePassword), nil
 }
 
+// serialAsHex converts a *big.Int Serial to a hex string with ":" every 2 characters.
+func serialAsHex(serial *big.Int) string {
+	bytes := serial.Bytes()
+	buf := make([]byte, 0, 3*len(bytes))
+	hexRecipient := buf[1*len(bytes) : 3*len(bytes)]
+	hex.Encode(hexRecipient, bytes)
+	for i := 0; i < len(hexRecipient); i += 2 {
+		buf = append(buf, hexRecipient[i], hexRecipient[i+1], ':')
+	}
+	return string(buf[:len(buf)-1])
+}
+
 // writeCertFiles writes certificates to disk
 func writeCertFiles(certs []*x509.Certificate, cleanup bool) (string, error) {
 	tree := certmin.SplitCertsAsTree(certs)
@@ -263,8 +282,7 @@ func writeCertFiles(certs []*x509.Certificate, cleanup bool) (string, error) {
 		return "", errors.New("no certificate found")
 	}
 
-	rx := regexp.MustCompile("[^a-zA-Z0-9_-]")
-	baseName := "certmin_" + rx.ReplaceAllString(tree.Certificate.Subject.CommonName, "_") + "_" +
+	baseName := "certmin_" + rxNormalize.ReplaceAllString(tree.Certificate.Subject.CommonName, "_") + "_" +
 		time.Now().Format("20060102150405")
 
 	ext := make(map[int]string)
