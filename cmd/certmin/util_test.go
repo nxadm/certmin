@@ -56,18 +56,6 @@ func TestGetCerts(t *testing.T) {
 	}
 }
 
-func TestGetLocation(t *testing.T) {
-	loc, remote, err := getLocation("util.go")
-	assert.NoError(t, err)
-	assert.Equal(t, "util.go", loc)
-	assert.False(t, remote)
-
-	loc, remote, err = getLocation("foo/fa")
-	assert.NoError(t, err)
-	assert.Equal(t, "foo/fa", loc)
-	assert.True(t, remote)
-}
-
 //func printCert(cert *x509.Certificate, w *tabwriter.Writer, colourKeeper colourKeeper) {
 func TestPrintCert(t *testing.T) {
 	certs, err := certmin.DecodeCertFile("t/myserver.crt", "")

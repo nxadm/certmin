@@ -67,13 +67,9 @@ func getCerts(input string, sb *strings.Builder) ([]*x509.Certificate, error) {
 	var certs []*x509.Certificate
 	var err, warn error
 
-	loc, remote, err := getLocation(input)
+	_, err = os.Stat(input) // Local file
 	if err != nil {
-		return nil, err
-	}
-
-	if remote {
-		certs, warn, err = certmin.RetrieveCertsFromAddr(loc, timeOut)
+		certs, warn, err = certmin.RetrieveCertsFromAddr(input, timeOut)
 		if warn != nil {
 			sb.WriteString(color.YellowString("WARNING: " + warn.Error()) + "\n\n")
 		}
@@ -81,7 +77,7 @@ func getCerts(input string, sb *strings.Builder) ([]*x509.Certificate, error) {
 			return nil, err
 		}
 	} else {
-		certs, err = certmin.DecodeCertFile(loc, "")
+		certs, err = certmin.DecodeCertFile(input, "")
 		if err != nil {
 			if strings.Contains(err.Error(), "pkcs12: decryption password incorrect") {
 				passwordBytes, err := promptForKeyPassword()
@@ -89,7 +85,7 @@ func getCerts(input string, sb *strings.Builder) ([]*x509.Certificate, error) {
 					return nil, err
 				}
 
-				certs, err = certmin.DecodeCertFile(loc, string(passwordBytes))
+				certs, err = certmin.DecodeCertFile(input, string(passwordBytes))
 				if err != nil {
 					return nil, err
 				}
@@ -98,20 +94,8 @@ func getCerts(input string, sb *strings.Builder) ([]*x509.Certificate, error) {
 			}
 		}
 	}
+
 	return certs, nil
-}
-
-// getLocation parses an input string and it return a string with a file
-// name or a rewritten hostname:port location, a boolean stating if the
-// location is remote and an error.
-func getLocation(input string) (string, bool, error) {
-	// Local file
-	_, err := os.Stat(input)
-	if err == nil {
-		return input, false, nil
-	}
-
-	return input, true, nil
 }
 
 // printCert prints the relevant information of certificate
