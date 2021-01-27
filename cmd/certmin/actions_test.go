@@ -46,7 +46,13 @@ func TestVerifyChain(t *testing.T) {
 	assert.Nil(t, err)
 
 	if os.Getenv("AUTHOR_TESTING") != "" {
+		// System's keystore
 		params.roots = nil
+		output, err = verifyChain([]string{"github.com"}, params)
+		assert.Contains(t, output, "its chain match")
+		assert.Nil(t, err)
+
+		params.roots = []string{"t/cert-and-chain.crt"}
 		output, err = verifyChain([]string{"github.com"}, params)
 		assert.Contains(t, output, "its chain do not match")
 		assert.Nil(t, err)
