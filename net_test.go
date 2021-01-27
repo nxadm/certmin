@@ -2,12 +2,33 @@ package certmin
 
 import (
 	"crypto/x509"
+	"fmt"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func ExampleRetrieveCertsFromAddr() {
+	certs, warn, err := RetrieveCertsFromAddr("github.com:443", 1*time.Second)
+	if warn != nil {
+		// The certificates can be retrieved, but an TLS error was found
+		// like an expired certificate or a server name mismatch.
+		fmt.Printf("warning: %s\n", warn)
+	}
+
+	if err != nil {
+		// The certicate can no be retrieved, e.g. because of a DNS or networking error.
+		fmt.Printf("warning: %s\n", err)
+	} else {
+		// certs holds all the certificates sent by the remote server,
+		// i.e. the chain. In this example, the CN of the first certificate
+		// is printed. This is safe because an error is returned if no
+		// certificates were retrieved).
+		fmt.Printf("CN: %s\n", certs[0].Subject.CommonName)
+	}
+}
 
 func TestRetrieveCertsFromAddr(t *testing.T) {
 	certs, warn, err := RetrieveCertsFromAddr("faa", 1*time.Second)
