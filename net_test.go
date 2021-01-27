@@ -54,6 +54,11 @@ func TestRetrieveCertsFromAddr(t *testing.T) {
 		assert.NoError(t, warn)
 		assert.NoError(t, err)
 		assert.True(t, len(certs) >= 2)
+
+		certs, warn, err = RetrieveCertsFromAddr("8.8.8.8", 5*time.Second)
+		assert.NoError(t, warn)
+		assert.NoError(t, err)
+		assert.True(t, len(certs) >= 2)
 	}
 }
 
@@ -101,6 +106,19 @@ func TestConnectAndRetrieve(t *testing.T) {
 	}
 }
 
+func TestParseIP(t *testing.T) {
+	remote, err := parseIP("10.0.0.1")
+	assert.Equal(t, "10.0.0.1:443", remote)
+	assert.Nil(t, err)
+
+	remote, err = parseIP("10.0.0.1:443")
+	assert.Equal(t, "10.0.0.1:443", remote)
+	assert.Nil(t, err)
+
+	remote, err = parseIP("ldaps://foo")
+	assert.NotNil(t, err)
+}
+
 func TestParseURL(t *testing.T) {
 	remote, err := parseURL("https://foo")
 	assert.Equal(t, "foo:443", remote)
@@ -128,6 +146,10 @@ func TestParseURL(t *testing.T) {
 
 	remote, err = parseURL("BLAH/BOE")
 	assert.Equal(t, "BLAH:443", remote)
+	assert.Nil(t, err)
+
+	remote, err = parseURL("foo://10.0.0.1:123")
+	assert.Equal(t, "10.0.0.1:123", remote)
 	assert.Nil(t, err)
 
 	_, err = parseURL("foo://foo:1AA23")

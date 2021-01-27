@@ -85,13 +85,6 @@ func TestPromptForKeyPassword(t *testing.T) {
 	t.SkipNow()
 }
 
-func TestSerialAsHex(t *testing.T) {
-	certs, err := certmin.DecodeCertFile("t/myserver.crt", "")
-	assert.NoError(t, err)
-	assert.NotNil(t, certs)
-	assert.Equal(t, "ab:4c:df:e9:a2:13:46:9e:6f:ff:36:1d:90:29:5e:be", serialAsHex(certs[0].SerialNumber))
-}
-
 func TestWriteCertFiles(t *testing.T) {
 	certs, err := certmin.DecodeCertFile("t/cert-and-chain.crt", "")
 	assert.NoError(t, err)

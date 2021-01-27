@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -25,10 +26,16 @@ import (
 // and the CN or alias) and an error in case of failure.
 func RetrieveCertsFromAddr(addr string, timeOut time.Duration) ([]*x509.Certificate, error, error) {
 	var certs []*x509.Certificate
+	var parsedAddr string
 	var err, warn error
-	parsedAddr, err := parseURL(addr)
+
+	// Normalize the addr
+	parsedAddr, err = parseIP(addr)
 	if err != nil {
-		return nil, nil, err
+		parsedAddr, err = parseURL(addr)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	certs, warn = connectAndRetrieve(parsedAddr, timeOut, false)
@@ -79,8 +86,31 @@ func connectAndRetrieve(addr string, timeOut time.Duration, skipVerify bool) ([]
 	return conn.ConnectionState().PeerCertificates, nil
 }
 
+// parseIP parses a given ip:port and returns a string in the form of
+// hostname:port (with port 443 as default if none given) and an error
+// if the parsing fails.
+func parseIP(remote string) (string, error) {
+	var host, port string
+	var err, err2 error
+
+	host, port, err = net.SplitHostPort(remote)
+	if err != nil {
+		host, port, err2 = net.SplitHostPort(remote + ":443")
+		if err2 != nil {
+			return "", err
+		}
+	}
+
+	parts := strings.Split(host, "/")
+	if net.ParseIP(parts[0]) != nil {
+		return parts[0] + ":" + port, nil
+	}
+	return "", errors.New("not an IP")
+}
+
 // parseURL parses a given URL and return a string in the form of
-// hostname:port or an error if the parsing fails.
+// hostname:port (with port 443 as default if none given) and an
+// error if the parsing fails.
 func parseURL(remote string) (string, error) {
 	parsedURL, err := url.Parse(remote)
 	if err != nil {
