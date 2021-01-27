@@ -6,12 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"net"
-	"net/url"
 	"os"
 	"path"
 	"regexp"
-	"strconv"
 	"strings"
 	"syscall"
 	"text/tabwriter"
@@ -116,50 +113,7 @@ func getLocation(input string) (string, bool, error) {
 		return input, false, nil
 	}
 
-	// Remote
-	location, err := parseURL(input)
-	if err == nil {
-		return location, true, nil
-	}
-	location, err = parseURL("certmin://" + input) // Add a scheme
-	if err == nil {
-		return location, true, nil
-	}
-
-	return "", false, fmt.Errorf("%s is not a file or a remote location", input)
-}
-
-// parseURL parses a given URL and return a string in the form of
-// hostname:port or an error if the parsing fails.
-func parseURL(remote string) (string, error) {
-	parsedURL, err := url.Parse(remote)
-	if err != nil {
-		return "", err
-	}
-
-	host := parsedURL.Host
-	if host == "" {
-		return "", errors.New("no hostname found")
-	}
-
-	scheme := parsedURL.Scheme
-	portStr := parsedURL.Port()
-	var port int
-	if portStr == "" {
-		foundPort, err := net.LookupPort("tcp", scheme)
-		if err == nil {
-			port = foundPort
-		} else {
-			port = 443
-		}
-	} else {
-		port, err = strconv.Atoi(portStr) // prefer explicit port
-		if err != nil {
-			return "", fmt.Errorf("invalid port (%s)", portStr)
-		}
-	}
-
-	return parsedURL.Hostname() + ":" + strconv.Itoa(port), nil
+	return input, true, nil
 }
 
 // printCert prints the relevant information of certificate

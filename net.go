@@ -8,22 +8,32 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/url"
 	"regexp"
+	"strconv"
 	"time"
 )
 
 // RetrieveCertsFromAddr retrieves all the certificates offered by the remote host. As parameters
-// it takes an address string in the form of hostname:port and a time-out duration for the
-// connection. The time-out is used for both the TCP and the SSL connection, with 0 disabling it.
+// it takes an address string (hostname, hostname:port, scheme://hostname or scheme://hostname:port)
+// and a time-out duration for the connection. If a port is not specified or can not be inferred
+// from the URI scheme, port 443 is used as a default. The time-out is used for both the TCP and the
+// SSL connection, with 0 disabling it.
+//
 // The return values are a []*x509.Certificate (with the first element being the certificate
-// of the server), an error with a warning (e.g. mismatch between the hostname and the CN or DNS alias
-// in the certificate) and an error in case of failure.
+// of the server), an error with a TLS warning (e.g. expired TLS cert, mismatch between the hostname
+// and the CN or alias) and an error in case of failure.
 func RetrieveCertsFromAddr(addr string, timeOut time.Duration) ([]*x509.Certificate, error, error) {
 	var certs []*x509.Certificate
 	var err, warn error
-	certs, warn = connectAndRetrieve(addr, timeOut, false)
+	parsedAddr, err := parseURL(addr)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	certs, warn = connectAndRetrieve(parsedAddr, timeOut, false)
 	if warn != nil {
-		certs, err = connectAndRetrieve(addr, timeOut, true)
+		certs, err = connectAndRetrieve(parsedAddr, timeOut, true)
 		if err != nil {
 			warn = nil
 		}
@@ -67,6 +77,33 @@ func connectAndRetrieve(addr string, timeOut time.Duration, skipVerify bool) ([]
 	}
 
 	return conn.ConnectionState().PeerCertificates, nil
+}
+
+// parseURL parses a given URL and return a string in the form of
+// hostname:port or an error if the parsing fails.
+func parseURL(remote string) (string, error) {
+	parsedURL, err := url.Parse(remote)
+	if err != nil {
+		return "", err
+	}
+
+	host := parsedURL.Host
+	if host == "" {
+		return parseURL("certmin://" + remote) // Add a scheme
+	}
+
+	scheme := parsedURL.Scheme
+	portStr := parsedURL.Port()
+	if portStr == "" {
+		port, err := net.LookupPort("tcp", scheme)
+		if err == nil {
+			portStr = strconv.Itoa(port)
+		} else {
+			portStr = "443"
+		}
+	}
+
+	return parsedURL.Hostname() + ":" + portStr, nil
 }
 
 // recursiveHopCerts follows the URL links recursively

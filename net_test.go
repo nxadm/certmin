@@ -11,23 +11,26 @@ import (
 )
 
 func ExampleRetrieveCertsFromAddr() {
-	certs, warn, err := RetrieveCertsFromAddr("github.com:443", 1*time.Second)
+	// Other formats are allowed like github.com:8443 or smtps://smtp.gmail.com
+	certs, warn, err := RetrieveCertsFromAddr("github.com", 1*time.Second)
+	if err != nil {
+		// The certificates can no be retrieved
+		// (e.g. because of a DNS or networking error).
+		fmt.Printf("error: %s\n", err)
+		return
+	}
+
 	if warn != nil {
-		// The certificates can be retrieved, but an TLS error was found
-		// like an expired certificate or a server name mismatch.
+		// The certificates can be retrieved, but a TLS error was found
+		// (e.g. an expired certificate or a server name mismatch).
 		fmt.Printf("warning: %s\n", warn)
 	}
 
-	if err != nil {
-		// The certicate can no be retrieved, e.g. because of a DNS or networking error.
-		fmt.Printf("warning: %s\n", err)
-	} else {
-		// certs holds all the certificates sent by the remote server,
-		// i.e. the chain. In this example, the CN of the first certificate
-		// is printed. This is safe because an error is returned if no
-		// certificates were retrieved).
-		fmt.Printf("CN: %s\n", certs[0].Subject.CommonName)
-	}
+	// certs holds all the certificates sent by the remote server,
+	// i.e. the chain. In this example, the CN of the first certificate
+	// is printed. This is safe because an error is returned if no
+	// certificates were retrieved).
+	fmt.Printf("CN: %s\n", certs[0].Subject.CommonName)
 }
 
 func TestRetrieveCertsFromAddr(t *testing.T) {
@@ -52,6 +55,23 @@ func TestRetrieveCertsFromAddr(t *testing.T) {
 		assert.NoError(t, err)
 		assert.True(t, len(certs) >= 2)
 	}
+}
+
+func ExampleRetrieveChainFromIssuerURLs() {
+	// Retrieve a *x509.Certificate, e.g. locally:
+	certs, err := DecodeCertFile("t/myserver.crt", "")
+	if err != nil {
+		return
+	}
+
+	// Get the remote chain by recursive following the Issuer URLs.
+	chain, err := RetrieveChainFromIssuerURLs(certs[0], 1*time.Second)
+	if err != nil {
+		return
+	}
+
+	// Print, by example, the length of the retrieved chain
+	fmt.Printf("the chain has %d certificates\n", len(chain))
 }
 
 func TestRetrieveChainFromIssuerURLs(t *testing.T) {
@@ -79,6 +99,39 @@ func TestConnectAndRetrieve(t *testing.T) {
 			assert.True(t, len(certs) >= 2)
 		}
 	}
+}
+
+func TestParseURL(t *testing.T) {
+	remote, err := parseURL("https://foo")
+	assert.Equal(t, "foo:443", remote)
+	assert.Nil(t, err)
+
+	remote, err = parseURL("ldaps://foo")
+	assert.Equal(t, "foo:636", remote)
+	assert.Nil(t, err)
+
+	remote, err = parseURL("foo://foo")
+	assert.Equal(t, "foo:443", remote)
+	assert.Nil(t, err)
+
+	remote, err = parseURL("https://foo:123")
+	assert.Equal(t, "foo:123", remote)
+	assert.Nil(t, err)
+
+	remote, err = parseURL("foo://foo:123")
+	assert.Equal(t, "foo:123", remote)
+	assert.Nil(t, err)
+
+	remote, err = parseURL("BLAH:123")
+	assert.Equal(t, "BLAH:123", remote)
+	assert.Nil(t, err)
+
+	remote, err = parseURL("BLAH/BOE")
+	assert.Equal(t, "BLAH:443", remote)
+	assert.Nil(t, err)
+
+	_, err = parseURL("foo://foo:1AA23")
+	assert.NotNil(t, err)
 }
 
 func TestRecursiveHopCerts(t *testing.T) {
