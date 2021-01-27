@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	version = "0.5.9"
+	version = "0.5.11"
 	website = "https://github.com/nxadm/certmin"
 	timeOut = 5 * time.Second
 )
