@@ -80,7 +80,7 @@ func getCerts(input string, sb *strings.Builder) ([]*x509.Certificate, error) {
 	if remote {
 		certs, warn, err = certmin.RetrieveCertsFromAddr(loc, timeOut)
 		if warn != nil {
-			sb.WriteString(color.YellowString(warn.Error()) + "\n\n")
+			sb.WriteString(color.YellowString("WARNING: " + warn.Error()) + "\n\n")
 		}
 		if err != nil {
 			return nil, err
