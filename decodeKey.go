@@ -17,6 +17,7 @@ func DecodeKeyFile(keyFile string, password string) (*pem.Block, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return DecodeKeyBytes(keyBytes, password)
 }
 
