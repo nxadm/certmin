@@ -10,6 +10,16 @@ import (
 	"software.sslmate.com/src/go-pkcs12"
 )
 
+// DecodeKeyFile reads a file with a PEM encoded key and returns the contents
+// as a *pem.Block and an error if encountered.
+func DecodeKeyFile(keyFile string, password string) (*pem.Block, error) {
+	keyBytes, err := ioutil.ReadFile(keyFile)
+	if err != nil {
+		return nil, err
+	}
+	return DecodeKeyBytes(keyBytes, password)
+}
+
 // DecodeKeyBytes reads a []byte with a key and returns a *pem.Block and
 // an error if encountered.
 func DecodeKeyBytes(keyBytes []byte, password string) (*pem.Block, error) {
@@ -98,14 +108,4 @@ func DecodeKeyBytesPKCS12(keyBytes []byte, password string) (*pem.Block, error) 
 	}
 
 	return getPKCS8PEMBlock(parsedKey)
-}
-
-// DecodeKeyFile reads a file with PEM encoded key and returns the contents as a *pem.Block
-// and an error if encountered.
-func DecodeKeyFile(keyFile string, password string) (*pem.Block, error) {
-	keyBytes, err := ioutil.ReadFile(keyFile)
-	if err != nil {
-		return nil, err
-	}
-	return DecodeKeyBytes(keyBytes, password)
 }
