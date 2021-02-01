@@ -13,13 +13,6 @@ import (
 	"math/big"
 )
 
-// CertTree represents a chain where certificates are
-// assigned as a Certificate, Intermediates and Roots.
-type CertTree struct {
-	Certificate          *x509.Certificate
-	Intermediates, Roots []*x509.Certificate
-}
-
 // CertSerialNumberAsHex converts a *x509.Certificate.SerialNumber (of type *big.Int)
 // to the more commonly used hex variant with a ":" separator every 2 characters
 // (like e.g. by openSSL).
@@ -213,34 +206,6 @@ func SortCertsAsChains(
 	return chainAsCerts, certByName, order
 }
 
-// SplitCertsAsTree returns a *CertTree where the given certificates
-// are assigned as Certificate, Intermediates and Roots. The starting
-// leaf certificate must be the first element of the given
-// []*x509.Certificate.
-func SplitCertsAsTree(certs []*x509.Certificate) *CertTree {
-	if len(certs) == 0 {
-		return nil
-	}
-
-	ordered := SortCerts(certs, false)
-	var roots, inters []*x509.Certificate
-	for _, cert := range ordered[1:] {
-		if IsRootCA(cert) {
-			roots = append(roots, cert)
-		} else {
-			inters = append(inters, cert)
-		}
-	}
-
-	certTree := CertTree{
-		Certificate:   ordered[0],
-		Intermediates: inters,
-		Roots:         roots,
-	}
-
-	return &certTree
-}
-
 // VerifyChain verifies the chain of a certificate as part of a CertTree. When the
 // Roots field is nil, the OS trust store is used. The function return a boolean with
 // the verification result and an string with an associated message with the reason
@@ -282,6 +247,22 @@ func VerifyCertAndKey(cert *x509.Certificate, key *pem.Block) bool {
 
 	_, err := tls.X509KeyPair(certPEM, keyPEM)
 	return err == nil
+}
+
+// VerifyCertAndKeyFiles verifies that the first certificate in a file and a key file
+// with an optional password match, returning the result as a bool and an error if encountered.
+func VerifyCertAndKeyFiles(cert, key, password string) (bool, error) {
+	certs, err := DecodeCertFile(cert, key)
+	if err != nil {
+		return false, err
+	}
+
+	keyPEM, err := DecodeKeyFile(key, password)
+	if err != nil {
+		return false, err
+	}
+
+	return VerifyCertAndKey(certs[0], keyPEM), nil
 }
 
 // getPKCS8PEMBlock is used to return a *pem.Block with the correct type

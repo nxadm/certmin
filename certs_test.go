@@ -3,11 +3,10 @@ package certmin
 import (
 	"crypto/x509"
 	"encoding/pem"
+	"github.com/stretchr/testify/assert"
 	"github.com/youmark/pkcs8"
 	"io/ioutil"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 var testPassword = "1234"
@@ -122,18 +121,6 @@ func TestSortCertsAsChains(t *testing.T) {
 	assert.Contains(t, chainAsCerts[ordered[0].Subject.String()][0].Subject.CommonName, "AAA Certificate Services")
 }
 
-func TestSplitCertsAsTree(t *testing.T) {
-	certs, err := DecodeCertFile("t/chain-out-of-order.crt", "")
-	assert.NotNil(t, certs)
-	assert.NoError(t, err)
-
-	tree := SplitCertsAsTree(certs)
-	assert.NotNil(t, tree)
-	assert.Contains(t, tree.Certificate.Subject.CommonName, "exporl")
-	assert.Equal(t, 5, len(tree.Intermediates))
-	assert.Equal(t, 1, len(tree.Roots))
-}
-
 func TestVerifyChain(t *testing.T) {
 	ca, err := DecodeCertFile("t/ca.crt", "")
 	assert.NoError(t, err)
@@ -222,6 +209,44 @@ func TestVerifyCertAndKey(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, key)
 	assert.True(t, VerifyCertAndKey(certs[0], key))
+}
+
+func TestVerifyCertAndKeyFiles(t *testing.T) {
+	result, err := VerifyCertAndKeyFiles("t/myserver.crt", "t/myserver.key", "")
+	assert.NoError(t, err)
+	assert.True(t, result)
+
+	result, err = VerifyCertAndKeyFiles("t/myserver.crt", "t/myserver_enc.key", testPassword)
+	assert.NoError(t, err)
+	assert.True(t, result)
+
+	result, err = VerifyCertAndKeyFiles("t/myserver.crt", "t/myserver-fromca2.key", "")
+	assert.NoError(t, err)
+	assert.False(t, result)
+
+	result, err = VerifyCertAndKeyFiles("t/ecdsa_prime256v1.crt", "t/ecdsa_prime256v1.key", "")
+	assert.NoError(t, err)
+	assert.True(t, result)
+
+	result, err = VerifyCertAndKeyFiles("t/ecdsa_prime256v1_2.crt", "t/ecdsa_prime256v1_2_enc.key", testPassword)
+	assert.NoError(t, err)
+	assert.True(t, result)
+
+	result, err = VerifyCertAndKeyFiles("t/ecdsa_secp384r1.crt", "t/ecdsa_secp384r1.key", "")
+	assert.NoError(t, err)
+	assert.True(t, result)
+
+	result, err = VerifyCertAndKeyFiles("t/ecdsa_secp384r1_2.crt", "t/ecdsa_secp384r1_2_enc.key", testPassword)
+	assert.NoError(t, err)
+	assert.True(t, result)
+
+	result, err = VerifyCertAndKeyFiles("t/ed25519.crt", "t/ed25519.key", "")
+	assert.NoError(t, err)
+	assert.True(t, result)
+
+	result, err = VerifyCertAndKeyFiles("t/ed25519_2.crt", "t/ed25519_2_enc.key", testPassword)
+	assert.NoError(t, err)
+	assert.True(t, result)
 }
 
 func TestGetPKCS8PEMBlock(t *testing.T) {

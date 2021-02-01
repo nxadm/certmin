@@ -117,7 +117,7 @@ func verifyChain(locations []string, params Params) (string, error) {
 			}
 		}
 
-		tree := certmin.SplitCertsAsTree(certs)
+		tree := certmin.NewCertTree(certs)
 		result, err := appendToCertTree(tree.Roots, params.roots)
 		if err != nil {
 			return sb.String(), err

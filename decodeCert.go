@@ -7,10 +7,46 @@ import (
 	"errors"
 	"io/ioutil"
 	"strings"
+	"time"
 
 	"go.mozilla.org/pkcs7"
 	"software.sslmate.com/src/go-pkcs12"
 )
+
+// DecodeCert is a high-level function that retrieves certificates from a Location with an optional
+// password and time-out. The password is used for encrypted containers (like PKCS12) while the
+// time-out is set for remote operations (TCP and TLS operations, 0 disables it). The function
+// returns a []*x509.Certificate and an error if encountered. The function supports DER or PEM PKCS1,
+// PKCS7 and PKCS12 encoded certificates.
+func DecodeCert(location Location, password string, timeOut time.Duration) ([]*x509.Certificate, error) {
+	//certBytes, err := ioutil.ReadFile(string(location))
+	//if err != nil {
+	//	return nil, err
+	//}
+	//return DecodeCertBytes(certBytes, password)
+	return nil, nil
+}
+
+// DecodeCertAddr retrieves the certificates from a given network address
+// reads a file with DER or PEM encoded certificates and returns
+// the contents as a []*x509.Certificate and an error if encountered.
+func DecodeCertAddr(certFile, password string) ([]*x509.Certificate, error) {
+	certBytes, err := ioutil.ReadFile(certFile)
+	if err != nil {
+		return nil, err
+	}
+	return DecodeCertBytes(certBytes, password)
+}
+
+// DecodeCertFile reads a file with DER or PEM encoded certificates and returns
+// the contents as a []*x509.Certificate and an error if encountered.
+func DecodeCertFile(certFile, password string) ([]*x509.Certificate, error) {
+	certBytes, err := ioutil.ReadFile(certFile)
+	if err != nil {
+		return nil, err
+	}
+	return DecodeCertBytes(certBytes, password)
+}
 
 // DecodeCertBytes reads a []byte with DER or PEM PKCS1, PKCS7 and PKCS12 encoded certificates,
 // and returns the contents as a []*x509.Certificate and an error if encountered. A password is
@@ -192,14 +228,4 @@ func DecodeCertBytesPKCS12(certBytes []byte, password string) ([]*x509.Certifica
 	}
 
 	return certs, err
-}
-
-// DecodeCertFile reads a file with DER or PEM encoded certificates and returns
-// the contents as a []*x509.Certificate and an error if encountered.
-func DecodeCertFile(certFile, password string) ([]*x509.Certificate, error) {
-	certBytes, err := ioutil.ReadFile(certFile)
-	if err != nil {
-		return nil, err
-	}
-	return DecodeCertBytes(certBytes, password)
 }

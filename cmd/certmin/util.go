@@ -199,9 +199,29 @@ func promptForKeyPassword() (string, error) {
 	return string(bytePassword), nil
 }
 
+// Verify and/or prompt for a key password
+func validateKeyPassword(keyFile, password string) (string, error){
+	var verified string
+	_, err := certmin.DecodeKeyFile(keyFile, password)
+	if err != nil {
+		verified, err = promptForKeyPassword()
+		if err != nil {
+			return "", err
+		}
+		verified = password
+
+		_, err = certmin.DecodeKeyFile(keyFile,password)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return verified, nil
+}
+
 // writeCertFiles writes certificates to disk
 func writeCertFiles(certs []*x509.Certificate, cleanup bool) (string, error) {
-	tree := certmin.SplitCertsAsTree(certs)
+	tree := certmin.NewCertTree(certs)
 	if tree.Certificate == nil {
 		return "", errors.New("no certificate found")
 	}
