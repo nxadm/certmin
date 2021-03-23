@@ -80,7 +80,7 @@ func getCerts(input string, sb *strings.Builder) ([]*x509.Certificate, error) {
 	if remote {
 		certs, warn, err = certmin.RetrieveCertsFromAddr(loc, timeOut)
 		if warn != nil {
-			sb.WriteString(color.YellowString("WARNING: " + warn.Error()) + "\n\n")
+			sb.WriteString(color.YellowString("WARNING: "+warn.Error()) + "\n\n")
 		}
 		if err != nil {
 			return nil, err
@@ -246,8 +246,18 @@ func printCert(cert *x509.Certificate, w *tabwriter.Writer, colourKeeper colourK
 	if len(cert.CRLDistributionPoints) > 0 {
 		fmt.Fprintf(w, "CRL locations:\t%s\n", strings.Join(cert.CRLDistributionPoints, ", "))
 	}
-	fmt.Fprintf(w, "Not before:\t%s\n", cert.NotBefore)
-	fmt.Fprintf(w, "Not after:\t%s\n", cert.NotAfter)
+
+	beforeTime := color.RedString
+	if cert.NotBefore.Before(time.Now()) {
+		beforeTime = color.GreenString
+	}
+	fmt.Fprintf(w, "Not before:\t%s\n", beforeTime(cert.NotBefore.String()))
+
+	afterTime := color.RedString
+	if cert.NotAfter.After(time.Now()) {
+		afterTime = color.GreenString
+	}
+	fmt.Fprintf(w, "Not after:\t%s\n", afterTime(cert.NotAfter.String()))
 }
 
 // promptForKeyPassword prompts the user for the password to
