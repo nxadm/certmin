@@ -276,6 +276,10 @@ func promptForKeyPassword() (string, error) {
 // serialAsHex converts a *big.Int Serial to a hex string with ":" every 2 characters.
 func serialAsHex(serial *big.Int) string {
 	bytes := serial.Bytes()
+	if len(bytes) == 0 {
+		return "[no serial]"
+	}
+
 	buf := make([]byte, 0, 3*len(bytes))
 	hexRecipient := buf[1*len(bytes) : 3*len(bytes)]
 	hex.Encode(hexRecipient, bytes)
