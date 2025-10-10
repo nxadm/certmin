@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/sha1"
 	"crypto/x509"
 	"encoding/hex"
 	"errors"
@@ -191,6 +192,8 @@ func printCert(cert *x509.Certificate, w *tabwriter.Writer, colourKeeper colourK
 		fmt.Fprintf(w, "URIs:\t%s\n", strings.Join(uris, ", "))
 	}
 
+	fp := sha1.Sum(cert.Raw)
+	fmt.Fprintf(w, "Fingerprint:\t%x\n", fp)
 	fmt.Fprintf(w, "Serial number:\t%s\n", serialAsHex(cert.SerialNumber))
 	fmt.Fprintf(w, "Version:\t%d\n", cert.Version)
 
@@ -277,7 +280,7 @@ func promptForKeyPassword() (string, error) {
 func serialAsHex(serial *big.Int) string {
 	bytes := serial.Bytes()
 	if len(bytes) == 0 {
-		return "[no serial]"
+		return "0"
 	}
 
 	buf := make([]byte, 0, 3*len(bytes))
