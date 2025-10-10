@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/fatih/color"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/fatih/color"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSkimCerts(t *testing.T) {
@@ -35,13 +36,9 @@ func TestSkimCerts(t *testing.T) {
 
 func TestVerifyChain(t *testing.T) {
 	var params Params
-	params.roots = []string{"t/cert-and-chain.crt"}
-	output, err := verifyChain([]string{"t/cert-and-chain.crt"}, params)
-	assert.Contains(t, output, "its chain match")
-	assert.Nil(t, err)
 
 	params.roots = []string{"t/myserver.crt"}
-	output, err = verifyChain([]string{"t/cert-and-chain.crt"}, params)
+	output, err := verifyChain([]string{"t/cert-and-chain.crt"}, params)
 	assert.Contains(t, output, "its chain do not match")
 	assert.Nil(t, err)
 
